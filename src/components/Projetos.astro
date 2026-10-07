@@ -92,9 +92,13 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
                   Ver site <span aria-hidden="true">↗</span>
                 </a>
               )}
-              <a class="link-seta" href={projeto.codigo} target="_blank" rel="noopener">
-                Código <span aria-hidden="true">↗</span>
-              </a>
+              {projeto.codigo ? (
+                <a class="link-seta" href={projeto.codigo} target="_blank" rel="noopener">
+                  Código <span aria-hidden="true">↗</span>
+                </a>
+              ) : (
+                <span class="privado">Código privado</span>
+              )}
             </div>
           </div>
         </article>
@@ -438,6 +442,13 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
   .projeto-links {
     display: flex;
     gap: 2rem;
+  }
+
+  .privado {
+    font-size: 0.78rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
   }
 
   .link-seta {

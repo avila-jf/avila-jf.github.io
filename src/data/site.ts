@@ -71,7 +71,7 @@ export const projetos: {
   descricao: string;
   tecnologias: string[];
   site?: string;
-  codigo: string;
+  codigo?: string;
   imagem?: string;
   destaque?: boolean;
 }[] = [
@@ -87,16 +87,15 @@ export const projetos: {
     destaque: true,
   },
   {
-    nome: 'Sofiarte',
+    nome: 'Ótica Beco São José',
     tipo: 'Site para cliente',
     descricao:
-      'Portfólio da tatuadora Sofia (@sofiarte_tattoo), aqui de Maceió: trabalhos, tatuagens sobre cicatriz, flashes e agendamento direto pelo WhatsApp.',
-    tecnologias: ['HTML', 'CSS', 'JavaScript'],
-    site: 'https://josefrancisco-alt.github.io/sofiarte/',
-    codigo: 'https://github.com/JoseFrancisco-alt/sofiarte',
-    imagem: 'sofiarte',
+      'Loja online de uma ótica de Maceió: catálogo com busca e filtros, escolha de lentes de grau, carrinho, checkout, login, acompanhamento do pedido e painel da loja.',
+    tecnologias: ['JavaScript', 'Vite', 'Supabase', 'GSAP', 'Three.js'],
+    site: 'https://otica-beco-sao-jose.vercel.app/',
+    imagem: 'otica-beco',
     destaque: true,
-  },
+  },
   {
     nome: 'Magnobag',
     tipo: 'Projeto pessoal',
@@ -107,18 +106,7 @@ export const projetos: {
     codigo: 'https://github.com/JoseFrancisco-alt/magnobag',
     imagem: 'magnobag',
     destaque: true,
-  },
-  {
-    nome: 'Este portfólio',
-    tipo: 'Projeto pessoal',
-    descricao:
-      'O site que você está vendo: galeria que se monta sozinha, slider em 3D, animações de rolagem e deploy automático a cada commit.',
-    tecnologias: ['Astro', 'TypeScript', 'GSAP', 'CSS'],
-    site: 'https://josefrancisco-alt.github.io/portfolio-fotografia/',
-    codigo: 'https://github.com/JoseFrancisco-alt/portfolio-fotografia',
-    imagem: 'portfolio-fotografia',
-    destaque: true,
-  },
+  },
   {
     nome: 'BookSmart',
     tipo: 'Faculdade',
