@@ -99,47 +99,21 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   </section>
 
   <!-- Projetos de programação (dados em site.ts → projetos) -->
-  <section id="projetos" class="container secao-codigo">
+  <section id="sites" class="container secao-codigo">
     <div class="codigo-topo">
       <div>
-        <p class="rotulo">Código</p>
-        <h2>Também <em class="marca-texto">programo.</em></h2>
+        <p class="rotulo">Projetos</p>
+        <h2>{criacaoDeSites.titulo}</h2>
+        <p class="codigo-descricao">{criacaoDeSites.texto}</p>
       </div>
-      <a class="link-seta" href={url('/projetos')}>Todos os projetos <span aria-hidden="true">→</span></a>
+      <div class="codigo-links">
+        <a class="botao" href={linkSite} target="_blank" rel="noopener">Quero meu site</a>
+        <a class="link-seta" href={url('/projetos')}>Todos os projetos <span aria-hidden="true">→</span></a>
+      </div>
     </div>
     <Projetos />
   </section>
 
-  <!-- Divulgação: criação de sites (seção secundária, no fim da página) -->
-  <section id="sites" class="container sites revelar">
-    <div class="sites-texto">
-      <p class="rotulo">Também faço</p>
-      <h2>{criacaoDeSites.titulo}</h2>
-      <p>{criacaoDeSites.texto}</p>
-      <ul>
-        {criacaoDeSites.vantagens.map((item) => <li>{item}</li>)}
-      </ul>
-      <a class="link-seta" href={linkSite} target="_blank" rel="noopener">
-        Quero meu site <span aria-hidden="true">→</span>
-      </a>
-    </div>
-
-    <!-- Mini "navegador" desenhado só com CSS, inclina com o mouse -->
-    <div class="navegador" data-tilt aria-hidden="true">
-      <div class="navegador-barra">
-        <i></i><i></i><i></i>
-        <span>seunome.github.io</span>
-      </div>
-      <div class="navegador-tela">
-        <div class="mini-bloco"></div>
-        <div class="mini-foto"></div>
-        <div class="mini-linha grande"></div>
-        <div class="mini-linha grande curta"></div>
-        <div class="mini-linha"></div>
-        <div class="mini-grade"><b></b><b></b><b></b></div>
-      </div>
-    </div>
-  </section>
 </Base>
 
 <style>
@@ -444,6 +418,19 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     margin-top: clamp(96px, 16vh, 180px);
     padding-top: clamp(64px, 10vh, 110px);
     border-top: 1px solid var(--linha);
+  }
+
+  .codigo-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem 2rem;
+  }
+
+  .codigo-descricao {
+    max-width: 52ch;
+    margin: 1.2rem 0 0;
+    color: var(--texto-suave);
   }
 
   .codigo-topo {
