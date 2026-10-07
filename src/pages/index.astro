@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Destaques from '../components/Destaques.astro';
+import Projetos from '../components/Projetos.astro';
 import { site, categorias, criacaoDeSites, destaques } from '../data/site';
 import { capa, fotosDa, fotosEmDestaque } from '../lib/fotos';
 import { url } from '../lib/url';
@@ -90,6 +91,18 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     <h2>Vamos <em class="marca-texto">fotografar?</em></h2>
     <p>Ensaios de retrato, trabalhos autorais e parcerias.</p>
     <a class="botao" href={url('/contato')}>Entrar em contato</a>
+  </section>
+
+  <!-- Projetos de programação (dados em site.ts → projetos) -->
+  <section id="projetos" class="container secao-codigo">
+    <div class="codigo-topo">
+      <div>
+        <p class="rotulo">Código</p>
+        <h2>Também <em class="marca-texto">programo.</em></h2>
+      </div>
+      <a class="link-seta" href={url('/projetos')}>Todos os projetos <span aria-hidden="true">→</span></a>
+    </div>
+    <Projetos />
   </section>
 
   <!-- Divulgação: criação de sites (seção secundária, no fim da página) -->
@@ -402,6 +415,27 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   .chamada p {
     color: var(--texto-suave);
     margin: 1rem 0 2.5rem;
+  }
+
+  /* ---------- PROJETOS DE CÓDIGO ---------- */
+  .secao-codigo {
+    margin-top: clamp(96px, 16vh, 180px);
+    padding-top: clamp(64px, 10vh, 110px);
+    border-top: 1px solid var(--linha);
+  }
+
+  .codigo-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: clamp(48px, 8vh, 90px);
+  }
+
+  .codigo-topo h2 {
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    margin-top: 0.75rem;
   }
 
   /* ---------- CRIAÇÃO DE SITES ---------- */

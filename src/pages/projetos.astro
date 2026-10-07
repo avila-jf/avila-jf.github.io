@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import Projetos from '../components/Projetos.astro';
+import { github } from '../data/site';
+---
+
+<Base titulo="Projetos" descricao="Sites e sistemas que eu desenvolvi: projetos para clientes, pessoais e da faculdade.">
+  <section class="container titulo-pagina">
+    <p class="rotulo">Código</p>
+    <h1>Projetos</h1>
+    <p>
+      Além de fotografar, eu programo. Aqui ficam os sites e sistemas que eu fiz: para clientes, por conta própria e
+      na faculdade.
+    </p>
+  </section>
+
+  <section class="container">
+    <Projetos todos />
+
+    <div class="mais">
+      <a class="botao" href={github} target="_blank" rel="noopener">Ver tudo no GitHub</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .mais {
+    margin-top: clamp(56px, 10vh, 100px);
+    text-align: center;
+  }
+</style>

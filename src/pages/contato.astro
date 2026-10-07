@@ -2,15 +2,13 @@
 import Base from '../layouts/Base.astro';
 import { site, criacaoDeSites } from '../data/site';
 
-const { instagram, whatsapp, email } = site.contato;
+const { instagram, whatsapp } = site.contato;
 const whats = (texto: string) => `https://wa.me/${whatsapp}?text=${encodeURIComponent(texto)}`;
 
 const canais = [
   { nome: 'Ensaio', valor: 'Agendar pelo WhatsApp', href: whats('Olá! Vi seu portfólio e queria conversar sobre um ensaio.') },
   { nome: 'Site', valor: 'Quero um portfólio', href: whats(criacaoDeSites.mensagemWhatsApp) },
-  { nome: 'Instagram', valor: `@${instagram}`, href: `https://instagram.com/${instagram}` },
-  { nome: 'E-mail', valor: email, href: `mailto:${email}` },
-];
+  { nome: 'Instagram', valor: `@${instagram}`, href: `https://instagram.com/${instagram}` },];
 ---
 
 <Base titulo="Contato" descricao={`Fale com ${site.nome} sobre ensaios e trabalhos.`}>

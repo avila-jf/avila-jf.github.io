@@ -11,9 +11,14 @@ const eu = Object.values(
   import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu.{jpg,jpeg,png,webp}', { eager: true }),
 )[0]?.default;
 
+const projetoCapa = Object.values(
+  import.meta.glob<{ default: ImageMetadata }>('/src/assets/projetos/sofiarte.{jpg,png,webp}', { eager: true }),
+)[0]?.default;
+
 const itens = [
   { href: url('/'), texto: 'Início', foto: capa()?.src },
   ...categorias.map((c) => ({ href: url(`/${c.slug}`), texto: c.titulo, foto: fotosDa(c.slug)[0]?.src })),
+  { href: url('/projetos'), texto: 'Projetos', foto: projetoCapa },
   { href: url('/sobre'), texto: 'Sobre', foto: eu },
   { href: url('/contato'), texto: 'Contato', foto: undefined },
 ];
@@ -27,7 +32,7 @@ const links = await Promise.all(
 
 const atual = Astro.url.pathname.replace(/\/$/, '');
 const naHome = atual === url('/').replace(/\/$/, '');
-const { instagram, whatsapp, email } = site.contato;
+const { instagram, whatsapp } = site.contato;
 ---
 
 <header class="topo">
@@ -80,9 +85,7 @@ const { instagram, whatsapp, email } = site.contato;
       </div>
       <div class="menu-contatos">
         <a href={`https://instagram.com/${instagram}`} target="_blank" rel="noopener">Instagram</a>
-        <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener">WhatsApp</a>
-        <a href={`mailto:${email}`}>E-mail</a>
-      </div>
+        <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener">WhatsApp</a>      </div>
     </div>
   </div>
 </div>
@@ -115,6 +118,7 @@ const { instagram, whatsapp, email } = site.contato;
     aberto = estado;
     topo.classList.toggle('aberto', aberto);
     gatilho.setAttribute('aria-expanded', String(aberto));
+    gatilho.dataset.cursor = aberto ? 'FECHAR' : 'ABRIR';
     menu.setAttribute('aria-hidden', String(!aberto));
     document.documentElement.style.overflow = aberto ? 'hidden' : '';
     if (aberto) abrir.timeScale(1).play();
@@ -137,9 +141,20 @@ const { instagram, whatsapp, email } = site.contato;
 
   // Miniatura da foto ao passar o mouse em cada link
   const previas = [...menu.querySelectorAll<HTMLImageElement>('.menu-previa img')];
+  const mostrarPrevia = (indice?: string) =>
+    previas.forEach((img) => img.classList.toggle('ativa', img.dataset.indice === indice));
+
+  // Ao abrir, já mostra a foto da página atual (ou a primeira)
+  const linkAtual = menu.querySelector<HTMLAnchorElement>('.menu-link[aria-current="page"]');
+  mostrarPrevia(
+    previas.some((img) => img.dataset.indice === linkAtual?.dataset.indice)
+      ? linkAtual?.dataset.indice
+      : previas[0]?.dataset.indice,
+  );
+
   menu.querySelectorAll<HTMLAnchorElement>('.menu-link').forEach((link) => {
     link.addEventListener('mouseenter', () => {
-      previas.forEach((img) => img.classList.toggle('ativa', img.dataset.indice === link.dataset.indice));
+      if (previas.some((img) => img.dataset.indice === link.dataset.indice)) mostrarPrevia(link.dataset.indice);
     });
     // Link para a própria página ou âncora: só fecha o menu
     link.addEventListener('click', () => alternar(false));
@@ -341,7 +356,7 @@ const { instagram, whatsapp, email } = site.contato;
     padding-block: 0.15em;
     font-family: var(--fonte-texto);
     font-weight: 800;
-    font-size: clamp(2.4rem, 6.5vw, 5.6rem);
+    font-size: clamp(2rem, min(6vw, 8.5vh), 5rem); /* cabe em telas baixas também */
     line-height: 1.05;
     letter-spacing: -0.03em;
     text-transform: uppercase;

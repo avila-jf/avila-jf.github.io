@@ -42,6 +42,11 @@ src/assets/fotos/rua/
 - **Capa da home:** defina `capaPrincipal` em `src/data/site.ts` (ex.: `'paisagem/01-sol-sobre-a-baia'`)
 - **Capa de cada categoria:** campo `capa` da categoria em `src/data/site.ts`
 - **Slider da home:** lista `destaques` em `src/data/site.ts`
+
+## Projetos de programação
+
+A página `/projetos` e a seção "Também programo" da home leem a lista `projetos` em `src/data/site.ts`.
+Para os destaques, coloque um print do site em `src/assets/projetos/<nome>.jpg` e marque `destaque: true`.
 - **Foto da página Sobre:** `src/assets/eu.jpg`
 
 Dica: exporte do Lightroom com o lado maior em 2400 px e qualidade de ~85%.

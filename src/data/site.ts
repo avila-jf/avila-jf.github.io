@@ -4,7 +4,7 @@ export const site = {
   nome: 'Francis Avila',
   apelido: 'Ávila', // como o pessoal te chama (aparece no "Olá, eu sou...")
   descricao: 'Fotografia de paisagem, retrato e rua.',
-  cidade: 'Sua cidade, Brasil',
+  cidade: 'Maceió, AL',
   // Frase grande da capa. "destaque" ganha o marca-texto roxo.
   frase: {
     inicio: 'Fotografias que guardam',
@@ -19,7 +19,6 @@ export const site = {
   contato: {
     instagram: '_avila.jf', // só o @, sem o "@"
     whatsapp: '5582993327581', // DDI + DDD + número, só dígitos
-    email: 'voce@exemplo.com',
   },
 };
 
@@ -62,6 +61,77 @@ export const criacaoDeSites = {
   ],
   mensagemWhatsApp: 'Olá! Vi seu portfólio e quero um site assim para mim.',
 };
+
+// Projetos de programação (página /projetos e seção na home).
+// "imagem" = nome do print em src/assets/projetos/ (sem .jpg). Sem imagem = cartão só com texto.
+export const projetos: {
+  nome: string;
+  tipo: string;
+  descricao: string;
+  tecnologias: string[];
+  site?: string;
+  codigo: string;
+  imagem?: string;
+  destaque?: boolean;
+}[] = [
+  {
+    nome: 'Sofiarte',
+    tipo: 'Site para cliente',
+    descricao:
+      'Portfólio da tatuadora Sofia (@sofiarte_tattoo), aqui de Maceió: trabalhos, tatuagens sobre cicatriz, flashes e agendamento direto pelo WhatsApp.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript'],
+    site: 'https://josefrancisco-alt.github.io/sofiarte/',
+    codigo: 'https://github.com/JoseFrancisco-alt/sofiarte',
+    imagem: 'sofiarte',
+    destaque: true,
+  },
+  {
+    nome: 'Magnobag',
+    tipo: 'Projeto pessoal',
+    descricao:
+      'Plataforma de análise de ações da B3, cripto e câmbio: gráficos, indicadores, backtests com taxa de acerto real, notícias e um simulador de gale.',
+    tecnologias: ['Python', 'Flask', 'pandas', 'SQLite', 'Chart.js'],
+    site: 'https://josefrancisco-alt.github.io/magnobag/',
+    codigo: 'https://github.com/JoseFrancisco-alt/magnobag',
+    imagem: 'magnobag',
+    destaque: true,
+  },
+  {
+    nome: 'Este portfólio',
+    tipo: 'Projeto pessoal',
+    descricao:
+      'O site que você está vendo: galeria que se monta sozinha, slider em 3D, animações de rolagem e deploy automático a cada commit.',
+    tecnologias: ['Astro', 'TypeScript', 'GSAP', 'CSS'],
+    site: 'https://josefrancisco-alt.github.io/portfolio-fotografia/',
+    codigo: 'https://github.com/JoseFrancisco-alt/portfolio-fotografia',
+    imagem: 'portfolio-fotografia',
+    destaque: true,
+  },
+  {
+    nome: 'BookSmart',
+    tipo: 'Faculdade',
+    descricao:
+      'Sistema de gerenciamento de biblioteca: cadastro de livros e usuários, empréstimos, devoluções e consultas do acervo.',
+    tecnologias: ['Java', 'MySQL', 'NetBeans'],
+    codigo: 'https://github.com/JoseFrancisco-alt/BookSmart',
+  },
+  {
+    nome: 'BookSmart Web',
+    tipo: 'Faculdade',
+    descricao: 'A versão web do BookSmart, com o back-end em Java e a interface no navegador.',
+    tecnologias: ['Java', 'HTML', 'CSS', 'JavaScript'],
+    codigo: 'https://github.com/JoseFrancisco-alt/booksmartweb',
+  },
+  {
+    nome: 'Sistema de Leilões',
+    tipo: 'Faculdade',
+    descricao: 'Sistema para uma casa de leilões com cadastro e listagem de produtos, integrado ao banco de dados.',
+    tecnologias: ['Java', 'Swing', 'MySQL', 'JDBC'],
+    codigo: 'https://github.com/JoseFrancisco-alt/LeiloesTDSat',
+  },
+];
+
+export const github = 'https://github.com/JoseFrancisco-alt';
 
 // Cada categoria vira uma página (/paisagem, /retrato, /rua)
 // e lê as fotos de src/assets/fotos/<slug>/
