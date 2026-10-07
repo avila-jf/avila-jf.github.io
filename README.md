@@ -3,7 +3,7 @@
 Site estático de fotografia (paisagem, retrato e rua) com visual escuro e cinematográfico.
 Feito com [Astro](https://astro.build), publicado no GitHub Pages.
 
-🔗 **Site no ar:** https://josefrancisco-alt.github.io/portfolio-fotografia
+🔗 **Site no ar:** https://avila-jf.github.io
 
 <!-- Depois de publicar, tire um print do site e coloque aqui: ![Print do site](docs/print.png) -->
 
@@ -23,7 +23,7 @@ Precisa do [Node.js](https://nodejs.org) (versão LTS).
 
 ```bash
 npm install      # instala as dependências (só na primeira vez)
-npm run dev      # abre em http://localhost:4321/portfolio-fotografia
+npm run dev      # abre em http://localhost:4321
 npm run build    # gera o site final na pasta dist/
 ```
 

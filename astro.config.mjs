@@ -1,9 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-// "base" é o nome do repositório no GitHub.
-// Se um dia o repositório se chamar "josefrancisco-alt.github.io", apague a linha "base".
+// O site mora na raiz de https://avila-jf.github.io (repositório "avila-jf.github.io"
+// na organização "avila-jf"), então não precisa de "base".
 export default defineConfig({
-  site: 'https://josefrancisco-alt.github.io',
-  base: '/portfolio-fotografia',
+  site: 'https://avila-jf.github.io',
 });
