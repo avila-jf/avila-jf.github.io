@@ -5,6 +5,10 @@
 //  3. Botões magnéticos: puxam levemente na direção do cursor
 //  4. Faixa de texto que inclina conforme a velocidade da rolagem (tipografia cinética)
 //  5. Barra fina de progresso no topo, que enche conforme a rolagem
+// Inspirados no Spell UI (spell.sh):
+//  6. Rótulos pequenos que embaralham as letras antes de aparecer (Special Text) e no hover
+//  7. Parágrafos que surgem palavra por palavra saindo do desfoque (Blur Reveal)
+//  (8. Brilho que passa no texto dos botões e 9. raios de luz ficam no efeitos.css)
 // Tudo desliga sozinho para quem prefere menos movimento (configuração do sistema).
 ---
 
@@ -90,6 +94,52 @@
       scaleX: 1,
       ease: 'none',
       scrollTrigger: { start: 0, end: 'max', scrub: 0.3 },
+    });
+    // ---------- 6. Rótulos que embaralham (Special Text) ----------
+    const SIMBOLOS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+<>/';
+    const embaralhar = (el: HTMLElement) => {
+      const final = el.dataset.texto ?? el.textContent ?? '';
+      el.dataset.texto = final;
+      let quadro = 0;
+      const total = 18;
+      const passo = () => {
+        el.textContent = [...final]
+          .map((letra, i) => {
+            if (letra === ' ' || letra === '·') return letra;
+            return i < (quadro / total) * final.length ? letra : SIMBOLOS[Math.floor(Math.random() * SIMBOLOS.length)];
+          })
+          .join('');
+        if (++quadro <= total) requestAnimationFrame(passo);
+        else el.textContent = final;
+      };
+      passo();
+    };
+    // só rótulos com texto puro (sem outros elementos dentro)
+    gsap.utils
+      .toArray<HTMLElement>('.rotulo')
+      .filter((el) => el.children.length === 0 && (el.textContent ?? '').trim().length > 0)
+      .forEach((el) => {
+        ScrollTrigger.create({ trigger: el, start: 'top 92%', once: true, onEnter: () => embaralhar(el) });
+        if (temMouse) el.addEventListener('mouseenter', () => embaralhar(el));
+      });
+
+    // ---------- 7. Parágrafos que saem do desfoque (Blur Reveal) ----------
+    document.fonts.ready.then(() => {
+      gsap.utils
+        .toArray<HTMLElement>('.projeto-descricao, .codigo-descricao, .titulo-pagina p:not(.rotulo), .sobre .texto > p:not(.rotulo)')
+        .forEach((p) => {
+          const partes = SplitText.create(p, { type: 'words' });
+          gsap.from(partes.words, {
+            opacity: 0,
+            filter: 'blur(10px)',
+            y: 8,
+            duration: 0.9,
+            ease: 'power2.out',
+            stagger: 0.025,
+            scrollTrigger: { trigger: p, start: 'top 90%', once: true },
+          });
+        });
+      ScrollTrigger.refresh();
     });
   }
 </script>

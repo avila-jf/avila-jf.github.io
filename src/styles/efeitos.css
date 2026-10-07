@@ -64,3 +64,77 @@ html.lenis body {
     display: none;
   }
 }
+
+/* ---------- Inspirados no Spell UI ---------- */
+
+/* 8. Shimmer: um brilho que passa de tempos em tempos pelos botões (usa as cores do tema) */
+.botao {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.botao::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.14) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: brilho-botao 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes brilho-botao {
+  0%,
+  60% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* 9. Light Rays: raios de luz caindo atrás do título da seção de projetos */
+.secao-codigo {
+  position: relative;
+}
+
+.secao-codigo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(1100px, 100vw);
+  height: 520px;
+  translate: -50% 0;
+  z-index: -1;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 160deg at 50% -10%,
+    rgb(var(--brilho) / 0.35) 0deg 3deg,
+    transparent 3deg 9deg
+  );
+  -webkit-mask-image: radial-gradient(ellipse 60% 85% at 50% 0%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(ellipse 60% 85% at 50% 0%, #000 0%, transparent 75%);
+  filter: blur(6px);
+  animation: raios 9s ease-in-out infinite alternate;
+}
+
+@keyframes raios {
+  from {
+    opacity: 0.55;
+    transform: skewX(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: skewX(4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .botao::after,
+  .secao-codigo::before {
+    animation: none;
+  }
+}
