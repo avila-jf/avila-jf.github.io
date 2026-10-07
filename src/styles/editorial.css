@@ -1,0 +1,70 @@
+/* Acabamento editorial inspirado no DESIGN.md da Superhuman (Refero Styles):
+   vidro com desfoque no topo, cantos suaves, bordas finíssimas, botões em pílula,
+   pouca sombra e mais respiro. NÃO define cores novas: só usa as variáveis do global.css
+   e branco/preto transparentes. Os "html ..." servem para vencer os estilos dos componentes. */
+
+/* Topo de vidro: sempre com desfoque leve, e um pouco mais forte depois de rolar */
+html .topo.topo {
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+}
+
+html .topo.topo.aberto {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
+/* Botões em pílula, com borda fina */
+.botao {
+  border-radius: 999px;
+  padding: 0.95rem 2rem;
+}
+
+/* Cantos suaves nas fotos e cartões */
+html .ensaio-imagem,
+html .galeria .item,
+html .janela,
+html .retrato img,
+html .retrato-vazio,
+html .slide {
+  border-radius: 14px;
+}
+
+/* Profundidade vem da foto e do vidro, não de sombra pesada */
+[data-tilt]:hover {
+  box-shadow:
+    0 18px 40px rgb(0 0 0 / 0.35),
+    0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+/* Etiquetas de tecnologia e linhas de lista com borda finíssima */
+html .tecnologias li {
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+/* Títulos de seção mais finos e com tracking fechado, no espírito editorial */
+html .titulo-pagina h1,
+html .codigo-topo h2,
+html .chamada h2 {
+  letter-spacing: -0.02em;
+}
+
+/* Nada passa da largura da tela no celular (a página não "escorrega" para o lado).
+   "clip" corta sem criar barra de rolagem e não atrapalha os elementos fixos. */
+html,
+body {
+  overflow-x: clip;
+}
+
+/* Menu em tela cheia no mesmo tom editorial da capa: fino, em caixa normal */
+html .menu-link.menu-link {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: -0.045em;
+}
+
+html .menu-previa.menu-previa {
+  border-radius: 16px;
+}

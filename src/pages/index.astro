@@ -4,21 +4,21 @@ import Base from '../layouts/Base.astro';
 import Destaques from '../components/Destaques.astro';
 import Projetos from '../components/Projetos.astro';
 import CameraCena from '../components/CameraCena.astro';
-import { site, categorias, criacaoDeSites, destaques } from '../data/site';
+import { site, categorias, criacaoDeSites, destaques, projetos } from '../data/site';
 import { capa, fotosDa, fotosEmDestaque } from '../lib/fotos';
 import { url } from '../lib/url';
 
 const fotoCapa = capa();
 const fotosDestaque = fotosEmDestaque(destaques);
 const ensaios = categorias.map((c) => ({ ...c, foto: fotosDa(c.slug)[0], total: fotosDa(c.slug).length }));
+const totalFotos = ensaios.reduce((soma, e) => soma + e.total, 0);
 const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
 ---
 
 <Base>
-  <!-- Capa: frase grande por cima da foto + bloco azul atrás (tudo com parallax) -->
+  <!-- Capa estilo editorial (inspirada na Superhuman): foto em tela cheia, título fino e
+       cartões de vidro flutuando por cima. Tudo com parallax. -->
   <section class="hero" data-parallax>
-    <div class="hero-bloco" aria-hidden="true"></div>
-
     <div class="hero-moldura">
       {
         fotoCapa ? (
@@ -26,8 +26,8 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
             class="hero-foto"
             src={fotoCapa.src}
             alt={fotoCapa.alt}
-            widths={[800, 1400, 2000]}
-            sizes="(max-width: 860px) 100vw, 60vw"
+            widths={[800, 1400, 2000, 2400]}
+            sizes="100vw"
             format="webp"
             quality={80}
             loading="eager"
@@ -52,6 +52,29 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
       <div class="hero-acoes entrar">
         <a class="botao" href="#ensaios">Ver ensaios</a>
         <a class="link-seta" href={url('/contato')}>Fale comigo <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <!-- Cartões de vidro flutuando sobre a foto -->
+    <div class="vidros" aria-hidden="true">
+      <div class="vidro vidro-ensaios">
+        <p class="vidro-rotulo">Ensaios</p>
+        <ul>
+          {
+            ensaios.map((e) => (
+              <li>
+                <span>{e.titulo}</span>
+                <b>{e.total}</b>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="vidro-rodape">{totalFotos} fotos · Nikon D3200</p>
+      </div>
+      <div class="vidro vidro-agenda"><i></i> Agenda aberta · {site.cidade.split(',')[0]}</div>
+      <div class="vidro vidro-codigo">
+        <span class="vidro-rotulo">Também programo</span>
+        <b>{projetos.filter((p) => p.destaque).length} sites no ar</b>
       </div>
     </div>
   </section>
@@ -122,56 +145,40 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     position: relative;
     min-height: 100svh;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     overflow: hidden;
-    padding-block: 110px 60px;
+    padding-block: 120px clamp(48px, 9vh, 96px);
   }
 
-  /* Bloco de cor atrás do texto (ideia do portfólio do Sean O'Brien) */
-  .hero-bloco {
-    position: absolute;
-    left: 7%;
-    bottom: 9%;
-    width: 28%;
-    height: 34%;
-    background: linear-gradient(135deg, #163f82, #040d22);
-    box-shadow: 0 0 80px rgb(var(--brilho) / 0.3);
-    translate: calc(var(--px, 0) * 40px) calc(var(--py, 0) * 40px);
-    transition: translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
 
-  /* Foto do lado direito, o texto invade por cima dela */
-  /* A foto se dissolve no fundo: some aos poucos do lado do texto e suaviza em cima, embaixo e na
-     direita (duas máscaras cruzadas). O ::after dá um banho de azul nas bordas para o contraste
-     com o pôr do sol. */
+
+
+  /* Foto em tela cheia, como capa de cinema. Um véu da cor do fundo sobe de baixo e vem da
+     esquerda para o texto ficar legível, sem mudar a foto. */
   .hero-moldura {
     position: absolute;
-    top: 6%;
-    right: 0;
-    width: 66%;
-    height: 86%;
+    inset: 0;
     overflow: hidden;
-    --some-lado: linear-gradient(to right, transparent 0%, #000 42%, #000 90%, transparent 100%);
-    --some-cima: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
-    -webkit-mask: var(--some-lado), var(--some-cima);
-    -webkit-mask-composite: source-in;
-    mask: var(--some-lado), var(--some-cima);
-    mask-composite: intersect;
   }
+
 
   .hero-moldura::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(ellipse 60% 62% at 62% 46%, transparent 35%, rgb(10 28 70 / 0.55) 100%);
+    background:
+      linear-gradient(to top, var(--fundo) 0%, rgb(0 0 0 / 0.35) 38%, transparent 70%),
+      linear-gradient(to right, rgb(0 0 0 / 0.55) 0%, transparent 55%);
   }
+
 
   .hero-foto {
     position: absolute;
     inset: -30px; /* sobra nas bordas para a foto poder se mexer */
     width: calc(100% + 60px);
     height: calc(100% + 60px);
+    max-width: none; /* a regra geral img{max-width:100%} cortava a sobra da direita */
     object-fit: cover;
     animation: zoom 18s ease-out both;
     translate: calc(var(--px, 0) * -30px) calc(var(--py, 0) * -30px);
@@ -201,17 +208,18 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   }
 
   /* Frase grande e pesada, estilo revista */
+  /* Título editorial: fino, grande e em caixa normal ("sussurra em vez de gritar") */
   .hero h1 {
-    max-width: 13ch;
+    max-width: 14ch;
     margin: 1rem 0 1.5rem;
     font-family: var(--fonte-texto);
-    font-size: clamp(2.6rem, 6.4vw, 6.2rem);
-    font-weight: 800;
-    line-height: 0.98;
-    letter-spacing: -0.03em;
-    text-transform: uppercase;
-    text-shadow: 0 4px 30px rgb(0 0 0 / 0.5);
+    font-size: clamp(2.8rem, 6.6vw, 6.4rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.045em;
+    text-shadow: 0 2px 24px rgb(0 0 0 / 0.35);
   }
+
 
   .hero h1 .marca-texto {
     font-family: var(--fonte-titulo);
@@ -236,6 +244,118 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   .hero .marca-texto {
     background-size: 0% 100%;
     animation: marcar 1s 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+
+  /* ---------- CARTÕES DE VIDRO (inspirado na Superhuman) ----------
+     Vidro translúcido com desfoque, borda finíssima e sem sombra pesada. Só usa branco
+     transparente por cima da foto, então não mexe nas cores do tema. */
+  .vidros {
+    position: absolute;
+    z-index: 2;
+    right: var(--margem);
+    bottom: clamp(48px, 9vh, 96px);
+    display: grid;
+    justify-items: end;
+    gap: 14px;
+    translate: calc(var(--px, 0) * -22px) calc(var(--py, 0) * -16px);
+    transition: translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .vidro {
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 16px;
+    background: rgb(255 255 255 / 0.07);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+    color: var(--texto);
+    animation: flutuar-vidro 7s ease-in-out infinite alternate;
+  }
+
+  .vidro-ensaios {
+    width: 260px;
+    padding: 18px 20px;
+  }
+
+  .vidro-rotulo {
+    margin: 0 0 10px;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  .vidro ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .vidro li {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+    font-size: 0.9rem;
+  }
+
+  .vidro li b {
+    font-weight: 400;
+    color: var(--destaque);
+  }
+
+  .vidro-rodape {
+    margin: 10px 0 0;
+    font-size: 0.72rem;
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  .vidro-agenda {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    animation-delay: -2s;
+  }
+
+  .vidro-agenda i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--destaque);
+    box-shadow: 0 0 0 0 var(--destaque);
+    animation: pulso 2s ease-out infinite;
+  }
+
+  .vidro-codigo {
+    display: grid;
+    gap: 2px;
+    padding: 12px 18px;
+    animation-delay: -4s;
+  }
+
+  .vidro-codigo .vidro-rotulo {
+    margin: 0;
+  }
+
+  .vidro-codigo b {
+    font-family: var(--fonte-titulo);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.3rem;
+  }
+
+  @keyframes flutuar-vidro {
+    to {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes pulso {
+    to {
+      box-shadow: 0 0 0 10px transparent;
+    }
   }
 
   /* ---------- FAIXA DE TEXTO ---------- */
@@ -320,7 +440,7 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   /* ---------- ENSAIOS ---------- */
   .secao {
-    padding-top: clamp(64px, 12vh, 140px);
+    padding-top: clamp(88px, 16vh, 180px);
   }
 
   .secao > .rotulo {
@@ -584,32 +704,11 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   /* ---------- CELULAR ---------- */
   @media (max-width: 860px) {
     .hero {
-      flex-direction: column;
-      align-items: stretch;
-      padding-top: 88px;
+      padding-top: 96px;
     }
 
-    .hero-moldura {
-      position: relative;
-      top: 0;
-      width: 100%;
-      height: 54svh;
-      margin-left: auto;
-      /* no celular a foto some embaixo (onde entra o texto) e de leve nas laterais */
-      --some-lado: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
-      --some-cima: linear-gradient(to bottom, transparent 0%, #000 12%, #000 62%, transparent 100%);
-    }
-
-    .hero-bloco {
-      left: 0;
-      top: 36svh;
-      bottom: auto;
-      width: 45%;
-      height: 28svh;
-    }
-
-    .hero-texto {
-      margin-top: -3.5rem;
+    .vidros {
+      display: none;
     }
 
     .sites {
@@ -649,7 +748,9 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   @media (prefers-reduced-motion: reduce) {
     .hero-foto,
-    .entrar {
+    .entrar,
+    .vidro,
+    .vidro-agenda i {
       animation: none;
     }
 
