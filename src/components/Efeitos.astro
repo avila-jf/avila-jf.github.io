@@ -1,0 +1,86 @@
+---
+// Efeitos inspirados em sites premiados (Awwwards, Godly, Brik, Jitter). Nenhum mexe nas cores.
+//  1. Rolagem suave (Lenis), sincronizada com o GSAP ScrollTrigger
+//  2. Títulos que entram letra por letra (SplitText) — use data-split em qualquer título
+//  3. Botões magnéticos: puxam levemente na direção do cursor
+//  4. Faixa de texto que inclina conforme a velocidade da rolagem (tipografia cinética)
+// Tudo desliga sozinho para quem prefere menos movimento (configuração do sistema).
+---
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { SplitText } from 'gsap/SplitText';
+  import Lenis from 'lenis';
+
+  gsap.registerPlugin(ScrollTrigger, SplitText);
+
+  const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const temMouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  if (!semMovimento) {
+    // ---------- 1. Rolagem suave ----------
+    // Só no computador; no celular a rolagem nativa já é suave e mais confiável.
+    if (temMouse) {
+      const lenis = new Lenis({ lerp: 0.09, anchors: true });
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((tempo) => {
+        // Para de rolar a página quando o menu ou a foto em tela cheia estão abertos
+        const travado =
+          document.documentElement.style.overflow === 'hidden' || document.querySelector('dialog[open]');
+        if (travado && !lenis.isStopped) lenis.stop();
+        if (!travado && lenis.isStopped) lenis.start();
+        lenis.raf(tempo * 1000);
+      });
+      gsap.ticker.lagSmoothing(0);
+    }
+
+    // ---------- 2. Títulos letra por letra ----------
+    const titulos = gsap.utils.toArray<HTMLElement>(
+      '[data-split], .titulo-pagina h1, .codigo-topo h2, .chamada h2, .sites h2, .projeto h3, .sobre h1',
+    );
+    document.fonts.ready.then(() => {
+      titulos.forEach((titulo) => {
+        const partes = SplitText.create(titulo, { type: 'words,chars', mask: 'words' });
+        gsap.from(partes.chars, {
+          yPercent: 110,
+          rotate: 6,
+          duration: 1,
+          ease: 'expo.out',
+          stagger: 0.022,
+          scrollTrigger: { trigger: titulo, start: 'top 88%', once: true },
+        });
+      });
+      ScrollTrigger.refresh();
+    });
+
+    // ---------- 3. Botões magnéticos ----------
+    if (temMouse) {
+      const FORCA = 0.3; // quanto o botão "puxa" para o cursor
+      document.querySelectorAll<HTMLElement>('.botao, .controle, .gatilho, .voltar, .topo-botao').forEach((botao) => {
+        const irX = gsap.quickTo(botao, 'x', { duration: 0.5, ease: 'power3.out' });
+        const irY = gsap.quickTo(botao, 'y', { duration: 0.5, ease: 'power3.out' });
+        botao.addEventListener('pointermove', (e) => {
+          const r = botao.getBoundingClientRect();
+          irX((e.clientX - (r.left + r.width / 2)) * FORCA);
+          irY((e.clientY - (r.top + r.height / 2)) * FORCA);
+        });
+        botao.addEventListener('pointerleave', () => {
+          gsap.to(botao, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.4)' });
+        });
+      });
+    }
+
+    // ---------- 4. Faixa que inclina com a velocidade da rolagem ----------
+    const faixas = gsap.utils.toArray<HTMLElement>('.faixa');
+    if (faixas.length) {
+      const inclinar = faixas.map((f) => gsap.quickTo(f, 'skewX', { duration: 0.5, ease: 'power3.out' }));
+      ScrollTrigger.create({
+        onUpdate: (self) => {
+          const graus = gsap.utils.clamp(-12, 12, self.getVelocity() / -250);
+          inclinar.forEach((ir) => ir(graus));
+        },
+      });
+    }
+  }
+</script>

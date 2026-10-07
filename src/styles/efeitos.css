@@ -1,0 +1,47 @@
+/* Transição suave entre páginas (View Transitions do próprio navegador, sem JavaScript).
+   A página antiga some subindo e a nova entra de baixo. O topo fica parado. Não mexe em cores. */
+@view-transition {
+  navigation: auto;
+}
+
+.topo {
+  view-transition-name: topo;
+}
+
+::view-transition-old(root) {
+  animation: 0.45s cubic-bezier(0.7, 0, 0.84, 0) both pagina-sai;
+}
+
+::view-transition-new(root) {
+  animation: 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both pagina-entra;
+}
+
+@keyframes pagina-sai {
+  to {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.98);
+  }
+}
+
+@keyframes pagina-entra {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+}
+
+/* Rolagem suave (Lenis): o navegador não deve suavizar por conta própria ao mesmo tempo */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}

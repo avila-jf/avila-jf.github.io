@@ -5,9 +5,11 @@ import Lightbox from '../components/Lightbox.astro';
 import EfeitosMouse from '../components/EfeitosMouse.astro';
 import Cursor from '../components/Cursor.astro';
 import Rolagem from '../components/Rolagem.astro';
+import Efeitos from '../components/Efeitos.astro';
 import { site } from '../data/site';
 import { url } from '../lib/url';
 import '../styles/global.css';
+import '../styles/efeitos.css';
 
 interface Props {
   titulo?: string;
@@ -46,6 +48,7 @@ const tituloCompleto = titulo ? `${titulo} — ${site.nome}` : `${site.nome} · 
     <Lightbox />
     <EfeitosMouse />
     <Rolagem />
+    <Efeitos />
     <Cursor />
   </body>
 </html>
