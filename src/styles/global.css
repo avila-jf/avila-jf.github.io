@@ -1,12 +1,15 @@
 /* Cores e fontes do site inteiro. Quer mudar o clima? Comece por aqui. */
 :root {
-  --fundo: #0b0a0f;
-  --fundo-2: #15131c;
-  --texto: #ece9f2;
-  --texto-suave: #9b96a8;
-  --linha: #2a2635;
-  --destaque: #a78bfa; /* roxo neon suave */
-  --destaque-forte: #7c3aed;
+  --fundo: #03050b; /* preto quase azulado */
+  --fundo-2: #080c17;
+  --texto: #e8eef7;
+  --texto-suave: #8f9bb0;
+  --linha: #121a2c;
+  --destaque: #6aa9ec; /* azul-céu claro */
+  --destaque-forte: #163f82;
+  --brilho: 18 50 108; /* cor dos brilhos/sombras coloridas, em R G B */
+  --botao: #0a1834; /* fundo dos botões: azul bem escuro */
+  --botao-borda: #1c3566;
 
   --fonte-titulo: 'Cormorant Garamond', Georgia, serif;
   --fonte-texto: 'Inter', system-ui, sans-serif;
@@ -105,7 +108,8 @@ h3 {
 .botao {
   display: inline-block;
   padding: 0.9rem 1.8rem;
-  border: 1px solid var(--texto);
+  border: 1px solid var(--botao-borda);
+  background: var(--botao);
   font-size: 0.78rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
@@ -120,7 +124,7 @@ h3 {
   background: var(--destaque-forte);
   border-color: var(--destaque-forte);
   color: var(--texto);
-  box-shadow: 0 0 32px rgb(124 58 237 / 0.45);
+  box-shadow: 0 0 32px rgb(var(--brilho) / 0.45);
   translate: 0 -3px;
 }
 
@@ -141,7 +145,7 @@ h3 {
   --sobe: -6px;
   box-shadow:
     0 24px 48px rgb(0 0 0 / 0.6),
-    0 0 36px rgb(124 58 237 / 0.35);
+    0 0 36px rgb(var(--brilho) / 0.35);
   outline-color: rgb(167 139 250 / 0.5);
   transition-duration: 0.15s, 0.4s, 0.4s; /* segue o mouse rápido */
 }

@@ -1,7 +1,8 @@
 ---
 // Slider principal (inspirado no "T.RICKS Slider"): arrasta com o mouse ou o dedo, roda em loop
-// e tem o efeito de "tela curva": cada foto gira em 3D conforme a distância do centro, então as
-// pontas ficam mais altas que o meio, sem cortar nada da foto. Usa a biblioteca Splide.
+// e tem o efeito de "tela curva": a faixa de fotos é recortada por uma curva em cima e embaixo
+// (as pontas ficam mais altas que o meio) e cada foto desliza por dentro da moldura (parallax).
+// Usa a biblioteca Splide.
 import { Image } from 'astro:assets';
 import type { Foto } from '../lib/fotos';
 import { categorias } from '../data/site';
@@ -50,21 +51,22 @@ const primeira = fotos[0];
   </div>
 
   <div class="rodape-slider container">
+    <div class="controles">
+      <button class="controle anterior" type="button" aria-label="Foto anterior">
+        <span class="controle-fundo"></span>
+        <svg class="controle-seta" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+      </button>
+      <button class="controle proxima" type="button" aria-label="Próxima foto">
+        <span class="controle-fundo"></span>
+        <svg class="controle-seta" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      </button>
+    </div>
+
     <p class="legenda" aria-live="polite">
-      <span class="legenda-num">{doisDigitos(1)}</span>
+      <span class="legenda-num"><b class="contador-atual">01</b> / {doisDigitos(fotos.length)}</span>
       <span class="legenda-titulo">{primeira?.alt}</span>
       <span class="legenda-categoria">{primeira && tituloDa(primeira.categoria)}</span>
     </p>
-
-    <div class="controles">
-      <button class="controle anterior" type="button" aria-label="Foto anterior">
-        <span class="controle-fundo"></span><span class="controle-seta">←</span>
-      </button>
-      <span class="contador"><b class="contador-atual">01</b> / {doisDigitos(fotos.length)}</span>
-      <button class="controle proxima" type="button" aria-label="Próxima foto">
-        <span class="controle-fundo"></span><span class="controle-seta">→</span>
-      </button>
-    </div>
   </div>
 </section>
 
@@ -86,38 +88,41 @@ const primeira = fotos[0];
       easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
       dragMinThreshold: { mouse: 8, touch: 12 },
       breakpoints: {
-        767: { gap: '3vw' },
+        767: { gap: '12vw' }, // com fotos de 84vw, as vizinhas ficam fora da tela (sem "rebarba")
       },
     }).mount();
 
-    // Tela curva: gira cada foto em 3D de acordo com a distância até o centro da tela.
-    // Fotos da esquerda viram a borda esquerda para a frente (e vice-versa), como um cinema curvo.
-    const GIRO = 42; // graus na borda da tela. Aumente para curvar mais
+    // Com autoWidth a largura vem da foto: recalcula quando cada uma termina de carregar,
+    // senão a primeira foto não fica no centro
+    raiz.querySelectorAll('img').forEach((img) => {
+      if (!img.complete) img.addEventListener('load', () => slider.refresh(), { once: true });
+    });
+
+    // Parallax: a foto desliza dentro da moldura conforme a distância até o centro da tela
+    const DESLIZE = 4; // % da largura da foto. Aumente para deslizar mais
     const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const slides = [...raiz.querySelectorAll<HTMLElement>('.splide__slide')];
     let visivel = true;
     new IntersectionObserver(([e]) => (visivel = e.isIntersecting)).observe(raiz);
 
-    function curvar() {
+    function deslizar() {
       if (visivel) {
         const meio = innerWidth / 2;
         for (const slide of slides) {
           const r = slide.getBoundingClientRect();
           if (r.right < -200 || r.left > innerWidth + 200) continue;
           const distancia = (r.left + r.width / 2 - meio) / meio; // -1 (esquerda) a 1 (direita)
-          const d = Math.max(-1.6, Math.min(1.6, distancia));
-          slide.style.transform = `perspective(800px) rotateY(${-d * GIRO}deg) scale(${1 + Math.abs(d) * 0.08})`;
+          const d = Math.max(-1.5, Math.min(1.5, distancia));
+          slide.querySelector('img')?.style.setProperty('translate', `${-d * DESLIZE}% 0`);
         }
       }
-      if (!semMovimento) requestAnimationFrame(curvar);
+      requestAnimationFrame(deslizar);
     }
-    curvar();
-    slider.on('moved resized', curvar);
+    if (!semMovimento) deslizar();
 
     const secao = raiz.closest('.destaques')!;
     const atual = secao.querySelector('.contador-atual')!;
     const legenda = secao.querySelector<HTMLElement>('.legenda')!;
-    const num = legenda.querySelector('.legenda-num')!;
     const titulo = legenda.querySelector('.legenda-titulo')!;
     const categoria = legenda.querySelector('.legenda-categoria')!;
 
@@ -125,10 +130,9 @@ const primeira = fotos[0];
     slider.on('move', (indice) => {
       const slide = slider.Components.Slides.getAt(indice)?.slide;
       const n = String(indice + 1).padStart(2, '0');
-      atual.textContent = n;
       legenda.classList.add('trocando');
       setTimeout(() => {
-        num.textContent = n;
+        atual.textContent = n;
         titulo.textContent = slide?.dataset.titulo ?? '';
         categoria.textContent = slide?.dataset.categoria ?? '';
         legenda.classList.remove('trocando');
@@ -146,14 +150,12 @@ const primeira = fotos[0];
     overflow: hidden;
   }
 
-  /* ---------- Tamanho: a foto inteira sempre cabe na tela ---------- */
+  /* ---------- Tela curva: recorte em arco em cima e embaixo ---------- */
   .curva {
     --altura: min(64vh, 640px); /* altura das fotos do slider */
-    padding-block: 2rem; /* espaço para as pontas "crescerem" com o giro 3D */
-  }
-
-  .splide__slide {
-    will-change: transform;
+    --curva: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 0Q50 18 100 0V100Q50 82 0 100Z'/%3E%3C/svg%3E");
+    -webkit-mask: var(--curva) 0 0 / 100% 100% no-repeat;
+    mask: var(--curva) 0 0 / 100% 100% no-repeat;
   }
 
   .splide {
@@ -180,7 +182,7 @@ const primeira = fotos[0];
     object-fit: cover;
     pointer-events: none;
     filter: brightness(0.6) saturate(0.8);
-    transform: scale(1.08);
+    transform: scale(1.16); /* sobra de foto para o parallax não mostrar a borda */
     transition:
       filter 0.9s,
       transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -188,23 +190,90 @@ const primeira = fotos[0];
 
   .splide__slide.is-active .slide img {
     filter: none;
-    transform: scale(1);
+    transform: scale(1.1);
   }
 
-  /* ---------- Legenda e controles ---------- */
+  /* ---------- Setas e legenda, centralizadas abaixo ---------- */
   .rodape-slider {
+    display: grid;
+    justify-items: center;
+    gap: 1.1rem;
+    margin-top: 1.2rem;
+    text-align: center;
+  }
+
+  .controles {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem 2rem;
-    margin-top: 1.5rem;
+    gap: 0.9rem;
+  }
+
+  .controle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 1px solid var(--botao-borda);
+    border-radius: 50%;
+    background: var(--botao);
+    color: var(--texto);
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+      border-color 0.3s,
+      transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .controle:active {
+    transform: scale(0.9);
+  }
+
+  .controle-fundo {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--destaque-forte);
+    transform: scale(0);
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .controle-seta {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  @media (hover: hover) {
+    .controle:hover {
+      border-color: var(--destaque-forte);
+    }
+
+    .controle:hover .controle-fundo {
+      transform: scale(1);
+    }
+
+    .anterior:hover .controle-seta {
+      translate: -3px 0;
+    }
+
+    .proxima:hover .controle-seta {
+      translate: 3px 0;
+    }
   }
 
   .legenda {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: baseline;
-    gap: 0.9rem;
+    gap: 0.4rem 0.9rem;
     margin: 0;
     transition:
       opacity 0.25s,
@@ -219,13 +288,18 @@ const primeira = fotos[0];
   .legenda-num {
     font-size: 0.72rem;
     letter-spacing: 0.2em;
+    color: var(--texto-suave);
+  }
+
+  .legenda-num b {
+    font-weight: 400;
     color: var(--destaque);
   }
 
   .legenda-titulo {
     font-family: var(--fonte-titulo);
     font-style: italic;
-    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    font-size: clamp(1.3rem, 2.2vw, 1.8rem);
     text-transform: lowercase;
   }
 
@@ -236,77 +310,21 @@ const primeira = fotos[0];
     color: var(--texto-suave);
   }
 
-  /* Setas redondas que "enchem" de roxo no hover */
-  .controles {
-    display: flex;
-    align-items: center;
-    gap: 1.4rem;
-  }
-
-  .controle {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 58px;
-    height: 58px;
-    padding: 0;
-    border: 1px solid rgb(236 233 242 / 0.35);
-    border-radius: 50%;
-    background: none;
-    color: var(--texto);
-    font-size: 1.1rem;
-    overflow: hidden;
-    cursor: pointer;
-  }
-
-  .controle-fundo {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: var(--destaque-forte);
-    transform: scale(0);
-    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  @media (hover: hover) {
-    .controle:hover .controle-fundo {
-      transform: scale(1);
-    }
-  }
-
-  .controle-seta {
-    position: relative;
-    transition: translate 0.3s;
-  }
-
-  .anterior:hover .controle-seta {
-    translate: -3px 0;
-  }
-
-  .proxima:hover .controle-seta {
-    translate: 3px 0;
-  }
-
-  .contador {
-    min-width: 5.5rem;
-    text-align: center;
-    font-size: 0.8rem;
-    letter-spacing: 0.2em;
-    color: var(--texto-suave);
-  }
-
-  .contador b {
-    font-weight: 400;
-    color: var(--texto);
-  }
-
   @media (max-width: 767px) {
     .curva {
-      --altura: min(58vh, 520px);
+      --altura: min(52vh, 480px);
+      /* curva mais suave no celular (metade da do computador) */
+      --curva: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 0Q50 8 100 0V100Q50 92 0 100Z'/%3E%3C/svg%3E");
     }
 
-    .rodape-slider {
-      flex-direction: column;
+    /* No celular todas as fotos têm a mesma largura, quase a tela toda */
+    .slide {
+      width: 84vw;
+    }
+
+    .slide img {
+      width: 100%;
+      max-width: none;
     }
   }
 

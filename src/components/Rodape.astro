@@ -55,7 +55,7 @@ const cidade = site.cidade.split(',')[0];
     margin-top: 8rem;
     padding-block: clamp(56px, 9vh, 96px) 2rem;
     border-top: 1px solid var(--linha);
-    background: radial-gradient(ellipse at 15% 100%, rgb(124 58 237 / 0.18), transparent 55%);
+    background: radial-gradient(ellipse at 15% 100%, rgb(var(--brilho) / 0.18), transparent 55%);
   }
 
   .rodape-topo {
@@ -140,7 +140,7 @@ const cidade = site.cidade.split(',')[0];
     padding: 1.6rem 1.5rem 1.6rem 0;
     border-bottom: 1px solid var(--linha);
     transition: background-size 0.5s;
-    background: linear-gradient(90deg, rgb(124 58 237 / 0.12), transparent) no-repeat;
+    background: linear-gradient(90deg, rgb(var(--brilho) / 0.12), transparent) no-repeat;
     background-size: 0% 100%;
   }
 

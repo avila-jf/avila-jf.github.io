@@ -8,7 +8,8 @@ const whats = (texto: string) => `https://wa.me/${whatsapp}?text=${encodeURIComp
 const canais = [
   { nome: 'Ensaio', valor: 'Agendar pelo WhatsApp', href: whats('Olá! Vi seu portfólio e queria conversar sobre um ensaio.') },
   { nome: 'Site', valor: 'Quero um portfólio', href: whats(criacaoDeSites.mensagemWhatsApp) },
-  { nome: 'Instagram', valor: `@${instagram}`, href: `https://instagram.com/${instagram}` },];
+  { nome: 'Instagram', valor: `@${instagram}`, href: `https://instagram.com/${instagram}` },
+];
 ---
 
 <Base titulo="Contato" descricao={`Fale com ${site.nome} sobre ensaios e trabalhos.`}>
@@ -70,7 +71,7 @@ const canais = [
   }
 
   .canais a {
-    background: linear-gradient(90deg, rgb(124 58 237 / 0.12), transparent 60%) no-repeat;
+    background: linear-gradient(90deg, rgb(var(--brilho) / 0.12), transparent 60%) no-repeat;
     background-size: 0% 100%;
     transition: padding 0.4s, background-size 0.5s;
   }

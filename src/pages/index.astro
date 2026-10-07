@@ -3,17 +3,19 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Destaques from '../components/Destaques.astro';
 import Projetos from '../components/Projetos.astro';
+import CameraCena from '../components/CameraCena.astro';
 import { site, categorias, criacaoDeSites, destaques } from '../data/site';
 import { capa, fotosDa, fotosEmDestaque } from '../lib/fotos';
 import { url } from '../lib/url';
 
 const fotoCapa = capa();
+const fotosDestaque = fotosEmDestaque(destaques);
 const ensaios = categorias.map((c) => ({ ...c, foto: fotosDa(c.slug)[0], total: fotosDa(c.slug).length }));
 const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
 ---
 
 <Base>
-  <!-- Capa: frase grande por cima da foto + bloco roxo atrás (tudo com parallax) -->
+  <!-- Capa: frase grande por cima da foto + bloco azul atrás (tudo com parallax) -->
   <section class="hero" data-parallax>
     <div class="hero-bloco" aria-hidden="true"></div>
 
@@ -54,7 +56,10 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     </div>
   </section>
 
-  <Destaques fotos={fotosEmDestaque(destaques)} />
+  <!-- Câmera 3D que vira de costas com a rolagem e dá zoom no display até virar o slider (anime.js) -->
+  <CameraCena foto={fotosDestaque[0]}>
+    <Destaques fotos={fotosDestaque} />
+  </CameraCena>
 
   <!-- Faixa de texto que corre para o lado com a rolagem (ScrollTrigger) -->
   <div class="faixa" aria-hidden="true">
@@ -155,21 +160,37 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     bottom: 9%;
     width: 28%;
     height: 34%;
-    background: linear-gradient(135deg, #6d28d9, #2e1065);
-    box-shadow: 0 0 80px rgb(124 58 237 / 0.3);
+    background: linear-gradient(135deg, #163f82, #040d22);
+    box-shadow: 0 0 80px rgb(var(--brilho) / 0.3);
     translate: calc(var(--px, 0) * 40px) calc(var(--py, 0) * 40px);
     transition: translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   /* Foto do lado direito, o texto invade por cima dela */
+  /* A foto se dissolve no fundo: some aos poucos do lado do texto e suaviza em cima, embaixo e na
+     direita (duas máscaras cruzadas). O ::after dá um banho de azul nas bordas para o contraste
+     com o pôr do sol. */
   .hero-moldura {
     position: absolute;
-    top: 13%;
+    top: 6%;
     right: 0;
-    width: 58%;
-    height: 72%;
+    width: 66%;
+    height: 86%;
     overflow: hidden;
-    background: var(--fundo-2);
+    --some-lado: linear-gradient(to right, transparent 0%, #000 42%, #000 90%, transparent 100%);
+    --some-cima: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
+    -webkit-mask: var(--some-lado), var(--some-cima);
+    -webkit-mask-composite: source-in;
+    mask: var(--some-lado), var(--some-cima);
+    mask-composite: intersect;
+  }
+
+  .hero-moldura::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 60% 62% at 62% 46%, transparent 35%, rgb(10 28 70 / 0.55) 100%);
   }
 
   .hero-foto {
@@ -187,8 +208,8 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     display: grid;
     place-items: center;
     background:
-      radial-gradient(ellipse at 60% 35%, #3b2466 0%, transparent 60%),
-      linear-gradient(160deg, #1d1829, #0e0d12);
+      radial-gradient(ellipse at 60% 35%, #0d1f3b 0%, transparent 60%),
+      linear-gradient(160deg, #081021, #03050b);
   }
 
   .hero-vazio span {
@@ -224,12 +245,13 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     letter-spacing: 0;
     text-transform: none;
     font-size: 1.12em;
+    display: inline-block; /* a parte em itálico nunca quebra no meio */
   }
 
-  /* Marca-texto roxo embaixo da frase (ideia do portfólio da Melyssa Griffin) */
+  /* Marca-texto azul embaixo da frase (ideia do portfólio da Melyssa Griffin) */
   .marca-texto {
     font-style: italic;
-    background: linear-gradient(transparent 62%, rgb(124 58 237 / 0.85) 62%, rgb(124 58 237 / 0.85) 90%, transparent 90%)
+    background: linear-gradient(transparent 62%, rgb(var(--brilho) / 0.85) 62%, rgb(var(--brilho) / 0.85) 90%, transparent 90%)
       no-repeat;
     background-size: 100% 100%; /* fora da capa, o Rolagem.astro anima isso ao rolar */
     -webkit-box-decoration-break: clone;
@@ -359,7 +381,7 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   .ensaio-vazio {
     height: 100%;
-    background: linear-gradient(160deg, #1d1829, #0e0d12);
+    background: linear-gradient(160deg, #081021, #03050b);
     border: 1px solid var(--linha);
   }
 
@@ -526,7 +548,7 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     bottom: 26%;
     width: 30%;
     height: 32%;
-    background: linear-gradient(135deg, var(--destaque-forte), #4c1d95);
+    background: linear-gradient(135deg, var(--destaque-forte), #07183a);
   }
 
   .mini-foto {
@@ -535,7 +557,7 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     top: 10%;
     width: 55%;
     height: 62%;
-    background: radial-gradient(ellipse at 60% 40%, #3b2466, #17141f);
+    background: radial-gradient(ellipse at 60% 40%, #0d1f3b, #080c17);
   }
 
   .mini-linha {
@@ -569,7 +591,7 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   .mini-grade b {
     height: 22px;
-    background: #231d33;
+    background: #0b1426;
   }
 
   /* ---------- CELULAR ---------- */
@@ -583,9 +605,12 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     .hero-moldura {
       position: relative;
       top: 0;
-      width: 84%;
-      height: 50svh;
+      width: 100%;
+      height: 54svh;
       margin-left: auto;
+      /* no celular a foto some embaixo (onde entra o texto) e de leve nas laterais */
+      --some-lado: linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+      --some-cima: linear-gradient(to bottom, transparent 0%, #000 12%, #000 62%, transparent 100%);
     }
 
     .hero-bloco {

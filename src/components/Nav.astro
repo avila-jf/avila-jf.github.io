@@ -1,6 +1,7 @@
 ---
 // Menu em tela cheia (inspirado no "T.RICKS Menu"): botão redondo, fundo que abre em círculo,
-// links grandes entrando um por um e miniatura da foto ao passar o mouse.
+// links grandes entrando um por um, letras que "rolam" no hover e a foto de prévia que entra
+// como cortina e acompanha o mouse.
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import { site, categorias } from '../data/site';
@@ -37,16 +38,13 @@ const { instagram, whatsapp } = site.contato;
 
 <header class="topo">
   <div class="topo-esquerda">
-    {
-      !naHome && (
-        <a class="voltar" href={url('/')} aria-label="Voltar">
-          <span class="voltar-fundo" aria-hidden="true" />
-          <svg class="voltar-seta" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M19 12H5M11 6l-6 6 6 6" />
-          </svg>
-        </a>
-      )
-    }
+    {/* No início a seta só aparece com o menu aberto (para sair dele) */}
+    <a class:list={['voltar', { 'so-no-menu': naHome }]} href={url('/')} aria-label="Voltar">
+      <span class="voltar-fundo" aria-hidden="true" />
+      <svg class="voltar-seta" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 12H5M11 6l-6 6 6 6" />
+      </svg>
+    </a>
     <a class="marca" href={url('/')}>{site.nome}</a>
   </div>
   <button class="gatilho" type="button" aria-expanded="false" aria-controls="menu" data-cursor="ABRIR">
@@ -72,7 +70,13 @@ const { instagram, whatsapp } = site.contato;
               aria-current={atual === link.href.replace(/\/$/, '') ? 'page' : undefined}
             >
               <span class="menu-num">0{i + 1}</span>
-              <span class="menu-texto">{link.texto}</span>
+              <span class="menu-texto" aria-label={link.texto}>
+                <span class="menu-letras" aria-hidden="true">
+                  {[...link.texto].map((letra, j) => (
+                    <span class="letra" style={`--j:${j}`}>{letra}</span>
+                  ))}
+                </span>
+              </span>
             </a>
           </div>
         ))
@@ -85,7 +89,8 @@ const { instagram, whatsapp } = site.contato;
       </div>
       <div class="menu-contatos">
         <a href={`https://instagram.com/${instagram}`} target="_blank" rel="noopener">Instagram</a>
-        <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener">WhatsApp</a>      </div>
+        <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener">WhatsApp</a>
+      </div>
     </div>
   </div>
 </div>
@@ -108,8 +113,14 @@ const { instagram, whatsapp } = site.contato;
       { clipPath: `circle(0% ${origem})` },
       { clipPath: `circle(150% ${origem})`, duration: 0.9, ease: 'power3.inOut' },
     )
-    .from('.menu-link', { yPercent: 110, duration: 1, ease: 'expo.out', stagger: 0.07 }, '-=0.35')
-    .from('.menu-lado', { autoAlpha: 0, y: 30, duration: 0.7, ease: 'power2.out' }, '<0.15');
+    .from(
+      '.menu-link',
+      { yPercent: 120, rotate: 5, transformOrigin: '0% 100%', duration: 1.1, ease: 'expo.out', stagger: 0.07 },
+      '-=0.35',
+    )
+    .from('.menu-num', { autoAlpha: 0, x: -12, duration: 0.6, ease: 'power2.out', stagger: 0.07 }, '<0.3')
+    .from('.menu-previa', { clipPath: 'inset(100% 0% 0% 0%)', duration: 1.1, ease: 'expo.inOut' }, '<-0.4')
+    .from('.menu-contatos a', { autoAlpha: 0, y: 20, duration: 0.6, ease: 'power2.out', stagger: 0.06 }, '<0.4');
 
   if (semMovimento) abrir.duration(0.01);
 
@@ -127,11 +138,35 @@ const { instagram, whatsapp } = site.contato;
 
   gatilho.addEventListener('click', () => alternar());
 
-  // Seta de voltar: volta para a página anterior do site; se entrou direto pelo link, vai para o início
+  // Guarda de onde a pessoa veio (só nesta aba do navegador)
+  const semBarra = (caminho: string) => caminho.replace(/\/$/, '');
+  const guardar = (chave: string, valor?: string) => {
+    try {
+      if (valor === undefined) sessionStorage.removeItem(chave);
+      else sessionStorage.setItem(chave, valor);
+    } catch {}
+  };
+  const ler = (chave: string) => {
+    try {
+      return sessionStorage.getItem(chave);
+    } catch {
+      return null;
+    }
+  };
+
+  // Seta de voltar: com o menu aberto, fecha o menu e volta para a página em que você estava.
+  // Com o menu fechado, volta para a página anterior do site; se entrou direto pelo link, vai para o início.
+  // Se chegou aqui por um item do menu, volta já com o menu aberto (a última tela que a pessoa viu).
   topo.querySelector<HTMLAnchorElement>('.voltar')?.addEventListener('click', (e) => {
+    if (aberto) {
+      e.preventDefault();
+      alternar(false);
+      return;
+    }
     const veioDoSite = document.referrer.startsWith(location.origin);
     if (veioDoSite && history.length > 1) {
       e.preventDefault();
+      if (ler('saiuDoMenu') === semBarra(location.pathname)) guardar('reabrirMenu', '1');
       history.back();
     }
   });
@@ -139,26 +174,66 @@ const { instagram, whatsapp } = site.contato;
     if (e.key === 'Escape' && aberto) alternar(false);
   });
 
-  // Miniatura da foto ao passar o mouse em cada link
+  // Prévia da foto: a nova entra como cortina de baixo para cima por cima da anterior
+  const previa = menu.querySelector<HTMLElement>('.menu-previa')!;
   const previas = [...menu.querySelectorAll<HTMLImageElement>('.menu-previa img')];
-  const mostrarPrevia = (indice?: string) =>
-    previas.forEach((img) => img.classList.toggle('ativa', img.dataset.indice === indice));
+  const links = [...menu.querySelectorAll<HTMLAnchorElement>('.menu-link')];
+  let atualPrevia: HTMLImageElement | undefined;
+  let camada = 1;
 
-  // Ao abrir, já mostra a foto da página atual (ou a primeira)
-  const linkAtual = menu.querySelector<HTMLAnchorElement>('.menu-link[aria-current="page"]');
-  mostrarPrevia(
-    previas.some((img) => img.dataset.indice === linkAtual?.dataset.indice)
-      ? linkAtual?.dataset.indice
-      : previas[0]?.dataset.indice,
-  );
+  function mostrarPrevia(indice?: string) {
+    const img = previas.find((p) => p.dataset.indice === indice);
+    if (!img || img === atualPrevia) return;
+    atualPrevia = img;
+    gsap.killTweensOf(img);
+    img.style.zIndex = String(++camada);
+    if (semMovimento) return gsap.set(img, { clipPath: 'inset(0% 0% 0% 0%)', scale: 1 });
+    gsap.fromTo(
+      img,
+      { clipPath: 'inset(100% 0% 0% 0%)', scale: 1.35, yPercent: 8 },
+      { clipPath: 'inset(0% 0% 0% 0%)', scale: 1, yPercent: 0, duration: 1, ease: 'expo.out' },
+    );
+  }
 
-  menu.querySelectorAll<HTMLAnchorElement>('.menu-link').forEach((link) => {
-    link.addEventListener('mouseenter', () => {
-      if (previas.some((img) => img.dataset.indice === link.dataset.indice)) mostrarPrevia(link.dataset.indice);
+  links.forEach((link) => {
+    link.addEventListener('mouseenter', () => mostrarPrevia(link.dataset.indice));
+    link.addEventListener('focus', () => mostrarPrevia(link.dataset.indice));
+    link.addEventListener('click', () => {
+      guardar('saiuDoMenu', semBarra(new URL(link.href).pathname));
+      alternar(false); // link para a própria página ou âncora: só fecha o menu
     });
-    // Link para a própria página ou âncora: só fecha o menu
-    link.addEventListener('click', () => alternar(false));
   });
+
+  // Ao abrir, a prévia começa na foto da página em que você está
+  function previaDaPagina() {
+    const ativo = links.find((l) => l.getAttribute('aria-current') === 'page') ?? links[0];
+    mostrarPrevia(ativo.dataset.indice);
+  }
+  gatilho.addEventListener('click', () => aberto && previaDaPagina());
+
+  // Voltou pela seta depois de sair pelo menu: reabre o menu (pageshow também roda quando o
+  // navegador restaura a página da memória ao voltar)
+  addEventListener('pageshow', () => {
+    if (!ler('reabrirMenu')) return;
+    guardar('reabrirMenu');
+    guardar('saiuDoMenu');
+    alternar(true);
+    previaDaPagina();
+  });
+
+  // A prévia acompanha o mouse devagar e inclina um pouco para o lado em que ele vai
+  if (!semMovimento && matchMedia('(hover: hover)').matches) {
+    const irX = gsap.quickTo(previa, 'x', { duration: 1.2, ease: 'power3.out' });
+    const irY = gsap.quickTo(previa, 'y', { duration: 1.2, ease: 'power3.out' });
+    const girar = gsap.quickTo(previa, 'rotate', { duration: 1.2, ease: 'power3.out' });
+    menu.addEventListener('mousemove', (e) => {
+      const nx = e.clientX / innerWidth - 0.5; // -0.5 a 0.5
+      const ny = e.clientY / innerHeight - 0.5;
+      irX(nx * 90);
+      irY(ny * 110);
+      girar(nx * 6);
+    });
+  }
 
   // Fundo do topo escurece quando a página rola
   const aoRolar = () => topo.classList.toggle('rolou', scrollY > 40);
@@ -175,18 +250,43 @@ const { instagram, whatsapp } = site.contato;
     align-items: center;
     justify-content: space-between;
     padding: 1.1rem var(--margem);
+  }
+
+  /* Fundo do topo numa camada própria que se dissolve para baixo: sem corte reto
+     (que aparecia como uma linha por cima das fotos e da cena da câmera) */
+  .topo::before,
+  .topo::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 -28px;
+    z-index: -1;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+
+  .topo::before {
     background: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent);
-    transition: background 0.4s;
   }
 
-  .topo.rolou {
-    background: rgb(11 10 15 / 0.85);
+  .topo::after {
+    background: rgb(3 5 11 / 0.85);
     backdrop-filter: blur(12px);
+    -webkit-mask: linear-gradient(to bottom, #000 55%, transparent);
+    mask: linear-gradient(to bottom, #000 55%, transparent);
+    opacity: 0;
   }
 
-  .topo.aberto {
-    background: transparent;
-    backdrop-filter: none;
+  .topo.rolou::before {
+    opacity: 0;
+  }
+
+  .topo.rolou::after {
+    opacity: 1;
+  }
+
+  .topo.aberto::before,
+  .topo.aberto::after {
+    opacity: 0;
   }
 
   .marca {
@@ -201,14 +301,15 @@ const { instagram, whatsapp } = site.contato;
     gap: 1rem;
   }
 
-  /* Seta de voltar: círculo que enche de roxo e seta que "puxa" para a esquerda */
+  /* Seta de voltar: círculo que enche de azul e seta que "puxa" para a esquerda */
   .voltar {
     position: relative;
     display: grid;
     place-items: center;
     width: 44px;
     height: 44px;
-    border: 1px solid rgb(236 233 242 / 0.35);
+    background: var(--botao);
+    border: 1px solid var(--botao-borda);
     border-radius: 50%;
     overflow: hidden;
     color: var(--texto);
@@ -250,9 +351,12 @@ const { instagram, whatsapp } = site.contato;
     }
   }
 
-  .aberto .voltar {
-    opacity: 0;
-    pointer-events: none;
+  .voltar.so-no-menu {
+    display: none;
+  }
+
+  .aberto .voltar.so-no-menu {
+    display: grid;
   }
 
   /* Botão redondo com duas linhas que viram um X */
@@ -273,7 +377,8 @@ const { instagram, whatsapp } = site.contato;
   .gatilho-circulo {
     position: absolute;
     inset: 0;
-    border: 1px solid rgb(236 233 242 / 0.35);
+    background: var(--botao);
+    border: 1px solid var(--botao-borda);
     border-radius: 50%;
     transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.3s, background 0.3s;
   }
@@ -282,7 +387,7 @@ const { instagram, whatsapp } = site.contato;
     .gatilho:hover .gatilho-circulo {
       transform: scale(1.15);
       border-color: var(--destaque);
-      background: rgb(124 58 237 / 0.15);
+      background: var(--destaque-forte);
     }
   }
 
@@ -324,13 +429,15 @@ const { instagram, whatsapp } = site.contato;
     inset: 0;
     z-index: 55;
     visibility: hidden;
+    overflow-y: auto; /* tela baixa: dá para rolar o menu */
+    overscroll-behavior: contain;
   }
 
   .menu-fundo {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background:
-      radial-gradient(ellipse at 80% 20%, rgb(124 58 237 / 0.35), transparent 55%),
+      radial-gradient(ellipse at 80% 20%, rgb(var(--brilho) / 0.35), transparent 55%),
       var(--fundo);
     clip-path: circle(0% at calc(100% - 58px) 42px);
   }
@@ -341,8 +448,8 @@ const { instagram, whatsapp } = site.contato;
     grid-template-columns: 1.3fr 1fr;
     align-items: center;
     gap: 4rem;
-    height: 100%;
-    padding-block: 110px 60px;
+    min-height: 100%;
+    padding-block: 100px 40px;
   }
 
   .menu-item {
@@ -356,7 +463,8 @@ const { instagram, whatsapp } = site.contato;
     padding-block: 0.15em;
     font-family: var(--fonte-texto);
     font-weight: 800;
-    font-size: clamp(2rem, min(6vw, 8.5vh), 5rem); /* cabe em telas baixas também */
+    /* cabe na largura E na altura da tela (7 itens) */
+    font-size: clamp(2rem, min(6.5vw, 7.4vh), 5.6rem);
     line-height: 1.05;
     letter-spacing: -0.03em;
     text-transform: uppercase;
@@ -375,6 +483,29 @@ const { instagram, whatsapp } = site.contato;
     position: relative;
     isolation: isolate; /* deixa o marca-texto (::after) atrás só do texto */
     transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* Letras que rolam: cada letra tem uma cópia logo abaixo (text-shadow) e sobe uma linha no hover,
+     uma depois da outra (--j é a posição da letra) */
+  .menu-letras {
+    display: inline-flex;
+    overflow: hidden;
+    line-height: 1.2;
+  }
+
+  .letra {
+    display: inline-block;
+    white-space: pre;
+    text-shadow: 0 1.4em currentColor; /* longe o bastante para o acento da cópia não aparecer */
+    transition: translate 0.55s cubic-bezier(0.7, 0, 0.2, 1);
+    transition-delay: calc(var(--j) * 0.025s);
+  }
+
+  @media (hover: hover) {
+    .menu-link:hover .letra,
+    .menu-link:focus-visible .letra {
+      translate: 0 -1.4em;
+    }
   }
 
   /* Os outros links apagam quando um está em foco */
@@ -413,7 +544,8 @@ const { instagram, whatsapp } = site.contato;
     max-height: 56vh;
     overflow: hidden;
     background: var(--fundo-2);
-    box-shadow: 0 0 60px rgb(124 58 237 / 0.25);
+    box-shadow: 0 0 60px rgb(var(--brilho) / 0.25);
+    will-change: transform;
   }
 
   .menu-previa img {
@@ -422,14 +554,7 @@ const { instagram, whatsapp } = site.contato;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0;
-    transform: scale(1.12);
-    transition: opacity 0.5s, transform 1s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .menu-previa img.ativa {
-    opacity: 1;
-    transform: scale(1);
+    clip-path: inset(100% 0% 0% 0%); /* escondida até o GSAP abrir a cortina */
   }
 
   .menu-contatos {

@@ -1,0 +1,232 @@
+---
+// Cena da câmera (anime.js + rolagem): uma Nikon D3200 em 3D (three.js, em src/lib/camera3d.ts)
+// aparece de lado, vira de costas enquanto você desce a página, dá zoom no display e o slider
+// "sai" de dentro dele.
+// O conteúdo do meio (<slot />) é o slider de destaques.
+// Sem JavaScript ou com "reduzir movimento" ligado, a câmera some e o slider aparece normal.
+import { getImage } from 'astro:assets';
+import type { Foto } from '../lib/fotos';
+
+interface Props {
+  foto?: Foto; // foto que aparece no display da câmera (use a primeira do slider para emendar)
+}
+
+const { foto } = Astro.props;
+const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format: 'webp', quality: 80 })).src : undefined;
+---
+
+<div class="camera-cena" data-foto={fotoDisplay}>
+  <div class="camera-palco">
+    <div class="camera-intro" aria-hidden="true">
+      <p class="rotulo">Pela minha lente</p>
+      <p class="camera-dica">role para ver <span>↓</span></p>
+    </div>
+
+    <div class="camera-zoom" aria-hidden="true">
+      <canvas class="camera-3d"></canvas>
+    </div>
+
+    <div class="camera-slider">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<script>
+  import { createTimeline } from 'animejs';
+  import type { Camera3D } from '../lib/camera3d';
+
+  const cena = document.querySelector<HTMLElement>('.camera-cena');
+  const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (cena && !semMovimento) {
+    cena.classList.add('ativa');
+
+    const zoom = cena.querySelector<HTMLElement>('.camera-zoom')!;
+    const intro = cena.querySelector<HTMLElement>('.camera-intro')!;
+    const slider = cena.querySelector<HTMLElement>('.camera-slider')!;
+    const tela = cena.querySelector<HTMLCanvasElement>('.camera-3d')!;
+
+    // Estado da cena (0 → 1). O anime.js anima estes números conforme a rolagem
+    const estado = { giro: 0, zoom: 0, slider: 0 };
+    let camera3d: Camera3D | undefined;
+
+    function desenhar() {
+      const { giro: g, zoom: z, slider: s } = estado;
+      camera3d?.definir(g, z);
+      zoom.style.opacity = String(1 - s);
+      intro.style.opacity = String(Math.max(0, 1 - g * 2.5));
+      slider.style.opacity = String(s);
+      slider.style.transform = `translateY(${(1 - s) * 60}px)`; // sem scale: o Splide mede as fotos pelo tamanho na tela
+      slider.style.pointerEvents = s > 0.6 ? 'auto' : 'none';
+    }
+
+    // Linha do tempo do anime.js (pausada): giro, zoom e entrada do slider
+    const linha = createTimeline({ autoplay: false, defaults: { ease: 'inOutSine' }, onUpdate: desenhar })
+      .add(estado, { giro: 1, duration: 450 }, 0)
+      .add(estado, { zoom: 1, duration: 380, ease: 'linear' }, 520)
+      .add(estado, { slider: 1, duration: 140, ease: 'outSine' }, 860);
+
+    // A rolagem manda na linha do tempo: 0 quando a cena encosta no topo, 1 no fim dela.
+    // Medimos a posição a cada quadro e seguimos com suavização, então mesmo rolando rápido
+    // (ou arrastando a barra) a animação sempre chega onde a página está.
+    let atual = -1;
+    let antes = performance.now();
+    let segurarAte = 0;
+    let pulando = 0; // até quando ignorar o freio (link que pula para outra seção)
+
+    // Links internos (ex.: "Ver ensaios") passam direto pela cena sem o freio, até a rolagem
+    // suave terminar (scrollend; os 5 s são só para navegadores que não têm esse evento)
+    document.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).closest('a[href*="#"]')) return;
+      pulando = performance.now() + 5000;
+      addEventListener(
+        'scrollend',
+        () => {
+          pulando = 0;
+          atual = -1; // a animação vai direto para onde a página parou, sem acionar o freio
+        },
+        { once: true },
+      );
+    });
+
+    // Encostou o dedo de novo durante o freio: solta na hora (a animação pula para o fim)
+    addEventListener(
+      'touchstart',
+      () => {
+        if (performance.now() < segurarAte || (atual >= 0 && atual < 0.97 && -cena!.getBoundingClientRect().top > cena!.offsetHeight - innerHeight)) {
+          segurarAte = 0;
+          atual = -1;
+        }
+      },
+      { passive: true },
+    );
+
+    function seguirRolagem(agora: number) {
+      const total = cena!.offsetHeight - innerHeight;
+      const topo = cena!.getBoundingClientRect().top;
+      const alvo = Math.min(1, Math.max(0, -topo / total));
+
+      // Freio: desceu tão rápido que passou do fim da cena antes do slider aparecer?
+      // Segura a página no slider enquanto a animação termina (acelerada) e mais um instante,
+      // para a inércia do touchpad/celular não empurrar para longe. Depois libera.
+      const passou = -topo > total + 2;
+      let freando = false;
+      if (passou && agora > pulando && atual >= 0 && (atual < 0.97 || agora < segurarAte)) {
+        freando = true;
+        if (atual < 0.97) segurarAte = agora + 300;
+        scrollTo({ top: scrollY + (total + topo), behavior: 'instant' });
+      }
+
+      // igual em 30 ou 144 fps; freando, a animação corre 3x mais rápido
+      const passo = 1 - Math.pow(freando ? 3.4e-9 : 0.0015, Math.min(0.1, (agora - antes) / 1000));
+      antes = agora;
+      const proximo = atual < 0 || Math.abs(alvo - atual) < 0.0005 ? alvo : atual + (alvo - atual) * passo;
+      if (proximo !== atual) {
+        atual = proximo;
+        linha.seek(atual * linha.duration);
+      }
+      requestAnimationFrame(seguirRolagem);
+    }
+    requestAnimationFrame(seguirRolagem);
+
+    // O three.js só é baixado agora (a página abre mais rápido)
+    import('../lib/camera3d')
+      .then(({ montarCamera }) => montarCamera(tela, cena.dataset.foto))
+      .then((c) => {
+        camera3d = c;
+        desenhar();
+      })
+      .catch(() => {
+        // sem WebGL: pula direto para o slider
+        cena.classList.remove('ativa');
+      });
+  }
+</script>
+
+<style>
+  /* ---------- Sem animação: só o slider ---------- */
+  .camera-cena:not(.ativa) .camera-intro,
+  .camera-cena:not(.ativa) .camera-zoom {
+    display: none;
+  }
+
+  /* ---------- Com animação (o script adiciona .ativa) ---------- */
+  .camera-cena.ativa {
+    height: 420vh; /* quanto maior, mais devagar a câmera gira ao rolar */
+  }
+
+  @media (max-width: 767px) {
+    .camera-cena.ativa {
+      height: 320vh; /* no celular, menos dedo para passar pela câmera */
+    }
+  }
+
+  .ativa .camera-palco {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 55%, rgb(var(--brilho) / 0.22), transparent 60%);
+  }
+
+  .ativa .camera-slider {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ativa .camera-slider :global(.destaques) {
+    padding-top: 0;
+  }
+
+  .camera-intro {
+    position: absolute;
+    inset: 110px var(--margem) auto;
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+  }
+
+  .camera-dica {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .camera-dica span {
+    display: inline-block;
+    animation: pulo 1.6s ease-in-out infinite;
+  }
+
+  @keyframes pulo {
+    50% {
+      translate: 0 5px;
+    }
+  }
+
+  /* ---------- A câmera em 3D (desenhada pelo three.js no canvas) ---------- */
+  .camera-zoom {
+    position: absolute;
+    inset: 0;
+  }
+
+  .camera-3d {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .camera-intro {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+</style>

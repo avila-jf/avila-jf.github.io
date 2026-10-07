@@ -261,7 +261,7 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
     gap: 1.5rem;
     padding: 1.6rem 0;
     border-bottom: 1px solid var(--linha);
-    background: linear-gradient(90deg, rgb(124 58 237 / 0.12), transparent 70%) no-repeat;
+    background: linear-gradient(90deg, rgb(var(--brilho) / 0.12), transparent 70%) no-repeat;
     background-size: 0% 100%;
     transition:
       background-size 0.5s,
