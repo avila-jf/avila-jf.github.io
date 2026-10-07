@@ -45,3 +45,22 @@ html.lenis body {
     navigation: none;
   }
 }
+
+/* Barra fina de progresso da rolagem (anima pelo components/Efeitos.astro) */
+.progresso {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 95;
+  height: 2px;
+  background: var(--destaque);
+  box-shadow: 0 0 10px var(--destaque);
+  transform: scaleX(0);
+  transform-origin: left;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progresso {
+    display: none;
+  }
+}

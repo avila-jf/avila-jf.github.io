@@ -76,6 +76,17 @@ export const projetos: {
   destaque?: boolean;
 }[] = [
   {
+    nome: 'Manoel.ink',
+    tipo: 'Site para cliente',
+    descricao:
+      'Site do tatuador Juan Manoel, de Maceió: blackwork, fine line e tatuagens geek, com galeria de trabalhos, flashes disponíveis, antes/depois de cicatrizadas e pedido de orçamento.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript'],
+    site: 'https://manoelink.github.io/',
+    codigo: 'https://github.com/manoelink/manoelink.github.io',
+    imagem: 'manoelink',
+    destaque: true,
+  },
+  {
     nome: 'Sofiarte',
     tipo: 'Site para cliente',
     descricao:

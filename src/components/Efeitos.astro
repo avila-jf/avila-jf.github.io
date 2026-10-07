@@ -4,8 +4,11 @@
 //  2. Títulos que entram letra por letra (SplitText) — use data-split em qualquer título
 //  3. Botões magnéticos: puxam levemente na direção do cursor
 //  4. Faixa de texto que inclina conforme a velocidade da rolagem (tipografia cinética)
+//  5. Barra fina de progresso no topo, que enche conforme a rolagem
 // Tudo desliga sozinho para quem prefere menos movimento (configuração do sistema).
 ---
+
+<div class="progresso" aria-hidden="true"></div>
 
 <script>
   import { gsap } from 'gsap';
@@ -82,5 +85,11 @@
         },
       });
     }
+    // ---------- 5. Barra de progresso da rolagem ----------
+    gsap.to('.progresso', {
+      scaleX: 1,
+      ease: 'none',
+      scrollTrigger: { start: 0, end: 'max', scrub: 0.3 },
+    });
   }
 </script>
