@@ -298,12 +298,12 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
     inset: 0;
     margin: 0;
     pointer-events: none;
-    font-family: var(--fonte-texto);
-    font-weight: 300;
+    /* As três palavras na mesma fonte do título da capa (Instrument Serif) */
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
     font-size: clamp(4.5rem, 14vw, 15rem);
-    line-height: 0.85;
-    letter-spacing: -0.055em;
-    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
     color: var(--texto);
     transition:
       opacity 0.6s,
@@ -317,20 +317,13 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
     transition: translate 1s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
+  /* "minha" na mesma fonte, só que em itálico e na cor de destaque */
   .camera-palavras em {
-    font-family: var(--fonte-titulo);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    text-transform: none;
+    font-style: italic;
     color: var(--destaque);
   }
 
-  /* "Pela" na mesma serifa do título da capa (Instrument Serif), em pé */
   .palavra-1 {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    text-transform: none;
     --prof: -40px;
     top: 13%;
     left: 6%;
@@ -345,12 +338,8 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
 
   .palavra-3 {
     --prof: -24px;
-    bottom: 5%;
-    right: 5%;
-    /* contorno mais grosso e claro, com um leve preenchimento, para não sumir no fundo */
-    color: rgb(232 238 247 / 0.08);
-    -webkit-text-stroke: 2px rgb(232 238 247 / 0.9);
-    text-shadow: 0 0 30px rgb(91 141 239 / 0.35);
+    bottom: 3%;
+    left: 30%; /* no espaço livre embaixo da câmera, sem bater no quadro de código */
   }
 
   /* ---------- Mira de foco (quatro cantos e um ponto) que segue o cursor ---------- */
@@ -485,7 +474,6 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
       bottom: auto;
       left: 4%;
       right: auto;
-      -webkit-text-stroke-width: 1.5px;
     }
 
     .camera-intro {

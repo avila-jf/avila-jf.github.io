@@ -3,17 +3,15 @@
    pouca sombra e mais respiro. NÃO define cores novas: só usa as variáveis do global.css
    e branco/preto transparentes. Os "html ..." servem para vencer os estilos dos componentes. */
 
-/* Topo de vidro: sempre com desfoque leve, e um pouco mais forte depois de rolar */
+/* Topo de vidro: só desfoque leve, sem linha embaixo (a linha cortava a cena da câmera) */
 html .topo.topo {
   -webkit-backdrop-filter: blur(10px) saturate(130%);
   backdrop-filter: blur(10px) saturate(130%);
-  border-bottom: 1px solid rgb(255 255 255 / 0.06);
 }
 
 html .topo.topo.aberto {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  border-bottom-color: transparent;
 }
 
 /* Botões em pílula, com borda fina */
