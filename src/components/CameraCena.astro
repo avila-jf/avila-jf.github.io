@@ -67,12 +67,16 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
     const tela = cena.querySelector<HTMLCanvasElement>('.camera-3d')!;
     let camera3d: Camera3D | undefined;
 
-    // As palavras gigantes se mexem um pouco com o mouse (profundidade)
+    // As palavras gigantes se mexem um pouco com o mouse (profundidade).
+    // Só com mouse de verdade: no celular o toque empurrava as palavras para fora da tela.
     const palco = cena.querySelector<HTMLElement>('.camera-palco')!;
-    addEventListener('pointermove', (e) => {
-      palco.style.setProperty('--mx', (e.clientX / innerWidth - 0.5).toFixed(3));
-      palco.style.setProperty('--my', (e.clientY / innerHeight - 0.5).toFixed(3));
-    });
+    if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        palco.style.setProperty('--mx', (e.clientX / innerWidth - 0.5).toFixed(3));
+        palco.style.setProperty('--my', (e.clientY / innerHeight - 0.5).toFixed(3));
+      });
+    }
 
     // Balões entram um de cada vez quando a cena aparece na tela
     new IntersectionObserver(
