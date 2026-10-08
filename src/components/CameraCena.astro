@@ -463,26 +463,29 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
 
   /* ---------- Celular: câmera em cima, balões embaixo ---------- */
   @media (max-width: 767px) {
+    /* No celular o título fica todo ACIMA da câmera (antes o "minha" sumia atrás dela):
+       "Pela minha" na primeira linha e "LENTE" logo embaixo */
     .camera-palavras {
-      font-size: 5.2rem;
+      font-size: 3.5rem;
     }
 
     .palavra-1 {
-      top: 17%;
+      top: 122px;
       left: 4%;
     }
 
     .palavra-2 {
-      top: 33%;
-      left: auto;
-      right: 4%;
+      top: 122px;
+      left: calc(4% + 1.75em);
+      opacity: 1;
     }
 
     .palavra-3 {
-      top: 49%;
+      top: 174px;
       bottom: auto;
       left: 4%;
       right: auto;
+      -webkit-text-stroke-width: 1.5px;
     }
 
     .camera-intro {
@@ -494,7 +497,7 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
     .camera-lado {
       grid-template-columns: 1fr;
       grid-template-rows: 1fr auto;
-      padding-top: 150px;
+      padding-top: 240px; /* espaço para o título "Pela minha LENTE" acima da câmera */
       padding-bottom: 88px; /* espaço para a barra de ícones fixa embaixo */
     }
 
