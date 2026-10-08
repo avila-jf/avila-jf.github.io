@@ -25,11 +25,28 @@ const itens = await Promise.all(
 const proporcoes = ['4/5', '3/2', '2/3', '16/9', '1/1', '4/5', '3/2', '2/3', '3/2'];
 ---
 
-<div class="galeria">
+{
+  itens.length > 0 && (
+    <div class="modos" role="group" aria-label="Como ver as fotos">
+      <button type="button" data-modo="galeria" aria-pressed="true">Galeria</button>
+      <button type="button" data-modo="contato" aria-pressed="false">Folha de contato</button>
+    </div>
+  )
+}
+
+<!-- "Folha de contato" (ideia do Julia Krantz no Refero Styles): como a prova do laboratório,
+     com o número de cada fotograma e as escolhidas circuladas de lápis vermelho -->
+<div class="galeria" data-modo="galeria">
   {
     itens.length > 0
       ? itens.map((foto, i) => (
-          <a class="item revelar" href={foto.grande.src} data-lightbox data-legenda={foto.alt} data-tilt>
+          <a class:list={['item revelar', { escolhida: i < 3 }]} href={foto.grande.src} data-lightbox data-legenda={foto.alt} data-tilt>
+            <span class="quadro-num" aria-hidden="true">
+              ▸ {i + 1}A <span>NIKON D3200</span>
+            </span>
+            <svg class="lapis" viewBox="0 0 100 70" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M50 4 C78 3 97 15 96 34 C95 55 74 67 48 66 C22 65 4 54 5 34 C6 16 24 6 54 7" pathLength="1" />
+            </svg>
             <Image
               src={foto.src}
               alt={foto.alt}
@@ -49,7 +66,163 @@ const proporcoes = ['4/5', '3/2', '2/3', '16/9', '1/1', '4/5', '3/2', '2/3', '3/
   }
 </div>
 
+<script>
+  // Alterna Galeria ↔ Folha de contato e lembra a escolha (só neste navegador)
+  const galeria = document.querySelector<HTMLElement>('.galeria');
+  const botoes = [...document.querySelectorAll<HTMLButtonElement>('.modos button')];
+
+  function usar(modo: string) {
+    if (!galeria) return;
+    galeria.dataset.modo = modo;
+    botoes.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.modo === modo)));
+    try {
+      localStorage.setItem('modo-galeria', modo);
+    } catch {}
+  }
+
+  botoes.forEach((b) => b.addEventListener('click', () => usar(b.dataset.modo!)));
+  try {
+    const salvo = localStorage.getItem('modo-galeria');
+    if (salvo) usar(salvo);
+  } catch {}
+</script>
+
 <style>
+  /* ---------- Botões de modo ---------- */
+  .modos {
+    display: inline-flex;
+    gap: 4px;
+    margin-bottom: 1.6rem;
+    padding: 4px;
+    border: 1px solid var(--linha);
+    border-radius: 99px;
+  }
+
+  .modos button {
+    padding: 0.5rem 1.1rem;
+    border: 0;
+    border-radius: 99px;
+    background: none;
+    color: var(--texto-suave);
+    font: inherit;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      background 0.3s,
+      color 0.3s;
+  }
+
+  .modos button[aria-pressed='true'] {
+    background: var(--botao);
+    color: var(--texto);
+  }
+
+  .quadro-num,
+  .lapis {
+    display: none;
+  }
+
+  /* ---------- Folha de contato ---------- */
+  .galeria[data-modo='contato'] {
+    columns: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 34px 12px;
+    padding: 40px clamp(14px, 2vw, 28px) 28px;
+    border-radius: 6px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 220px, rgb(255 255 255 / 0.015) 220px 222px),
+      #08090c;
+    box-shadow: inset 0 0 0 1px #15171d;
+  }
+
+  .galeria[data-modo='contato'] .item {
+    /* a folha aparece inteira de uma vez (o "revelar ao rolar" se perde ao trocar o layout) */
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    position: relative;
+    margin: 0;
+    aspect-ratio: 3 / 2;
+    overflow: visible;
+    background: #000;
+    box-shadow: 0 0 0 4px #000;
+  }
+
+  .galeria[data-modo='contato'] .item img {
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.15) contrast(1.05);
+  }
+
+  .galeria[data-modo='contato'] .item:hover img {
+    transform: none;
+    filter: none;
+  }
+
+  /* número do fotograma, na cor da borda do filme */
+  .galeria[data-modo='contato'] .quadro-num {
+    position: absolute;
+    left: 0;
+    top: -22px;
+    display: flex;
+    gap: 12px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    color: #e8a33d;
+  }
+
+  .quadro-num span {
+    opacity: 0.6;
+  }
+
+  /* círculo de lápis vermelho: fica nas escolhidas e se desenha no hover das outras */
+  .galeria[data-modo='contato'] .lapis {
+    position: absolute;
+    inset: -14px -16px;
+    z-index: 2;
+    display: block;
+    width: calc(100% + 32px);
+    height: calc(100% + 28px);
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .lapis path {
+    fill: none;
+    stroke: #e5322d;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0; /* sem isso sobra um pontinho da ponta arredondada */
+    transition:
+      stroke-dashoffset 0.6s cubic-bezier(0.5, 0, 0.3, 1),
+      opacity 0.15s;
+  }
+
+  .escolhida .lapis path,
+  .item:hover .lapis path {
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+
+  .galeria[data-modo='contato'] .escolhida .quadro-num::after {
+    content: '✓';
+    color: #e5322d;
+    font-weight: 700;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lapis path {
+      transition: none;
+    }
+  }
+
+  /* ---------- Galeria normal ---------- */
   /* Grade estilo "masonry": colunas que respeitam a proporção de cada foto */
   .galeria {
     columns: 3 320px;

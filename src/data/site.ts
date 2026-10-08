@@ -73,6 +73,7 @@ export const projetos: {
   site?: string;
   codigo?: string;
   imagem?: string;
+  cor?: string; // cor da luz de fundo do projeto na vitrine (a cor principal do site)
   destaque?: boolean;
 }[] = [
   {
@@ -84,6 +85,7 @@ export const projetos: {
     site: 'https://manoelink.github.io/',
     codigo: 'https://github.com/manoelink/manoelink.github.io',
     imagem: 'manoelink',
+    cor: '#d8392c',
     destaque: true,
   },
   {
@@ -94,6 +96,7 @@ export const projetos: {
     tecnologias: ['JavaScript', 'Vite', 'Supabase', 'GSAP', 'Three.js'],
     site: 'https://otica-beco-sao-jose.vercel.app/',
     imagem: 'otica-beco',
+    cor: '#f7d35c',
     destaque: true,
   },
   {
@@ -105,6 +108,7 @@ export const projetos: {
     site: 'https://josefrancisco-alt.github.io/magnobag/',
     codigo: 'https://github.com/JoseFrancisco-alt/magnobag',
     imagem: 'magnobag',
+    cor: '#3fd598',
     destaque: true,
   },
   {

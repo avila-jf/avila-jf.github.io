@@ -46,9 +46,7 @@
     const hero = document.querySelector('.hero');
     if (hero) {
       const rolagem = { trigger: hero, start: 'top top', end: 'bottom top', scrub: true };
-      gsap.to('.hero-moldura', { yPercent: 18, scale: 1.04, ease: 'none', scrollTrigger: rolagem });
-      gsap.to('.vidros', { yPercent: -40, ease: 'none', scrollTrigger: rolagem });
-      gsap.to('.hero-texto', { yPercent: -30, autoAlpha: 0, ease: 'none', scrollTrigger: rolagem });
+      gsap.to('.hero-moldura', { yPercent: 18, scale: 1.04, ease: 'none', scrollTrigger: rolagem });      gsap.to('.hero-texto', { yPercent: -30, autoAlpha: 0, ease: 'none', scrollTrigger: rolagem });
     }
 
     // 3) Faixas de texto que correm para o lado

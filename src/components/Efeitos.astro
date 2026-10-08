@@ -64,7 +64,7 @@
     // ---------- 3. Botões magnéticos ----------
     if (temMouse) {
       const FORCA = 0.3; // quanto o botão "puxa" para o cursor
-      document.querySelectorAll<HTMLElement>('.botao, .controle, .gatilho, .voltar, .topo-botao').forEach((botao) => {
+      document.querySelectorAll<HTMLElement>('.botao, .botao-claro, .controle, .gatilho, .voltar, .topo-botao').forEach((botao) => {
         const irX = gsap.quickTo(botao, 'x', { duration: 0.5, ease: 'power3.out' });
         const irY = gsap.quickTo(botao, 'y', { duration: 0.5, ease: 'power3.out' });
         botao.addEventListener('pointermove', (e) => {

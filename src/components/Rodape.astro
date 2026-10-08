@@ -1,18 +1,56 @@
 ---
+import { Image } from 'astro:assets';
 import { site } from '../data/site';
+import { fotosDa } from '../lib/fotos';
 import { url } from '../lib/url';
 
 const ano = new Date().getFullYear();
 const { instagram, whatsapp } = site.contato;
 const cidade = site.cidade.split(',')[0];
+// Paisagem de fundo do rodapé (ideia do "Scenic footer" do Inspora), pintada de azul pelo CSS
+const paisagens = fotosDa('paisagem');
+const fundo = paisagens[1] ?? paisagens[0];
 ---
 
 <footer class="rodape">
+  {
+    fundo && (
+      <div class="rodape-paisagem" aria-hidden="true">
+        <!-- Filtro "gravura": tira a cor, reduz a poucos tons (como tinta de impressão), mexe as bordas
+             de leve (traço feito à mão) e pinta de azul-marinho sobre papel creme -->
+        <svg width="0" height="0" style="position:absolute">
+          <filter id="gravura" color-interpolation-filters="sRGB">
+            <feColorMatrix in="SourceGraphic" type="saturate" values="0" />
+            <feComponentTransfer>
+              <feFuncR type="discrete" tableValues="0 0.18 0.36 0.6 0.82 1" />
+              <feFuncG type="discrete" tableValues="0 0.18 0.36 0.6 0.82 1" />
+              <feFuncB type="discrete" tableValues="0 0.18 0.36 0.6 0.82 1" />
+            </feComponentTransfer>
+            <!-- escuro → azul-marinho (#0e2a5c), claro → creme (#ece4cf) -->
+            <feColorMatrix
+              type="matrix"
+              values="0.87 0 0 0 0.055
+                      0.73 0 0 0 0.165
+                      0.45 0 0 0 0.36
+                      0    0 0 1 0"
+              result="tinta"
+            />
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="1" seed="4" result="ruido" />
+            <feDisplacementMap in="tinta" in2="ruido" scale="3" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </svg>
+        <Image src={fundo.src} alt="" widths={[800, 1400, 2000]} sizes="100vw" format="webp" quality={70} loading="lazy" />
+      </div>
+    )
+  }
   <div class="container">
     <div class="rodape-topo">
       <div class="assinatura">
         <p class="rotulo">{cidade} · Fotografia & código</p>
-        <a class="nome-grande" href={url('/')}>{site.nome}</a>
+        <!-- Assinatura que se escreve sozinha quando aparece (componente Signature do Spell UI) -->
+        <a class="nome-grande" href={url('/')} aria-label={site.nome}>
+          <svg viewBox="0 0 860 190" aria-hidden="true"><text x="6" y="148">{site.nome}</text></svg>
+        </a>
       </div>
 
       <button class="topo-botao" type="button" aria-label="Voltar ao topo">
@@ -44,6 +82,19 @@ const cidade = site.cidade.split(',')[0];
 </footer>
 
 <script>
+  // Assinatura: começa a "escrever" quando o rodapé aparece
+  const nome = document.querySelector('.nome-grande');
+  if (nome) {
+    new IntersectionObserver(
+      ([e], obs) => {
+        if (!e.isIntersecting) return;
+        nome.classList.add('escrever');
+        obs.disconnect();
+      },
+      { threshold: 0.6 },
+    ).observe(nome);
+  }
+
   document.querySelector('.topo-botao')?.addEventListener('click', () => {
     const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
     scrollTo({ top: 0, behavior: semMovimento ? 'auto' : 'smooth' });
@@ -52,10 +103,112 @@ const cidade = site.cidade.split(',')[0];
 
 <style>
   .rodape {
+    position: relative;
     margin-top: 8rem;
     padding-block: clamp(56px, 9vh, 96px) 2rem;
     border-top: 1px solid var(--linha);
     background: radial-gradient(ellipse at 15% 100%, rgb(var(--brilho) / 0.18), transparent 55%);
+    overflow: hidden;
+  }
+
+  .rodape > .container {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 12px rgb(3 5 11 / 0.7); /* texto legível por cima do creme da gravura */
+  }
+
+  /* Paisagem em duotom azul, sumindo para cima no fundo da página */
+  .rodape-paisagem {
+    position: absolute;
+    inset: 0;
+    -webkit-mask: linear-gradient(to bottom, transparent 0%, #000 40%);
+    mask: linear-gradient(to bottom, transparent 0%, #000 40%);
+  }
+
+  /* Paisagem como gravura em azul e creme (ideia do "Scenic footer" do Inspora) */
+  .rodape-paisagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 60%;
+    filter: contrast(1.25) url(#gravura);
+  }
+
+  /* hachuras finas por cima, como os riscos de uma gravura em metal */
+  .rodape-paisagem::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(118deg, rgb(14 42 102 / 0.32) 0 1px, transparent 1px 3.5px),
+      repeating-linear-gradient(28deg, rgb(14 42 102 / 0.12) 0 1px, transparent 1px 5px);
+    mix-blend-mode: multiply;
+  }
+
+  .rodape-paisagem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(to right, rgb(3 5 11 / 0.78), rgb(3 5 11 / 0.35) 45%, transparent 75%),
+      linear-gradient(to top, rgb(3 5 11 / 0.7), transparent 35%);
+  }
+
+  /* ---------- Assinatura escrita à mão ---------- */
+  .nome-grande svg {
+    display: block;
+    width: min(100%, 760px);
+    height: auto;
+    overflow: visible;
+  }
+
+  .nome-grande text {
+    font-family: var(--fonte-titulo);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 150px;
+    fill: transparent;
+    stroke: var(--texto);
+    stroke-width: 1.4px;
+    stroke-dasharray: 1400;
+    stroke-dashoffset: 1400;
+    transition: fill 0.4s;
+  }
+
+  .nome-grande.escrever text {
+    animation:
+      escrever 3s cubic-bezier(0.5, 0, 0.3, 1) forwards,
+      preencher 0.9s 2.4s ease forwards;
+  }
+
+  .nome-grande:hover text {
+    fill: var(--destaque);
+    stroke: var(--destaque);
+  }
+
+  @keyframes escrever {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes preencher {
+    to {
+      fill: var(--texto);
+      stroke-width: 0.4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nome-grande text {
+      stroke-dashoffset: 0;
+      fill: var(--texto);
+    }
+
+    .nome-grande.escrever text {
+      animation: none;
+    }
   }
 
   .rodape-topo {
@@ -65,18 +218,14 @@ const cidade = site.cidade.split(',')[0];
     gap: 2rem;
   }
 
-  .nome-grande {
-    display: inline-block;
-    margin-top: 0.8rem;
-    font-family: var(--fonte-titulo);
-    font-style: italic;
-    font-size: clamp(3rem, 10vw, 8rem);
-    line-height: 0.95;
-    transition: color 0.4s;
+  .assinatura {
+    flex: 1;
+    min-width: 0;
   }
 
-  .nome-grande:hover {
-    color: var(--destaque);
+  .nome-grande {
+    display: block;
+    margin-top: 0.8rem;
   }
 
   /* Botão de voltar ao topo (mesmo estilo das outras setas) */

@@ -1,38 +1,77 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Destaques from '../components/Destaques.astro';
 import Projetos from '../components/Projetos.astro';
 import CameraCena from '../components/CameraCena.astro';
+import TerminalCamera from '../components/TerminalCamera.astro';
 import { site, categorias, criacaoDeSites, destaques, projetos } from '../data/site';
 import { capa, fotosDa, fotosEmDestaque } from '../lib/fotos';
 import { url } from '../lib/url';
 
+// Fotos da capa: alternam sozinhas (em gravura). Troque os nomes aqui para usar outras fotos;
+// se nenhuma for encontrada, a capa usa a foto principal de site.ts.
+const fotosDeCapa = ['barcos na hora dourada']; // a mesma do rodapé (com uma só, a capa fica parada)
 const fotoCapa = capa();
+const fotosCapa = (() => {
+  const todas = categorias.flatMap((c) => fotosDa(c.slug));
+  const achadas = fotosDeCapa.flatMap((nome) => todas.filter((f) => f.alt === nome).slice(0, 1));
+  return achadas.length > 0 ? achadas : fotoCapa ? [fotoCapa] : [];
+})();
 const fotosDestaque = fotosEmDestaque(destaques);
 const ensaios = categorias.map((c) => ({ ...c, foto: fotosDa(c.slug)[0], total: fotosDa(c.slug).length }));
 const totalFotos = ensaios.reduce((soma, e) => soma + e.total, 0);
-const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
+// Fotos pequenas para o rastro do mouse na faixa (as mesmas do slider de destaques)
+const fotosRastro = await Promise.all(
+  fotosDestaque.map(async (f) => (await getImage({ src: f.src, width: 420, format: 'webp', quality: 70 })).src),
+);
+const linkSite =`https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
 ---
 
 <Base>
-  <!-- Capa estilo editorial (inspirada na Superhuman): foto em tela cheia, título fino e
-       cartões de vidro flutuando por cima. Tudo com parallax. -->
-  <section class="hero" data-parallax>
+  <!-- Capa estilo editorial (inspirada na Superhuman): foto em tela cheia e título fino, com parallax. -->
+  <!-- Capa em "gravura": as fotos viram ilustração gravada em azul-marinho e creme (como o rodapé)
+       e alternam sozinhas. Para voltar às fotos coloridas, é só tirar a classe "hero-gravura" daqui. -->
+  <section class="hero hero-gravura" data-parallax>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="gravura-capa" color-interpolation-filters="sRGB">
+        <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="cinza" />
+        <!-- um granulado fino misturado antes de reduzir os tons: as passagens entre um tom e outro
+             viram pontinhos, como o pontilhado de uma gravura, em vez de manchas -->
+        <feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="1" seed="3" />
+        <feColorMatrix type="saturate" values="0" result="granulado" />
+        <feComposite in="cinza" in2="granulado" operator="arithmetic" k1="0" k2="1" k3="0.22" k4="-0.11" />
+        <feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0 0.14 0.28 0.44 0.6 0.76 0.9 1" />
+          <feFuncG type="discrete" tableValues="0 0.14 0.28 0.44 0.6 0.76 0.9 1" />
+          <feFuncB type="discrete" tableValues="0 0.14 0.28 0.44 0.6 0.76 0.9 1" />
+        </feComponentTransfer>
+        <!-- escuro → azul-marinho do site (#0b1f4f), claro → creme (#efe7d3) -->
+        <feColorMatrix
+          type="matrix"
+          values="0.894 0 0 0 0.043
+                  0.784 0 0 0 0.122
+                  0.518 0 0 0 0.31
+                  0     0 0 1 0"
+        />
+      </filter>
+    </svg>
     <div class="hero-moldura">
       {
-        fotoCapa ? (
-          <Image
-            class="hero-foto"
-            src={fotoCapa.src}
-            alt={fotoCapa.alt}
-            widths={[800, 1400, 2000, 2400]}
-            sizes="100vw"
-            format="webp"
-            quality={80}
-            loading="eager"
-            fetchpriority="high"
-          />
+        fotosCapa.length > 0 ? (
+          fotosCapa.map((foto, i) => (
+            <Image
+              class:list={['hero-foto', 'hero-slide', { ativa: i === 0 }]}
+              src={foto.src}
+              alt={foto.alt}
+              widths={[800, 1400, 2000, 2400]}
+              sizes="100vw"
+              format="webp"
+              quality={80}
+              loading="eager"
+              fetchpriority={i === 0 ? 'high' : 'low'}
+            />
+          ))
         ) : (
           <div class="hero-foto hero-vazio">
             <span>sua foto de capa</span>
@@ -42,53 +81,59 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     </div>
 
     <div class="hero-texto container">
-      <p class="rotulo entrar">Fotografia · {site.cidade}</p>
+      <p class="hero-selo entrar"><i aria-hidden="true"></i> Agenda aberta · Fotografia & sites · {site.cidade.split(',')[0]}</p>
       <h1 class="entrar">
         {site.frase.inicio} <em class="marca-texto">{site.frase.destaque}</em>
+        <!-- Cópia dourada do título por cima, revelada por uma faixa que passa: a luz do pôr do sol
+             correndo pelas letras ("Gradient Sweep", visto no Details Vault) -->
+        <span class="titulo-brilho" aria-hidden="true">
+          {site.frase.inicio} <em class="marca-texto">{site.frase.destaque}</em>
+        </span>
       </h1>
       <p class="hero-assinatura entrar">
-        {site.nome} — {categorias.map((c) => c.titulo).join(' · ')}
+        {site.nome} — {categorias.map((c) => c.titulo).join(' · ')} · Sites
       </p>
       <div class="hero-acoes entrar">
         <a class="botao" href="#ensaios">Ver ensaios</a>
-        <a class="link-seta" href={url('/contato')}>Fale comigo <span aria-hidden="true">→</span></a>
+        <a class="botao-claro" href={linkSite} target="_blank" rel="noopener">
+          Quero meu site
+          <span class="botao-claro-icone" aria-hidden="true">↗</span>
+        </a>
       </div>
     </div>
 
-    <!-- Cartões de vidro flutuando sobre a foto -->
-    <div class="vidros" aria-hidden="true">
-      <div class="vidro vidro-ensaios">
-        <p class="vidro-rotulo">Ensaios</p>
-        <ul>
-          {
-            ensaios.map((e) => (
-              <li>
-                <span>{e.titulo}</span>
-                <b>{e.total}</b>
-              </li>
-            ))
-          }
-        </ul>
-        <p class="vidro-rodape">{totalFotos} fotos · Nikon D3200</p>
-      </div>
-      <div class="vidro vidro-agenda"><i></i> Agenda aberta · {site.cidade.split(',')[0]}</div>
-      <div class="vidro vidro-codigo">
-        <span class="vidro-rotulo">Também programo</span>
-        <b>{projetos.filter((p) => p.destaque).length} sites no ar</b>
-      </div>
-    </div>
   </section>
 
-  <!-- Câmera 3D que vira de costas com a rolagem e dá zoom no display até virar o slider (anime.js) -->
-  <CameraCena foto={fotosDestaque[0]}>
+  <!-- Câmera 3D que mira em você, dá zoom, foca e dispara (flash → slider); o terminal narra em código -->
+  <CameraCena
+    foto={fotosDestaque[0]}
+    info={{
+      nome: site.nome,
+      cidade: site.cidade.split(',')[0],
+      ensaios: ensaios.map((e) => ({ titulo: e.titulo, total: e.total })),
+      totalFotos: ensaios.reduce((soma, e) => soma + e.total, 0),
+      sitesNoAr: projetos.filter((p) => p.destaque).length,
+    }}
+  >
+    <TerminalCamera
+      slot="lado"
+      nome={site.nome}
+      cidade={site.cidade.split(',')[0]}
+      ensaios={ensaios}
+      sitesNoAr={projetos.filter((p) => p.destaque).length}
+    />
     <Destaques fotos={fotosDestaque} />
   </CameraCena>
 
-  <!-- Faixa de texto que corre para o lado com a rolagem (ScrollTrigger) -->
-  <div class="faixa" aria-hidden="true">
-    <p class="faixa-texto">
-      {Array.from({ length: 4 }, () => categorias.map((c) => <span>{c.titulo} <i>✦</i> </span>))}
-    </p>
+  <!-- Faixa de texto que corre para o lado com a rolagem (ScrollTrigger). Passando o mouse, as
+       fotos vão aparecendo atrás do cursor ("Image cursor trail", visto no Skiper-UI). -->
+  <div class="faixa-area" data-rastro={JSON.stringify(fotosRastro)}>
+    <div class="faixa" aria-hidden="true">
+      <p class="faixa-texto">
+        {Array.from({ length: 4 }, () => categorias.map((c) => <span>{c.titulo} <i>✦</i> </span>))}
+      </p>
+    </div>
+    <div class="rastro" aria-hidden="true"></div>
   </div>
 
   <section id="ensaios" class="container secao">
@@ -123,23 +168,136 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   <!-- Projetos de programação (dados em site.ts → projetos) -->
   <section id="sites" class="container secao-codigo">
+    <!-- Abertura que vende (ideias da agência do Gustavo Campelo): selo, frase forte, um botão
+         claro de orçamento e três diferenciais. Premium = espaço e hierarquia, não excesso. -->
     <div class="codigo-topo">
-      <div>
-        <p class="rotulo">Projetos</p>
-        <h2>{criacaoDeSites.titulo}</h2>
-        <p class="codigo-descricao">{criacaoDeSites.texto}</p>
-      </div>
+      <p class="hero-selo selo-sites"><i aria-hidden="true"></i> Também crio sites</p>
+      <h2>Sites que fazem sua marca parecer o que ela <em class="marca-texto">vale.</em></h2>
+      <p class="codigo-descricao">{criacaoDeSites.texto}</p>
       <div class="codigo-links">
-        <a class="botao" href={linkSite} target="_blank" rel="noopener">Quero meu site</a>
+        <a class="botao-claro" href={linkSite} target="_blank" rel="noopener">
+          Solicitar orçamento
+          <span class="botao-claro-icone" aria-hidden="true">↗</span>
+        </a>
         <a class="link-seta" href={url('/projetos')}>Todos os projetos <span aria-hidden="true">→</span></a>
       </div>
     </div>
+
+    <ul class="diferenciais">
+      <li class="revelar">
+        <span class="diferencial-num">01</span>
+        <h3>Feito do zero</h3>
+        <p>Nada de modelo pronto: o visual nasce da sua marca, das suas cores e do seu público.</p>
+      </li>
+      <li class="revelar">
+        <span class="diferencial-num">02</span>
+        <h3>Animação na medida</h3>
+        <p>Movimento que guia o olhar e valoriza o produto, sem pesar nem distrair.</p>
+      </li>
+      <li class="revelar">
+        <span class="diferencial-num">03</span>
+        <h3>Rápido no celular</h3>
+        <p>Pensado primeiro para o telefone, carrega rápido e está pronto para o link da bio.</p>
+      </li>
+    </ul>
+
     <Projetos />
   </section>
 
 </Base>
 
+<script>
+  // Capa: alterna as fotos a cada 7 s (só enquanto a capa está na tela e a aba está aberta)
+  const slides = [...document.querySelectorAll<HTMLElement>('.hero-slide')];
+  if (slides.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let atual = 0;
+    let capaVisivel = true;
+    new IntersectionObserver(([e]) => (capaVisivel = e.isIntersecting)).observe(document.querySelector('.hero')!);
+    setInterval(() => {
+      if (!capaVisivel || document.hidden) return;
+      slides[atual].classList.remove('ativa');
+      atual = (atual + 1) % slides.length;
+      slides[atual].classList.add('ativa');
+    }, 7000);
+  }
+
+  // Rastro de fotos na faixa: a cada ~90px que o mouse anda, uma foto aparece no cursor,
+  // fica um instante e some. Só no computador e sem "reduzir movimento".
+  const area = document.querySelector<HTMLElement>('.faixa-area');
+  const temMouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (area && temMouse && !semMovimento) {
+    const rastro = area.querySelector<HTMLElement>('.rastro')!;
+    const fotos: string[] = JSON.parse(area.dataset.rastro ?? '[]');
+    // baixa as fotos só quando a faixa chega perto da tela
+    new IntersectionObserver(
+      ([e], obs) => {
+        if (!e.isIntersecting) return;
+        fotos.forEach((src) => (new Image().src = src));
+        obs.disconnect();
+      },
+      { rootMargin: '400px' },
+    ).observe(area);
+
+    let proxima = 0;
+    let ultimoX = -999;
+    let ultimoY = -999;
+
+    area.addEventListener('pointermove', (e) => {
+      const caixa = area.getBoundingClientRect();
+      const x = e.clientX - caixa.left;
+      const y = e.clientY - caixa.top;
+      if (Math.hypot(x - ultimoX, y - ultimoY) < 90 || fotos.length === 0) return;
+      ultimoX = x;
+      ultimoY = y;
+
+      const img = document.createElement('img');
+      img.src = fotos[proxima];
+      img.alt = '';
+      proxima = (proxima + 1) % fotos.length;
+      img.style.left = `${x}px`;
+      img.style.top = `${y}px`;
+      const giro = `rotate(${((Math.random() - 0.5) * 10).toFixed(1)}deg)`;
+      rastro.append(img);
+
+      img
+        .animate(
+          [
+            { opacity: 0, transform: `translate(-50%, -50%) ${giro} scale(0.6)` },
+            { opacity: 1, transform: `translate(-50%, -50%) ${giro} scale(1)`, offset: 0.18 },
+            { opacity: 1, transform: `translate(-50%, -50%) ${giro} scale(1)`, offset: 0.6 },
+            { opacity: 0, transform: `translate(-50%, -40%) ${giro} scale(0.9)` },
+          ],
+          { duration: 1300, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', fill: 'forwards' },
+        )
+        .finished.then(() => img.remove());
+    });
+  }
+</script>
+
 <style>
+  /* ---------- Rastro de fotos na faixa ---------- */
+  .faixa-area {
+    position: relative;
+  }
+
+  .rastro {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .rastro :global(img) {
+    position: absolute;
+    width: clamp(150px, 14vw, 220px);
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.7);
+    opacity: 0;
+  }
+
   /* ---------- CAPA ---------- */
   .hero {
     position: relative;
@@ -172,6 +330,47 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
       linear-gradient(to right, rgb(0 0 0 / 0.55) 0%, transparent 55%);
   }
 
+  /* ---------- Fotos da capa alternando: troca em fade, com um zoom bem lento na que está à vista ---------- */
+  .hero-slide {
+    opacity: 0;
+    scale: 1.06;
+    transition:
+      opacity 1.8s ease,
+      scale 9s linear;
+  }
+
+  .hero-slide.ativa {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* ---------- TESTE: capa em gravura azul e creme ---------- */
+  .hero-gravura .hero-foto {
+    filter: contrast(1.2) url(#gravura-capa);
+    object-position: center 68%; /* mostra a cidade e os barcos, como no rodapé, em vez de só céu */
+  }
+
+  /* hachuras finas por cima, como os riscos de uma gravura em metal */
+  .hero-gravura .hero-moldura::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(118deg, rgb(11 31 79 / 0.2) 0 1px, transparent 1px 3.5px),
+      repeating-linear-gradient(28deg, rgb(11 31 79 / 0.08) 0 1px, transparent 1px 5px);
+    mix-blend-mode: multiply;
+  }
+
+  /* véu azul-marinho (em vez de preto) para o texto continuar legível sobre o creme */
+  .hero-gravura .hero-moldura::after {
+    z-index: 1;
+    background:
+      linear-gradient(to top, var(--fundo) 0%, rgb(8 20 52 / 0.55) 35%, transparent 70%),
+      linear-gradient(to right, rgb(8 20 52 / 0.75) 0%, rgb(8 20 52 / 0.25) 45%, transparent 70%);
+  }
+
 
   .hero-foto {
     position: absolute;
@@ -183,6 +382,130 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     animation: zoom 18s ease-out both;
     translate: calc(var(--px, 0) * -30px) calc(var(--py, 0) * -30px);
     transition: translate 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* ---------- Brilho de pôr do sol passando pelo título ---------- */
+  .hero h1 {
+    position: relative;
+  }
+
+  .titulo-brilho {
+    position: absolute;
+    inset: 0;
+    color: #fff3dc; /* creme da gravura */
+    text-shadow:
+      0 0 18px rgb(255 236 200 / 0.6),
+      0 2px 24px rgb(0 0 0 / 0.35);
+    pointer-events: none;
+    /* só a faixa diagonal aparece; ela entra pela esquerda e atravessa o título até sair à direita */
+    -webkit-mask: linear-gradient(105deg, transparent 40%, #000 48%, #000 52%, transparent 60%) 100% 0 / 300% 100% no-repeat;
+    mask: linear-gradient(105deg, transparent 40%, #000 48%, #000 52%, transparent 60%) 100% 0 / 300% 100% no-repeat;
+    animation: varrer 2.4s 1.5s cubic-bezier(0.45, 0, 0.2, 1) both;
+  }
+
+  /* na cópia, sem marca-texto azul e sem a animação dela */
+  .titulo-brilho .marca-texto {
+    background: none;
+    animation: none;
+  }
+
+  .hero h1:hover .titulo-brilho {
+    animation: varrer-de-novo 1.6s cubic-bezier(0.45, 0, 0.2, 1) both;
+  }
+
+  @keyframes varrer {
+    from {
+      -webkit-mask-position: 100% 0;
+      mask-position: 100% 0;
+    }
+    to {
+      -webkit-mask-position: 0% 0;
+      mask-position: 0% 0;
+    }
+  }
+
+  /* mesma coisa com outro nome, para o hover reiniciar a animação */
+  @keyframes varrer-de-novo {
+    from {
+      -webkit-mask-position: 100% 0;
+      mask-position: 100% 0;
+    }
+    to {
+      -webkit-mask-position: 0% 0;
+      mask-position: 0% 0;
+    }
+  }
+
+  /* Selo em pílula no topo do texto (ideia da capa da agência WebHub) */
+  .hero-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 8px 16px;
+    border: 1px solid rgb(255 255 255 / 0.16);
+    border-radius: 99px;
+    background: rgb(255 255 255 / 0.07);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(236 233 242 / 0.88);
+  }
+
+  .hero-selo i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 0 0 rgb(74 222 128 / 0.7);
+    animation: pulso-selo 2s ease-out infinite;
+  }
+
+  @keyframes pulso-selo {
+    to {
+      box-shadow: 0 0 0 9px transparent;
+    }
+  }
+
+  /* Botão claro com o ícone num círculo (como o "Solicitar orçamento" da WebHub) */
+  .botao-claro {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 6px 6px 22px;
+    border-radius: 99px;
+    background: var(--texto);
+    color: var(--fundo);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition:
+      background 0.3s,
+      translate 0.3s;
+  }
+
+  .botao-claro-icone {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--botao);
+    color: var(--texto);
+    font-size: 1rem;
+    letter-spacing: 0;
+    transition: rotate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .botao-claro:hover {
+    background: #fff;
+  }
+
+  .botao-claro:hover .botao-claro-icone {
+    rotate: 45deg;
   }
 
   .hero-vazio {
@@ -209,25 +532,28 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   /* Frase grande e pesada, estilo revista */
   /* Título editorial: fino, grande e em caixa normal ("sussurra em vez de gritar") */
+  /* Título em Instrument Serif: a serifa editorial dos portfólios premium da Refero (mesmo desenho
+     da PP Editorial New, mas gratuita). "O mundo" em pé numa linha, "pelas minhas lentes." em itálico
+     na outra. O resto do site segue na Inter, como nos portfólios de fotografia de referência. */
   .hero h1 {
-    max-width: 14ch;
-    margin: 1rem 0 1.5rem;
-    font-family: var(--fonte-texto);
-    font-size: clamp(2.8rem, 6.6vw, 6.4rem);
+    margin: 1.1rem 0 1.5rem;
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: clamp(2.8rem, 8.6vw, 9rem);
     font-weight: 400;
-    line-height: 1;
-    letter-spacing: -0.045em;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
     text-shadow: 0 2px 24px rgb(0 0 0 / 0.35);
   }
 
-
   .hero h1 .marca-texto {
-    font-family: var(--fonte-titulo);
-    font-weight: 500;
-    letter-spacing: 0;
+    font-family: inherit;
+    font-weight: 400;
+    letter-spacing: -0.02em;
     text-transform: none;
-    font-size: 1.12em;
-    display: inline-block; /* a parte em itálico nunca quebra no meio */
+    font-size: 1em;
+    display: block; /* sempre na linha de baixo... */
+    width: fit-content; /* ...e o marca-texto só do tamanho da frase */
+    white-space: nowrap;
   }
 
   /* Marca-texto azul embaixo da frase (ideia do portfólio da Melyssa Griffin) */
@@ -244,118 +570,6 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   .hero .marca-texto {
     background-size: 0% 100%;
     animation: marcar 1s 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  }
-
-  /* ---------- CARTÕES DE VIDRO (inspirado na Superhuman) ----------
-     Vidro translúcido com desfoque, borda finíssima e sem sombra pesada. Só usa branco
-     transparente por cima da foto, então não mexe nas cores do tema. */
-  .vidros {
-    position: absolute;
-    z-index: 2;
-    right: var(--margem);
-    bottom: clamp(48px, 9vh, 96px);
-    display: grid;
-    justify-items: end;
-    gap: 14px;
-    translate: calc(var(--px, 0) * -22px) calc(var(--py, 0) * -16px);
-    transition: translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .vidro {
-    border: 1px solid rgb(255 255 255 / 0.14);
-    border-radius: 16px;
-    background: rgb(255 255 255 / 0.07);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    backdrop-filter: blur(18px) saturate(140%);
-    color: var(--texto);
-    animation: flutuar-vidro 7s ease-in-out infinite alternate;
-  }
-
-  .vidro-ensaios {
-    width: 260px;
-    padding: 18px 20px;
-  }
-
-  .vidro-rotulo {
-    margin: 0 0 10px;
-    font-size: 0.68rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgb(255 255 255 / 0.6);
-  }
-
-  .vidro ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .vidro li {
-    display: flex;
-    justify-content: space-between;
-    padding: 9px 0;
-    border-top: 1px solid rgb(255 255 255 / 0.1);
-    font-size: 0.9rem;
-  }
-
-  .vidro li b {
-    font-weight: 400;
-    color: var(--destaque);
-  }
-
-  .vidro-rodape {
-    margin: 10px 0 0;
-    font-size: 0.72rem;
-    color: rgb(255 255 255 / 0.55);
-  }
-
-  .vidro-agenda {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
-    border-radius: 99px;
-    font-size: 0.78rem;
-    animation-delay: -2s;
-  }
-
-  .vidro-agenda i {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--destaque);
-    box-shadow: 0 0 0 0 var(--destaque);
-    animation: pulso 2s ease-out infinite;
-  }
-
-  .vidro-codigo {
-    display: grid;
-    gap: 2px;
-    padding: 12px 18px;
-    animation-delay: -4s;
-  }
-
-  .vidro-codigo .vidro-rotulo {
-    margin: 0;
-  }
-
-  .vidro-codigo b {
-    font-family: var(--fonte-titulo);
-    font-style: italic;
-    font-weight: 400;
-    font-size: 1.3rem;
-  }
-
-  @keyframes flutuar-vidro {
-    to {
-      transform: translateY(-8px);
-    }
-  }
-
-  @keyframes pulso {
-    to {
-      box-shadow: 0 0 0 10px transparent;
-    }
   }
 
   /* ---------- FAIXA DE TEXTO ---------- */
@@ -549,22 +763,83 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   .codigo-descricao {
     max-width: 52ch;
-    margin: 1.2rem 0 0;
+    margin: 0 0 2.2rem;
+    font-size: 1.05rem;
     color: var(--texto-suave);
   }
 
   .codigo-topo {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: clamp(48px, 8vh, 90px);
+    max-width: 980px;
+    margin-bottom: clamp(56px, 9vh, 96px);
   }
 
   .codigo-topo h2 {
-    font-size: clamp(2.6rem, 7vw, 5rem);
-    margin-top: 0.75rem;
+    max-width: 16ch;
+    margin: 1.4rem 0 1.4rem;
+    font-family: var(--fonte-texto);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 6.4vw, 5.6rem);
+    line-height: 1;
+    letter-spacing: -0.045em;
+  }
+
+  .codigo-topo h2 .marca-texto {
+    font-family: var(--fonte-titulo);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  /* ---------- Três diferenciais numa linha fina ---------- */
+  .diferenciais {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0 0 clamp(80px, 14vh, 150px);
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--linha);
+  }
+
+  .diferenciais li {
+    padding: 1.8rem 2rem 0 0;
+  }
+
+  .diferenciais li + li {
+    padding-left: 2rem;
+    border-left: 1px solid var(--linha);
+  }
+
+  .diferencial-num {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    color: var(--destaque);
+  }
+
+  .diferenciais h3 {
+    margin: 0.8rem 0 0.5rem;
+    font-family: var(--fonte-titulo);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+  }
+
+  .diferenciais p {
+    margin: 0;
+    max-width: 32ch;
+    font-size: 0.9rem;
+    color: var(--texto-suave);
+  }
+
+  @media (max-width: 760px) {
+    .diferenciais {
+      grid-template-columns: 1fr;
+    }
+
+    .diferenciais li,
+    .diferenciais li + li {
+      padding: 1.4rem 0;
+      border-left: 0;
+      border-bottom: 1px solid var(--linha);
+    }
   }
 
   /* ---------- CRIAÇÃO DE SITES ---------- */
@@ -707,8 +982,9 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
       padding-top: 96px;
     }
 
-    .vidros {
-      display: none;
+    .hero-selo {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
     }
 
     .sites {
@@ -748,9 +1024,10 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
   @media (prefers-reduced-motion: reduce) {
     .hero-foto,
-    .entrar,
-    .vidro,
-    .vidro-agenda i {
+    .hero-selo i,
+    .titulo-brilho,
+    .hero h1:hover .titulo-brilho,
+    .entrar {
       animation: none;
     }
 

@@ -28,7 +28,8 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
     destaques.map((projeto, i) => {
       const print = printDe(projeto.imagem);
       return (
-        <article class="projeto revelar">
+        <article class="projeto revelar" style={projeto.cor ? `--cor-projeto: ${projeto.cor}` : undefined}>
+          <div class="palco">
           <a
             class="janela"
             href={projeto.site ?? projeto.codigo}
@@ -74,6 +75,7 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
               <span class="tela-dica">passe o mouse para rolar o site</span>
             </div>
           </a>
+          </div>
 
           <div class="projeto-texto">
             <p class="rotulo">
@@ -177,12 +179,61 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
   }
 
   /* Um sim, um não: o print troca de lado */
-  .projeto:nth-child(even) .janela {
+  .projeto:nth-child(even) .palco {
     order: 2;
+  }
+
+  /* ---------- Palco: a janela "acesa" pela cor do próprio site, como foto de produto em
+     estúdio (ideia dos mockups em cenário do Gustavo Campelo). A luz cresce no hover. ---------- */
+  .palco {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .palco::before {
+    content: '';
+    position: absolute;
+    inset: -14% -10% -16%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--cor-projeto, var(--destaque)) 70%, transparent), transparent);
+    filter: blur(50px);
+    opacity: 0.6;
+    transition:
+      opacity 0.8s,
+      scale 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* reflexo da luz no "chão", embaixo da janela */
+  .palco::after {
+    content: '';
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    bottom: -38px;
+    z-index: -1;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--cor-projeto, var(--destaque)) 45%, transparent), transparent);
+    filter: blur(14px);
+    opacity: 0.5;
+    transition: opacity 0.8s;
+  }
+
+  .palco:hover::before {
+    opacity: 0.9;
+    scale: 1.08;
+  }
+
+  .palco:hover::after {
+    opacity: 0.85;
   }
 
   .janela {
     display: block;
+    box-shadow:
+      0 40px 80px -40px rgb(0 0 0 / 0.9),
+      0 0 0 1px color-mix(in srgb, var(--cor-projeto, var(--destaque)) 18%, transparent);
     border: 1px solid var(--linha);
     border-radius: 10px;
     overflow: hidden;
@@ -405,7 +456,7 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
   }
 
   .projeto-num {
-    color: var(--destaque);
+    color: var(--cor-projeto, var(--destaque));
     margin-right: 0.6rem;
   }
 
@@ -535,7 +586,7 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
       grid-template-columns: 1fr;
     }
 
-    .projeto:nth-child(even) .janela {
+    .projeto:nth-child(even) .palco {
       order: 0;
     }
 

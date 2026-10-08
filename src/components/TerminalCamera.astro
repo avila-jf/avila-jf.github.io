@@ -1,0 +1,242 @@
+---
+// Terminal ao lado da câmera (na CameraCena): mostra os dados do portfólio como código e vai
+// "executando" o que a câmera faz enquanto você rola — ligar, mirar, zoom, foco, disparar.
+// É o lado programador do site conversando com o lado fotógrafo.
+// Ouve o evento "camera:progresso" que a CameraCena dispara a cada quadro.
+import { url } from '../lib/url';
+
+interface Props {
+  nome: string;
+  cidade: string;
+  ensaios: { slug: string; total: number }[];
+  sitesNoAr: number;
+}
+
+const { nome, cidade, ensaios, sitesNoAr } = Astro.props;
+---
+
+<div class="terminal">
+  <div class="term-barra" aria-hidden="true">
+    <i></i><i></i><i></i>
+    <span>fotografo.ts</span>
+  </div>
+
+  <div class="term-corpo">
+    <pre class="term-objeto"><code><span class="k">const</span> <span class="v">fotografo</span> = {'{'}
+  nome: <span class="s">'{nome}'</span>,
+  cidade: <span class="s">'{cidade}'</span>,
+  camera: <span class="s">'Nikon D3200'</span>,
+  ensaios: {'{'} {ensaios.map((e, i) => (<Fragment><a class="term-link" href={url(`/${e.slug}`)}>{e.slug}</a>: <span class="n">{e.total}</span>{i < ensaios.length - 1 ? ', ' : ' '}</Fragment>))}{'}'},
+  <a class="term-link" href="#sites">sitesNoAr</a>: <span class="n">{sitesNoAr}</span>,
+  <a class="term-link" href={url('/contato')}>agenda</a>: <span class="s">'aberta'</span>,
+{'}'};</code></pre>
+
+    <ol class="term-passos" aria-hidden="true">
+      <li data-passo="ligar"><span><span class="p">›</span> camera.<b>ligar</b>()</span><em></em></li>
+      <li data-passo="mirar"><span><span class="p">›</span> camera.<b>mirar</b>(voce)</span><em></em></li>
+      <li data-passo="zoom"><span><span class="p">›</span> lente.<b>zoom</b>(<span class="n">18</span>, <span class="n">55</span>)</span><em></em></li>
+      <li data-passo="foco"><span><span class="p">›</span> foco.<b>travar</b>()</span><em></em></li>
+      <li data-passo="disparar"><span><span class="p">›</span> camera.<b>disparar</b>()</span><em></em></li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  const passos = [...document.querySelectorAll<HTMLElement>('.term-passos li')];
+  const status = (nome: string) => passos.find((p) => p.dataset.passo === nome)!;
+  const escrever = (li: HTMLElement, estado: 'espera' | 'rodando' | 'ok', texto: string) => {
+    li.dataset.estado = estado;
+    const em = li.querySelector('em')!;
+    if (em.textContent !== texto) em.textContent = texto;
+  };
+
+  document.addEventListener('camera:progresso', (e) => {
+    const { p, virar, zoom, foco, foto } = (e as CustomEvent).detail as Record<string, number | boolean>;
+    const barra = (t: number) => '▰'.repeat(Math.round(t * 8)) + '▱'.repeat(8 - Math.round(t * 8));
+
+    escrever(status('ligar'), (p as number) > 0.01 ? 'ok' : 'rodando', (p as number) > 0.01 ? '✓ ligada' : '');
+
+    const v = virar as number;
+    escrever(status('mirar'), v >= 1 ? 'ok' : v > 0 ? 'rodando' : 'espera', v >= 1 ? '✓ te achei' : v > 0 ? `${Math.round(v * 100)}%` : '');
+
+    const z = zoom as number;
+    const mm = Math.round(18 + z * 37);
+    escrever(status('zoom'), z >= 1 ? 'ok' : z > 0 ? 'rodando' : 'espera', z > 0 ? `${barra(z)} ${mm}mm` : '');
+
+    const f = foco as number;
+    escrever(status('foco'), f >= 1 ? 'ok' : f > 0 ? 'rodando' : 'espera', f >= 1 ? '● AF-S travado' : f > 0 ? 'focando…' : '');
+
+    escrever(status('disparar'), foto ? 'ok' : f >= 1 ? 'rodando' : 'espera', foto ? '✓ click!' : f >= 1 ? 'role ↓' : '');
+  });
+</script>
+
+<style>
+  .terminal {
+    width: min(100%, 470px);
+    border: 1px solid rgb(106 169 236 / 0.22);
+    border-radius: 14px;
+    background: rgb(5 9 20 / 0.82);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 40px 90px -40px rgb(var(--brilho) / 1);
+    font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: #c9d4e6;
+    overflow: hidden;
+    /* entrada (CameraCena adiciona .visivel) */
+    opacity: 0;
+    translate: 0 30px;
+    transition:
+      opacity 0.8s,
+      translate 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  :global(.visivel) .terminal,
+  :global(.camera-cena:not(.ativa)) .terminal {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .term-barra {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgb(106 169 236 / 0.14);
+    background: rgb(255 255 255 / 0.02);
+  }
+
+  .term-barra i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #2a3550;
+  }
+
+  .term-barra span {
+    margin-left: 8px;
+    font-size: 0.72rem;
+    color: var(--texto-suave);
+  }
+
+  .term-corpo {
+    padding: 14px 18px 16px;
+  }
+
+  .term-objeto {
+    margin: 0 0 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgb(106 169 236 / 0.16);
+    font: inherit;
+    white-space: pre-wrap;
+  }
+
+  .k {
+    color: #c49bff;
+  }
+
+  .v {
+    color: var(--destaque);
+  }
+
+  .s {
+    color: #9fd8b0;
+  }
+
+  .n {
+    color: #ffcf8a;
+  }
+
+  .term-link {
+    color: #e8eef7;
+    text-decoration: underline;
+    text-decoration-color: rgb(106 169 236 / 0.4);
+    text-underline-offset: 3px;
+    transition:
+      color 0.2s,
+      text-decoration-color 0.2s;
+  }
+
+  .term-link:hover {
+    color: var(--destaque);
+    text-decoration-color: var(--destaque);
+  }
+
+  .term-passos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .term-passos li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    opacity: 0.32;
+    transition: opacity 0.3s;
+  }
+
+  .term-passos li b {
+    font-weight: 500;
+    color: var(--destaque);
+  }
+
+  .p {
+    color: var(--texto-suave);
+  }
+
+  .term-passos em {
+    font-style: normal;
+    white-space: nowrap;
+    color: var(--texto-suave);
+  }
+
+  .term-passos li[data-estado='rodando'],
+  .term-passos li[data-estado='ok'] {
+    opacity: 1;
+  }
+
+  .term-passos li[data-estado='ok'] em {
+    color: #9fd8b0;
+  }
+
+  /* cursor piscando na linha que está rodando */
+  .term-passos li[data-estado='rodando'] em::after {
+    content: '▌';
+    margin-left: 4px;
+    color: var(--destaque);
+    animation: piscar 1s steps(1) infinite;
+  }
+
+  .term-passos li[data-passo='foco'][data-estado='ok'] em {
+    color: #4ade80;
+  }
+
+  @keyframes piscar {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .terminal {
+      width: 100%;
+      font-size: 0.7rem;
+    }
+
+    .term-objeto {
+      display: none; /* no celular, só os comandos */
+    }
+
+    .term-corpo {
+      padding: 10px 14px 12px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .term-passos li[data-estado='rodando'] em::after {
+      animation: none;
+    }
+  }
+</style>

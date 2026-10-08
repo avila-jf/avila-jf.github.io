@@ -1,39 +1,59 @@
 ---
-// Cena da câmera (anime.js + rolagem): uma Nikon D3200 em 3D (three.js, em src/lib/camera3d.ts)
-// aparece de lado, vira de costas enquanto você desce a página, dá zoom no display e o slider
-// "sai" de dentro dele.
-// O conteúdo do meio (<slot />) é o slider de destaques.
+// Cena da câmera: uma Nikon D3200 em 3D (three.js, em src/lib/camera3d.ts) à esquerda e um
+// terminal à direita. A câmera chega de costas, com o display mostrando um menu com os ensaios,
+// a agenda e os sites. Enquanto você rola, ela vira e mira em você (segue o mouse), dá zoom,
+// foca (a mira em volta do cursor fecha e fica verde) e dispara: um flash branco cobre a tela,
+// escurece para o azul-marinho do tema e revela o slider de destaques.
+// O terminal (slot "lado") vai narrando cada passo como código.
+// O conteúdo do meio (<slot />) é o slider.
 // Sem JavaScript ou com "reduzir movimento" ligado, a câmera some e o slider aparece normal.
 import { getImage } from 'astro:assets';
 import type { Foto } from '../lib/fotos';
+import type { InfoDisplay } from '../lib/camera3d';
 
 interface Props {
-  foto?: Foto; // foto que aparece no display da câmera (use a primeira do slider para emendar)
+  foto?: Foto; // foto de fundo do menu no display (use a primeira do slider para emendar)
+  info: InfoDisplay; // o que o menu do display mostra
 }
 
-const { foto } = Astro.props;
-const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format: 'webp', quality: 80 })).src : undefined;
+const { foto, info } = Astro.props;
+const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format: 'webp', quality: 70 })).src : undefined;
 ---
 
-<div class="camera-cena" data-foto={fotoDisplay}>
+<div class="camera-cena" data-foto={fotoDisplay} data-info={JSON.stringify(info)}>
   <div class="camera-palco">
+    <!-- Palavras gigantes atrás da câmera (ideia do OFF+BRAND e do Rose Island) -->
+    <p class="camera-palavras" aria-hidden="true">
+      <span class="palavra-1">Pela</span>
+      <span class="palavra-2"><em>minha</em></span>
+      <span class="palavra-3">lente</span>
+    </p>
+
     <div class="camera-intro" aria-hidden="true">
-      <p class="rotulo">Pela minha lente</p>
-      <p class="camera-dica">role para ver <span>↓</span></p>
+      <p class="camera-dica">role para fotografar <span>↓</span></p>
     </div>
 
-    <div class="camera-zoom" aria-hidden="true">
-      <canvas class="camera-3d"></canvas>
+    <div class="camera-lado">
+      <div class="camera-zoom" aria-hidden="true">
+        <canvas class="camera-3d"></canvas>
+      </div>
+      <div class="camera-baloes">
+        <slot name="lado" />
+      </div>
     </div>
 
     <div class="camera-slider">
       <slot />
     </div>
+
+    <!-- Mira de foco que segue o cursor -->
+    <div class="camera-mira" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
+
+    <div class="camera-flash" aria-hidden="true"></div>
   </div>
 </div>
 
 <script>
-  import { createTimeline } from 'animejs';
   import type { Camera3D } from '../lib/camera3d';
 
   const cena = document.querySelector<HTMLElement>('.camera-cena');
@@ -42,104 +62,129 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format:
   if (cena && !semMovimento) {
     cena.classList.add('ativa');
 
+    const flash = cena.querySelector<HTMLElement>('.camera-flash')!;
     const zoom = cena.querySelector<HTMLElement>('.camera-zoom')!;
-    const intro = cena.querySelector<HTMLElement>('.camera-intro')!;
-    const slider = cena.querySelector<HTMLElement>('.camera-slider')!;
     const tela = cena.querySelector<HTMLCanvasElement>('.camera-3d')!;
-
-    // Estado da cena (0 → 1). O anime.js anima estes números conforme a rolagem
-    const estado = { giro: 0, zoom: 0, slider: 0 };
     let camera3d: Camera3D | undefined;
 
-    function desenhar() {
-      const { giro: g, zoom: z, slider: s } = estado;
-      camera3d?.definir(g, z);
-      zoom.style.opacity = String(1 - s);
-      intro.style.opacity = String(Math.max(0, 1 - g * 2.5));
-      slider.style.opacity = String(s);
-      slider.style.transform = `translateY(${(1 - s) * 60}px)`; // sem scale: o Splide mede as fotos pelo tamanho na tela
-      slider.style.pointerEvents = s > 0.6 ? 'auto' : 'none';
-    }
-
-    // Linha do tempo do anime.js (pausada): giro, zoom e entrada do slider
-    const linha = createTimeline({ autoplay: false, defaults: { ease: 'inOutSine' }, onUpdate: desenhar })
-      .add(estado, { giro: 1, duration: 450 }, 0)
-      .add(estado, { zoom: 1, duration: 380, ease: 'linear' }, 520)
-      .add(estado, { slider: 1, duration: 140, ease: 'outSine' }, 860);
-
-    // A rolagem manda na linha do tempo: 0 quando a cena encosta no topo, 1 no fim dela.
-    // Medimos a posição a cada quadro e seguimos com suavização, então mesmo rolando rápido
-    // (ou arrastando a barra) a animação sempre chega onde a página está.
-    let atual = -1;
-    let antes = performance.now();
-    let segurarAte = 0;
-    let pulando = 0; // até quando ignorar o freio (link que pula para outra seção)
-
-    // Links internos (ex.: "Ver ensaios") passam direto pela cena sem o freio, até a rolagem
-    // suave terminar (scrollend; os 5 s são só para navegadores que não têm esse evento)
-    document.addEventListener('click', (e) => {
-      if (!(e.target as HTMLElement).closest('a[href*="#"]')) return;
-      pulando = performance.now() + 5000;
-      addEventListener(
-        'scrollend',
-        () => {
-          pulando = 0;
-          atual = -1; // a animação vai direto para onde a página parou, sem acionar o freio
-        },
-        { once: true },
-      );
+    // As palavras gigantes se mexem um pouco com o mouse (profundidade)
+    const palco = cena.querySelector<HTMLElement>('.camera-palco')!;
+    addEventListener('pointermove', (e) => {
+      palco.style.setProperty('--mx', (e.clientX / innerWidth - 0.5).toFixed(3));
+      palco.style.setProperty('--my', (e.clientY / innerHeight - 0.5).toFixed(3));
     });
 
-    // Encostou o dedo de novo durante o freio: solta na hora (a animação pula para o fim)
-    addEventListener(
-      'touchstart',
-      () => {
-        if (performance.now() < segurarAte || (atual >= 0 && atual < 0.97 && -cena!.getBoundingClientRect().top > cena!.offsetHeight - innerHeight)) {
-          segurarAte = 0;
-          atual = -1;
-        }
+    // Balões entram um de cada vez quando a cena aparece na tela
+    new IntersectionObserver(
+      ([e], obs) => {
+        if (!e.isIntersecting) return;
+        cena.classList.add('visivel');
+        obs.disconnect();
       },
-      { passive: true },
-    );
+      { threshold: 0.35 },
+    ).observe(cena.querySelector('.camera-palco')!);
 
-    function seguirRolagem(agora: number) {
+    // Links internos (ex.: "Ver ensaios") passam pela cena sem disparar o flash
+    let pulando = false;
+    document.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).closest('a[href*="#"]')) return;
+      pulando = true;
+      addEventListener('scrollend', () => (pulando = false), { once: true });
+      setTimeout(() => (pulando = false), 5000); // navegadores sem "scrollend"
+    });
+
+    // O clique: a câmera dá um tranco, o flash branco estoura, vira azul-marinho e some.
+    // A troca câmera → slider acontece escondida atrás do flash.
+    function fotografar() {
+      camera3d?.disparar();
+      zoom.animate([{ scale: 1 }, { scale: 0.96 }, { scale: 1 }], { duration: 220, easing: 'ease-out' });
+      flash.animate(
+          [
+            { opacity: 0, backgroundColor: '#ffffff' },
+            { opacity: 1, backgroundColor: '#ffffff', offset: 0.08 },
+            { opacity: 1, backgroundColor: '#ffffff', offset: 0.2 },
+            { opacity: 1, backgroundColor: '#0a1834', offset: 0.5 },
+            { opacity: 0, backgroundColor: '#03050b' },
+          ],
+          { duration: 1100, delay: 90, easing: 'ease-out' },
+        );
+      setTimeout(() => cena!.classList.add('foto', 'sem-transicao'), 90 + 200); // flash já cobre a tela
+      setTimeout(() => cena!.classList.remove('sem-transicao'), 1300);
+    }
+
+    // Roteiro da rolagem (p vai de 0 a 1 enquanto a cena está presa na tela):
+    //   0.00–0.10  de costas: dá para ler o menu no display
+    //   0.10–0.30  a câmera vira de frente e passa a mirar em você (no mouse)
+    //   0.32–0.46  zoom: a lente estica de 18 para 55 mm
+    //   0.48–0.58  foco: a mira em volta do cursor fecha e fica verde
+    //   0.62       disparo: flash e o slider aparece
+    const faixa = (p: number, de: number, ate: number) => Math.min(1, Math.max(0, (p - de) / (ate - de)));
+    const DISPARO = 0.62;
+    const mira = cena.querySelector<HTMLElement>('.camera-mira')!;
+    const mouseFino = matchMedia('(pointer: fine)').matches;
+    const ponteiro = { x: innerWidth * 0.7, y: innerHeight * 0.5, sx: innerWidth * 0.7, sy: innerHeight * 0.5 };
+    if (mouseFino) {
+      addEventListener('pointermove', (e) => {
+        ponteiro.x = e.clientX;
+        ponteiro.y = e.clientY;
+      });
+    }
+
+    let suave = -1; // progresso suavizado (a câmera não pula quando a rolagem dá trancos)
+    let primeiraVez = true;
+
+    function quadro() {
       const total = cena!.offsetHeight - innerHeight;
       const topo = cena!.getBoundingClientRect().top;
-      const alvo = Math.min(1, Math.max(0, -topo / total));
+      const p = Math.min(1, Math.max(0, -topo / total));
+      const naFoto = cena!.classList.contains('foto');
+      const naTela = topo < innerHeight && -topo < cena!.offsetHeight;
+      if (topo < innerHeight * 0.4) cena!.classList.add('visivel'); // garante a entrada mesmo se o observer atrasar
 
-      // Freio: desceu tão rápido que passou do fim da cena antes do slider aparecer?
-      // Segura a página no slider enquanto a animação termina (acelerada) e mais um instante,
-      // para a inércia do touchpad/celular não empurrar para longe. Depois libera.
-      const passou = -topo > total + 2;
-      let freando = false;
-      if (passou && agora > pulando && atual >= 0 && (atual < 0.97 || agora < segurarAte)) {
-        freando = true;
-        if (atual < 0.97) segurarAte = agora + 300;
-        scrollTo({ top: scrollY + (total + topo), behavior: 'instant' });
+      // passou do ponto → dispara; voltou bem para trás → câmera de novo
+      if (!naFoto && p > DISPARO) {
+        if (primeiraVez || pulando || !naTela) cena!.classList.add('foto');
+        else fotografar();
+      } else if (naFoto && p < DISPARO - 0.08) {
+        cena!.classList.remove('foto');
       }
+      primeiraVez = false;
 
-      // igual em 30 ou 144 fps; freando, a animação corre 3x mais rápido
-      const passo = 1 - Math.pow(freando ? 3.4e-9 : 0.0015, Math.min(0.1, (agora - antes) / 1000));
-      antes = agora;
-      const proximo = atual < 0 || Math.abs(alvo - atual) < 0.0005 ? alvo : atual + (alvo - atual) * passo;
-      if (proximo !== atual) {
-        atual = proximo;
-        linha.seek(atual * linha.duration);
+      suave = suave < 0 ? p : suave + (p - suave) * 0.12;
+      const virar = faixa(suave, 0.1, 0.3);
+      const zoomLente = faixa(suave, 0.32, 0.46);
+      const foco = faixa(suave, 0.48, 0.58);
+      camera3d?.definir({ virar, zoom: zoomLente, foco });
+
+      // Mira de foco: aparece com o zoom, segue o cursor, fecha com o foco e fica verde
+      // (no celular, sem mouse, ela fica no meio da câmera)
+      if (!mouseFino) {
+        const r = zoom.getBoundingClientRect();
+        ponteiro.x = r.left + r.width / 2;
+        ponteiro.y = r.top + r.height / 2;
       }
-      requestAnimationFrame(seguirRolagem);
+      ponteiro.sx += (ponteiro.x - ponteiro.sx) * 0.18;
+      ponteiro.sy += (ponteiro.y - ponteiro.sy) * 0.18;
+      const tamanho = 150 - foco * 80;
+      mira.style.transform = `translate(${ponteiro.sx - tamanho / 2}px, ${ponteiro.sy - tamanho / 2}px)`;
+      mira.style.width = mira.style.height = `${tamanho}px`;
+      mira.style.opacity = String(naFoto ? 0 : Math.min(1, zoomLente * 2));
+      mira.classList.toggle('travada', foco >= 1);
+
+      document.dispatchEvent(
+        new CustomEvent('camera:progresso', { detail: { p, virar, zoom: zoomLente, foco, foto: cena!.classList.contains('foto') } }),
+      );
+      requestAnimationFrame(quadro);
     }
-    requestAnimationFrame(seguirRolagem);
+    requestAnimationFrame(quadro);
 
     // O three.js só é baixado agora (a página abre mais rápido)
     import('../lib/camera3d')
-      .then(({ montarCamera }) => montarCamera(tela, cena.dataset.foto))
-      .then((c) => {
-        camera3d = c;
-        desenhar();
-      })
+      .then(({ montarCamera }) => montarCamera(tela, cena.dataset.foto, JSON.parse(cena.dataset.info ?? 'null') ?? undefined))
+      .then((c) => (camera3d = c))
       .catch(() => {
-        // sem WebGL: pula direto para o slider
-        cena.classList.remove('ativa');
+        // sem WebGL: some a câmera, fica o terminal e o flash
+        zoom.style.display = 'none';
       });
   }
 </script>
@@ -147,18 +192,21 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format:
 <style>
   /* ---------- Sem animação: só o slider ---------- */
   .camera-cena:not(.ativa) .camera-intro,
-  .camera-cena:not(.ativa) .camera-zoom {
+  .camera-cena:not(.ativa) .camera-palavras,
+  .camera-cena:not(.ativa) .camera-lado,
+  .camera-cena:not(.ativa) .camera-flash,
+  .camera-cena:not(.ativa) .camera-mira {
     display: none;
   }
 
   /* ---------- Com animação (o script adiciona .ativa) ---------- */
   .camera-cena.ativa {
-    height: 420vh; /* quanto maior, mais devagar a câmera gira ao rolar */
+    height: 420vh; /* quanto maior, mais devagar a câmera passa por cada etapa */
   }
 
   @media (max-width: 767px) {
     .camera-cena.ativa {
-      height: 320vh; /* no celular, menos dedo para passar pela câmera */
+      height: 340vh;
     }
   }
 
@@ -168,7 +216,41 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format:
     height: 100vh;
     height: 100svh;
     overflow: hidden;
-    background: radial-gradient(ellipse at 50% 55%, rgb(var(--brilho) / 0.22), transparent 60%);
+    background: radial-gradient(ellipse at 30% 55%, rgb(var(--brilho) / 0.3), transparent 60%);
+  }
+
+  /* Câmera à esquerda, balões à direita */
+  .camera-lado {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    align-items: center;
+    gap: clamp(16px, 3vw, 48px);
+    padding: 110px var(--margem) 40px;
+    transition:
+      opacity 0.6s,
+      translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .camera-zoom {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .camera-3d {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .camera-baloes {
+    display: grid;
+    justify-items: start;
   }
 
   .ativa .camera-slider {
@@ -177,19 +259,180 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format:
     display: grid;
     align-content: center;
     opacity: 0;
+    translate: 0 60px; /* sem scale: o Splide mede as fotos pelo tamanho na tela */
     pointer-events: none;
+    transition:
+      opacity 0.7s,
+      translate 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   .ativa .camera-slider :global(.destaques) {
     padding-top: 0;
   }
 
+  /* Depois do clique: a câmera sai, o slider entra */
+  .ativa.foto .camera-lado,
+  .ativa.foto .camera-intro,
+  .ativa.foto .camera-palavras {
+    opacity: 0;
+    translate: 0 -40px;
+    pointer-events: none;
+  }
+
+  .ativa.foto .camera-slider {
+    opacity: 1;
+    translate: 0 0;
+    pointer-events: auto;
+  }
+
+  /* Atrás do flash a troca é instantânea */
+  .ativa.sem-transicao .camera-lado,
+  .ativa.sem-transicao .camera-intro,
+  .ativa.sem-transicao .camera-palavras {
+    transition: none;
+  }
+
+  /* ---------- Palavras gigantes ---------- */
+  .camera-palavras {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    pointer-events: none;
+    font-family: var(--fonte-texto);
+    font-weight: 300;
+    font-size: clamp(4.5rem, 14vw, 15rem);
+    line-height: 0.85;
+    letter-spacing: -0.055em;
+    text-transform: uppercase;
+    color: var(--texto);
+    transition:
+      opacity 0.6s,
+      translate 0.6s;
+  }
+
+  .camera-palavras span {
+    position: absolute;
+    white-space: nowrap;
+    translate: calc(var(--mx, 0) * var(--prof)) calc(var(--my, 0) * var(--prof));
+    transition: translate 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .camera-palavras em {
+    font-family: var(--fonte-titulo);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    color: var(--destaque);
+  }
+
+  .palavra-1 {
+    --prof: -40px;
+    top: 13%;
+    left: 6%;
+  }
+
+  .palavra-2 {
+    --prof: 28px;
+    top: 17%;
+    left: 43%;
+    opacity: 0.9;
+  }
+
+  .palavra-3 {
+    --prof: -24px;
+    bottom: 5%;
+    right: 5%;
+    color: transparent;
+    -webkit-text-stroke: 1px rgb(232 238 247 / 0.45);
+  }
+
+  /* ---------- Mira de foco (quatro cantos e um ponto) que segue o cursor ---------- */
+  .camera-mira {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    width: 150px;
+    height: 150px;
+    opacity: 0;
+    pointer-events: none;
+    --cor: rgb(232 238 247 / 0.9);
+  }
+
+  .camera-mira i {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border: 0 solid var(--cor);
+    transition: border-color 0.25s;
+  }
+
+  .camera-mira i:nth-child(1) {
+    left: 0;
+    top: 0;
+    border-width: 2px 0 0 2px;
+  }
+
+  .camera-mira i:nth-child(2) {
+    right: 0;
+    top: 0;
+    border-width: 2px 2px 0 0;
+  }
+
+  .camera-mira i:nth-child(3) {
+    left: 0;
+    bottom: 0;
+    border-width: 0 0 2px 2px;
+  }
+
+  .camera-mira i:nth-child(4) {
+    right: 0;
+    bottom: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  .camera-mira b {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px;
+    border-radius: 50%;
+    background: var(--cor);
+    transition: background 0.25s;
+  }
+
+  /* foco travado: fica verde e dá uma piscada */
+  .camera-mira.travada {
+    --cor: #4ade80;
+    animation: travar 0.35s ease-out;
+  }
+
+  @keyframes travar {
+    50% {
+      scale: 0.85;
+    }
+  }
+
+  .camera-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    background: #fff;
+  }
+
   .camera-intro {
     position: absolute;
     inset: 110px var(--margem) auto;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     z-index: 2;
+    transition:
+      opacity 0.6s,
+      translate 0.6s;
   }
 
   .camera-dica {
@@ -211,22 +454,45 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1400, format:
     }
   }
 
-  /* ---------- A câmera em 3D (desenhada pelo three.js no canvas) ---------- */
-  .camera-zoom {
-    position: absolute;
-    inset: 0;
-  }
-
-  .camera-3d {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
+  /* ---------- Celular: câmera em cima, balões embaixo ---------- */
   @media (max-width: 767px) {
+    .camera-palavras {
+      font-size: 5.2rem;
+    }
+
+    .palavra-1 {
+      top: 17%;
+      left: 4%;
+    }
+
+    .palavra-2 {
+      top: 33%;
+      left: auto;
+      right: 4%;
+    }
+
+    .palavra-3 {
+      top: 49%;
+      bottom: auto;
+      left: 4%;
+      right: auto;
+    }
+
     .camera-intro {
+      inset-block-start: 90px;
       flex-direction: column;
       gap: 0.5rem;
+    }
+
+    .camera-lado {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+      padding-top: 150px;
+      padding-bottom: 88px; /* espaço para a barra de ícones fixa embaixo */
+    }
+
+    .camera-baloes {
+      justify-items: stretch;
     }
   }
 </style>

@@ -1,12 +1,20 @@
 // Nikon D3200 modelada em código com three.js (WebGL): corpo, pega, prisma, botões e a lente 18-55
-// com anéis torneados e ranhuras. Quem controla a animação é a CameraCena (anime.js + rolagem),
-// chamando definir(giro, zoom) com números de 0 a 1.
+// com anéis torneados e ranhuras. A CameraCena move tudo pela rolagem com definir({ virar, zoom, foco }):
+// a câmera vira para quem está vendo, mira no mouse, dá zoom, foca e dispara.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
+// Pose da câmera na cena, tudo de 0 a 1 (quem controla é a CameraCena, pela rolagem)
+export interface Pose {
+  virar: number; // 0 = de costas (display com o menu à vista), 1 = de frente, lente apontada para quem vê
+  zoom: number; // lente estica de 18 para 55 mm e a câmera chega mais perto
+  foco: number; // anel de foco gira
+}
+
 export interface Camera3D {
-  definir(giro: number, zoom: number): void;
+  definir(pose: Partial<Pose>): void;
+  disparar(): void; // tranco do clique e a luz da frente acende
 }
 
 // Medidas do corpo (unidades livres; a câmera real tem ~125 x 96 x 77 mm)
@@ -102,39 +110,103 @@ function lixeira() {
   return paraTextura(c);
 }
 
-// Informações por cima da foto no display
-function interfaceDoDisplay() {
-  const [c, g] = canvas(1024, 774);
-  g.strokeStyle = g.fillStyle = '#fff';
-  g.lineWidth = 3;
-  g.font = '500 34px Inter, sans-serif';
-  g.shadowColor = 'rgba(0,0,0,.8)';
-  g.shadowBlur = 8;
-  g.strokeRect(40, 36, 58, 52);
-  g.fillText('M', 52, 74);
-  g.strokeRect(900, 42, 76, 40);
-  g.fillRect(908, 50, 48, 24);
-  g.fillText('1/250     F5.6     ISO 400', 44, 730);
-  g.fillText('[ 1.2k ]', 860, 730);
-  g.strokeRect(452, 327, 120, 120);
-  return paraTextura(c);
+// O que aparece no display: os dados do portfólio, como um menu da própria câmera
+export interface InfoDisplay {
+  nome: string;
+  cidade: string;
+  ensaios: { titulo: string; total: number }[];
+  totalFotos: number;
+  sitesNoAr: number;
 }
 
-// Foto no display ocupando tudo, como object-fit: cover
-function cobrir(t: THREE.Texture, proporcao: number) {
-  const img = t.image as HTMLImageElement;
-  const da = img.width / img.height;
-  if (da > proporcao) {
-    t.repeat.set(proporcao / da, 1);
-    t.offset.set((1 - proporcao / da) / 2, 0);
+// Menu no estilo Nikon: barra no topo, lista com a linha selecionada em azul, rodapé com dicas.
+// "sel" é a linha destacada (a CameraCena não precisa saber: o próprio display vai passando).
+function desenharMenu(g: CanvasRenderingContext2D, info: InfoDisplay, sel: number, foto?: HTMLImageElement) {
+  const L = 1024;
+  const A = 774;
+  g.save();
+  g.clearRect(0, 0, L, A);
+
+  // fundo: a foto (como object-fit: cover) bem escurecida, ou um degradê azul
+  if (foto) {
+    const escala = Math.max(L / foto.width, A / foto.height);
+    const w = foto.width * escala;
+    const h = foto.height * escala;
+    g.drawImage(foto, (L - w) / 2, (A - h) * 0.3, w, h);
+    g.fillStyle = 'rgba(3, 7, 16, 0.82)';
+    g.fillRect(0, 0, L, A);
   } else {
-    // foto em pé: mostra um pouco mais da parte de baixo (na "wonder why", da cabeça até a camiseta)
-    t.repeat.set(1, da / proporcao);
-    t.offset.set(0, (1 - da / proporcao) * 0.3);
+    const d = g.createLinearGradient(0, 0, 0, A);
+    d.addColorStop(0, '#0b1730');
+    d.addColorStop(1, '#03060d');
+    g.fillStyle = d;
+    g.fillRect(0, 0, L, A);
   }
+
+  g.textBaseline = 'middle';
+
+  // barra do topo
+  g.fillStyle = 'rgba(255,255,255,0.07)';
+  g.fillRect(0, 0, L, 96);
+  g.fillStyle = '#6aa9ec';
+  g.font = '700 34px Inter, sans-serif';
+  g.fillText('MENU', 44, 50);
+  g.fillStyle = '#e8eef7';
+  g.font = '500 30px Inter, sans-serif';
+  g.textAlign = 'right';
+  g.fillText(info.nome.toUpperCase(), L - 130, 50);
+  // bateria
+  g.strokeStyle = '#e8eef7';
+  g.lineWidth = 3;
+  g.strokeRect(L - 104, 34, 58, 32);
+  g.fillRect(L - 44, 42, 6, 16);
+  g.fillStyle = '#4ade80';
+  g.fillRect(L - 98, 40, 44, 20);
+  g.textAlign = 'left';
+
+  // linhas: os ensaios, a agenda e os sites
+  const linhas = [
+    ...info.ensaios.map((e) => ({ texto: e.titulo, valor: String(e.total), serifa: true })),
+    { texto: `Agenda aberta · ${info.cidade}`, valor: '●', serifa: false },
+    { texto: `${info.sitesNoAr} sites no ar`, valor: '</>', serifa: false },
+  ];
+  const topo = 118;
+  const altura = 96;
+  linhas.forEach((l, i) => {
+    const y = topo + i * altura;
+    if (i === sel) {
+      g.fillStyle = 'rgba(106,169,236,0.24)';
+      g.fillRect(24, y, L - 48, altura - 10);
+      g.fillStyle = '#6aa9ec';
+      g.fillRect(24, y, 8, altura - 10);
+    }
+    if (i === info.ensaios.length) {
+      // separador entre ensaios e o resto
+      g.fillStyle = 'rgba(255,255,255,0.12)';
+      g.fillRect(44, y - 6, L - 88, 2);
+    }
+    g.fillStyle = i === sel ? '#ffffff' : 'rgba(232,238,247,0.82)';
+    g.font = l.serifa ? 'italic 500 58px "Cormorant Garamond", Georgia, serif' : '400 40px Inter, sans-serif';
+    g.fillText(l.texto, 64, y + (altura - 10) / 2 + 2);
+    g.textAlign = 'right';
+    g.fillStyle = l.valor === '●' ? '#4ade80' : '#6aa9ec';
+    g.font = '600 40px Inter, sans-serif';
+    g.fillText(l.valor, L - 64, y + (altura - 10) / 2 + 2);
+    g.textAlign = 'left';
+  });
+
+  // rodapé com as dicas, como nos menus de câmera
+  g.fillStyle = 'rgba(255,255,255,0.07)';
+  g.fillRect(0, A - 84, L, 84);
+  g.fillStyle = 'rgba(232,238,247,0.75)';
+  g.font = '400 30px Inter, sans-serif';
+  g.fillText(`${info.totalFotos} fotos · Nikon D3200`, 44, A - 42);
+  g.textAlign = 'right';
+  g.fillText('OK ▸ fotografar', L - 44, A - 42);
+  g.restore();
 }
 
-export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string): Promise<Camera3D> {
+export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string, info?: InfoDisplay): Promise<Camera3D> {
   await document.fonts?.ready;
 
   const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, alpha: true });
@@ -276,22 +348,36 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string): P
   add(new THREE.CylinderGeometry(0.08, 0.08, 0.05, 24), botao, -W / 2 + 1.35, H / 2 + 0.02, D / 2 - 0.05);
 
   // ---------- traseira ----------
-  // Moldura, foto e a interface por cima (tudo virado para trás)
+  // Moldura e o display com o menu (desenhado num canvas que vira textura; virado para trás)
   add(new RoundedBoxGeometry(TELA.w + 0.2, TELA.h + 0.2, 0.05, 3, 0.06), brilho, TELA.x, TELA.y, -D / 2 - 0.01);
-  const fotoMat = new THREE.MeshBasicMaterial({ color: 0x0b0a10, toneMapped: false });
-  const display = add(new THREE.PlaneGeometry(TELA.w, TELA.h), fotoMat, TELA.x, TELA.y, -D / 2 - 0.04);
+  const [telaMenu, g2d] = canvas(1024, 774);
+  const texturaMenu = paraTextura(telaMenu);
+  const display = add(new THREE.PlaneGeometry(TELA.w, TELA.h), new THREE.MeshBasicMaterial({ map: texturaMenu, toneMapped: false }), TELA.x, TELA.y, -D / 2 - 0.04);
   display.rotation.y = Math.PI;
-  const ui = placa(interfaceDoDisplay(), TELA.w, TELA.h, TELA.x, TELA.y, -D / 2 - 0.045, true);
-  const uiMat = ui.material as THREE.MeshBasicMaterial;
 
+  // A linha selecionada do menu vai descendo sozinha, como alguém navegando
+  let fotoFundo: HTMLImageElement | undefined;
+  let selecionada = 0;
+  const redesenharMenu = () => {
+    if (!info) return;
+    desenharMenu(g2d, info, selecionada, fotoFundo);
+    texturaMenu.needsUpdate = true;
+  };
+  redesenharMenu();
+  if (info) {
+    const linhas = info.ensaios.length + 2;
+    setInterval(() => {
+      selecionada = (selecionada + 1) % linhas;
+      redesenharMenu();
+    }, 1400);
+  }
   if (fotoUrl) {
-    new THREE.TextureLoader().load(fotoUrl, (t) => {
-      t.colorSpace = THREE.SRGBColorSpace;
-      cobrir(t, TELA.w / TELA.h);
-      fotoMat.map = t;
-      fotoMat.color.set(0xffffff);
-      fotoMat.needsUpdate = true;
-    });
+    const img = new Image();
+    img.onload = () => {
+      fotoFundo = img;
+      redesenharMenu();
+    };
+    img.src = fotoUrl;
   }
 
   // Coluna de botões à esquerda do display (vista de trás)
@@ -399,12 +485,13 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string): P
   noEixo(reflexo);
 
   // ---------- movimento ----------
-  const estado = { giro: 0, zoom: 0 };
-  const alvoTela = new THREE.Vector3();
-  const olhar = new THREE.Vector3();
-  const inicio = new THREE.Vector3();
-  const olharInicio = new THREE.Vector3(0.1, 0.25, 0.6);
+  const pose: Pose = { virar: 0, zoom: 0, foco: 0 };
   const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  const inicio = new THREE.Vector3();
+  const olhar = new THREE.Vector3(0.1, 0.05, 0.6);
+  const afMat = luzAf.material as THREE.MeshStandardMaterial;
+  const reflexoMat = reflexo.material as THREE.MeshBasicMaterial;
+  let tranco = 0; // 1 logo depois do disparo, cai para 0
   let largura = 1;
   let altura = 1;
 
@@ -415,8 +502,9 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string): P
     renderer.setSize(largura, altura, false);
     olho.aspect = largura / altura;
     olho.updateProjectionMatrix();
-    // distância para a câmera inteira caber: ~46% da largura no computador, 82% no celular
-    const fracao = olho.aspect < 1 ? 0.82 : 0.46;
+    // distância para a câmera inteira caber: ~46% da largura numa tela larga, 72% numa estreita
+    // (na CameraCena o canvas ocupa só a metade esquerda, então costuma ser estreito)
+    const fracao = olho.aspect < 1 || largura < 500 ? 0.72 : 0.46;
     const porLargura = 5.2 / fracao / (2 * TG * olho.aspect);
     const porAltura = 3.9 / 0.62 / (2 * TG);
     inicio.set(0, 0.9, Math.max(porLargura, porAltura));
@@ -425,33 +513,37 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string): P
   const suave = (t: number) => t * t * (3 - 2 * t);
 
   function desenhar(tempo: number) {
-    const { giro: g, zoom: z } = estado;
-    mouse.sx += (mouse.x - mouse.sx) * 0.05;
-    mouse.sy += (mouse.y - mouse.sy) * 0.05;
-    const calma = 1 - Math.min(1, z * 3); // flutuação e mouse somem durante o zoom
+    const v = suave(pose.virar);
+    const z = suave(pose.zoom);
+    mouse.sx += (mouse.x - mouse.sx) * 0.06;
+    mouse.sy += (mouse.y - mouse.sy) * 0.06;
+    tranco *= 0.88;
 
+    // Começa de costas (display com o menu virado para quem chega) e vira até ficar de frente;
+    // de frente, a câmera mira no mouse de verdade (segue o cursor como se enquadrasse você)
+    const mira = 0.2 + v * 0.6;
     modelo.rotation.set(
-      (1 - g) * 0.2 + mouse.sy * 0.12 * calma,
-      -0.62 + g * (Math.PI + 0.62) + mouse.sx * 0.25 * calma,
-      (1 - g) * -0.05,
+      0.16 * (1 - v) + mouse.sy * 0.5 * mira - tranco * 0.06,
+      (Math.PI - 0.28) * (1 - v) + mouse.sx * 0.9 * mira,
+      0.03 * (1 - v),
     );
-    modelo.position.y = Math.sin(tempo / 900) * 0.05 * calma;
+    modelo.position.y = Math.sin(tempo / 900) * 0.05 * (1 - z * 0.7);
+    modelo.position.z = -tranco * 0.25;
+
+    // Zoom: a lente estica (18 → 55 mm) e o anel gira; o foco gira o anel de novo
+    lente.scale.z = 1 + z * 0.38;
+    lente.rotation.z = z * 0.9 + suave(pose.foco) * 0.6;
+
+    // Luz da frente acende no disparo e o reflexo da lente brilha ao focar
+    afMat.emissive.setRGB(0.42 + tranco * 3, 0.29 + tranco * 2.5, 0.09 + tranco * 2);
+    reflexoMat.opacity = 0.55 + pose.foco * 0.35 + tranco;
+
+    // Câmera do three.js: perto do display enquanto está de costas (para ler o menu), se afasta
+    // enquanto ela vira e volta a chegar perto com o zoom
+    const pertoDisplay = (1 - v) * 0.3;
+    olho.position.set(inicio.x - pertoDisplay * 1.2, inicio.y * (1 - z * 0.4) * (1 - pertoDisplay), inicio.z * (1 - z * 0.22) * (1 - pertoDisplay));
+    olho.lookAt(olhar.x - pertoDisplay * 1.2, olhar.y - pertoDisplay * 0.5, olhar.z);
     modelo.updateMatrixWorld();
-
-    // Centro do display no mundo (depois do giro) e a distância para ele cobrir a tela
-    alvoTela.set(TELA.x, TELA.y, -D / 2 - 0.04);
-    modelo.localToWorld(alvoTela);
-    const perto = Math.min(TELA.h / 2 / TG, TELA.w / 2 / (TG * olho.aspect)) * 0.9;
-    const ez = suave(z);
-    olho.position.set(
-      THREE.MathUtils.lerp(inicio.x, alvoTela.x, ez),
-      THREE.MathUtils.lerp(inicio.y, alvoTela.y, ez),
-      THREE.MathUtils.lerp(inicio.z, alvoTela.z + perto, z * z), // aproxima acelerando
-    );
-    olhar.lerpVectors(olharInicio, alvoTela, ez);
-    olho.lookAt(olhar);
-    uiMat.opacity = Math.max(0, 1 - z * 2.5);
-
     renderer.render(cena, olho);
   }
 
@@ -468,9 +560,11 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string): P
   renderer.setAnimationLoop((tempo) => visivel && desenhar(tempo));
 
   return {
-    definir(giro, zoom) {
-      estado.giro = giro;
-      estado.zoom = zoom;
+    definir(nova) {
+      Object.assign(pose, nova);
+    },
+    disparar() {
+      tranco = 1;
     },
   };
 }
