@@ -325,7 +325,12 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
     color: var(--destaque);
   }
 
+  /* "Pela" na mesma serifa do título da capa (Instrument Serif), em pé */
   .palavra-1 {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-transform: none;
     --prof: -40px;
     top: 13%;
     left: 6%;
@@ -342,8 +347,10 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
     --prof: -24px;
     bottom: 5%;
     right: 5%;
-    color: transparent;
-    -webkit-text-stroke: 1px rgb(232 238 247 / 0.45);
+    /* contorno mais grosso e claro, com um leve preenchimento, para não sumir no fundo */
+    color: rgb(232 238 247 / 0.08);
+    -webkit-text-stroke: 2px rgb(232 238 247 / 0.9);
+    text-shadow: 0 0 30px rgb(91 141 239 / 0.35);
   }
 
   /* ---------- Mira de foco (quatro cantos e um ponto) que segue o cursor ---------- */
