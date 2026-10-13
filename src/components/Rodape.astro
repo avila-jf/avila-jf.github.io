@@ -8,8 +8,8 @@ const ano = new Date().getFullYear();
 const { instagram, whatsapp } = site.contato;
 const cidade = site.cidade.split(',')[0];
 // Paisagem de fundo do rodapé (ideia do "Scenic footer" do Inspora), pintada de azul pelo CSS
-const paisagens = fotosDa('paisagem');
-const fundo = paisagens[1] ?? paisagens[0];
+const paisagens = fotosDa('pedras');
+const fundo = paisagens.find((f) => f.nome === '02-barcos-na-hora-dourada') ?? paisagens[0];
 ---
 
 <footer class="rodape">

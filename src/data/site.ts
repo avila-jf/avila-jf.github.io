@@ -3,7 +3,7 @@
 export const site = {
   nome: 'Francis Avila',
   apelido: 'Ávila', // como o pessoal te chama (aparece no "Olá, eu sou...")
-  descricao: 'Fotografia de paisagem, retrato e rua.',
+  descricao: 'Fotografia em Maceió e arredores: Pedras do Pôr do Sol, Jaraguá, Carneiros e mais.',
   cidade: 'Maceió, Brasil',
   // Frase grande da capa. "destaque" ganha o marca-texto azul.
   frase: {
@@ -23,30 +23,32 @@ export const site = {
 };
 
 // Foto grande do topo da home. Formato: 'categoria/nome-do-arquivo' (sem o .jpg).
-export const capaPrincipal = 'paisagem/01-sol-sobre-a-baia';
+export const capaPrincipal = 'pedras/01-sol-sobre-a-baia';
 
 // Fotos do slider principal da home, na ordem em que aparecem (da mais escura para a mais clara;
 // a primeira também aparece no display da câmera 3D).
 // Formato: 'categoria/nome-do-arquivo' (sem o .jpg). Lista vazia = escolha automática.
 export const destaques: string[] = [
-  'retrato/09-wonder-why', // primeira: aparece no display da câmera
-  'rua/02-noite-de-festa',
-  'rua/03-luzes-da-praca',
-  'retrato/02-olhando-a-cidade',
-  'retrato/10-perfil-na-noite',
-  'rua/06-bolsa-na-pedra',
-  'paisagem/03-fim-de-tarde-nas-pedras',
-  'rua/08-buggy-e-bandeira',
-  'rua/11-bar-da-praia',
-  'rua/07-escola-de-surf',
-  'paisagem/06-ceu-amarelo-e-coqueiros',
-  'rua/12-kit-de-praia',
-  'retrato/05-sorriso',
-  'rua/01-capa-mortal-no-barco',
-  'paisagem/04-navio-ao-entardecer',
-  'paisagem/05-barcos-no-azul',
-  'rua/09-ambulante-na-areia',
-  'retrato/07-amigos-no-mar',
+  'pedras/12-wonder-why', // primeira: aparece no display da câmera
+  'pedras/18-noite-de-festa',
+  'pedras/19-luzes-da-praca',
+  'pedras/15-olhando-a-cidade',
+  'pedras/13-perfil-na-noite',
+  'pedras/11-bolsa-na-pedra',
+  'pedras/03-fim-de-tarde-nas-pedras',
+  'carneiros/01-buggy-e-bandeira',
+  'carneiros/08-bar-da-praia',
+  'carneiros/02-escola-de-surf',
+  'carneiros/04-ceu-amarelo-e-coqueiros',
+  'carneiros/09-kit-de-praia',
+  'ato/06-beijo-e-leque',
+  'jaragua/11-sorriso',
+  'pedras/10-capa-mortal-no-barco',
+  'pedras/04-navio-ao-entardecer',
+  'pedras/05-barcos-no-azul',
+  'carneiros/06-ambulante-na-areia',
+  'carneiros/14-bicicleta-na-praia',
+  'carneiros/11-amigos-no-mar',
 ];
 
 // Divulgação: você também cria sites de portfólio para outras pessoas.
@@ -98,7 +100,7 @@ export const projetos: {
     imagem: 'otica-beco',
     cor: '#f7d35c',
     destaque: true,
-  },
+  },
   {
     nome: 'Magnobag',
     tipo: 'Projeto pessoal',
@@ -110,7 +112,7 @@ export const projetos: {
     imagem: 'magnobag',
     cor: '#3fd598',
     destaque: true,
-  },
+  },
   {
     nome: 'BookSmart',
     tipo: 'Faculdade',
@@ -137,25 +139,31 @@ export const projetos: {
 
 export const github = 'https://github.com/JoseFrancisco-alt';
 
-// Cada categoria vira uma página (/paisagem, /retrato, /rua)
+// Cada ensaio é um lugar (ou evento) e vira uma página (/pedras, /jaragua, ...)
 // e lê as fotos de src/assets/fotos/<slug>/
 // "capa" (opcional) = nome do arquivo sem .jpg: aparece no cartão da home, no menu e primeiro na galeria.
 export const categorias: { slug: string; titulo: string; descricao: string; capa?: string }[] = [
   {
-    slug: 'paisagem',
-    titulo: 'Paisagem',
-    descricao: 'Horizontes, luz de fim de tarde e lugares que pedem silêncio.',
+    slug: 'pedras',
+    titulo: 'Pedras do Pôr do Sol',
+    descricao: 'Do fim de tarde à noite na beira da baía: barcos, silhuetas e as luzes da cidade na água.',
+    capa: '03-fim-de-tarde-nas-pedras',
   },
   {
-    slug: 'retrato',
-    titulo: 'Retrato',
-    descricao: 'Pessoas, olhares e a luz certa no rosto certo.',
-    capa: '10-perfil-na-noite',
+    slug: 'jaragua',
+    titulo: 'Jaraguá',
+    descricao: 'O bairro histórico: fachadas antigas, luz de poste e gente na rua.',
+    capa: '05-escadaria-a-noite',
   },
   {
-    slug: 'rua',
-    titulo: 'Rua',
-    descricao: 'O acaso da cidade: sombras, pressa e momentos que não se repetem.',
-    capa: '03-luzes-da-praca',
+    slug: 'carneiros',
+    titulo: 'Carneiros',
+    descricao: 'Pernambuco: coqueiros, areia clara e um dia inteiro de praia.',
+  },
+  {
+    slug: 'ato',
+    titulo: 'Ato de manifestação',
+    descricao: 'A rua em dia de manifestação: cartazes, bandeiras e gente junta.',
+    capa: '09-pela-defesa-da-democracia',
   },
 ];

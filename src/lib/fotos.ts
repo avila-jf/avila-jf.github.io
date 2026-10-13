@@ -61,11 +61,11 @@ export function fotosEmDestaque(lista: string[], limite = 10) {
     .filter((f): f is Foto => Boolean(f));
 }
 
-// Foto de capa: a escolhida em site.ts (capaPrincipal), senão a primeira paisagem.
+// Foto de capa: a escolhida em site.ts (capaPrincipal), senão a primeira das Pedras.
 export function capa() {
   return (
     fotos.find((f) => `${f.categoria}/${f.nome}` === capaPrincipal) ??
-    fotosDa('paisagem')[0] ??
+    fotosDa('pedras')[0] ??
     fotos[0]
   );
 }
