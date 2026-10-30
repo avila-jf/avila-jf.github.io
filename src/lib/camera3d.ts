@@ -15,6 +15,7 @@ export interface Pose {
 export interface Camera3D {
   definir(pose: Partial<Pose>): void;
   disparar(): void; // tranco do clique e a luz da frente acende
+  parar(): void; // para de desenhar e libera o WebGL (a intro chama quando some)
 }
 
 // Medidas do corpo (unidades livres; a câmera real tem ~125 x 96 x 77 mm)
@@ -565,6 +566,10 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string, in
     },
     disparar() {
       tranco = 1;
+    },
+    parar() {
+      renderer.setAnimationLoop(null);
+      renderer.dispose();
     },
   };
 }

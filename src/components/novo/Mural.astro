@@ -1,0 +1,973 @@
+---
+// Mural de fotos da abertura (pegada omrimalka.art): uma parede de fotos maior que a tela.
+// Todas as fotos ficam em gravura azul (duotone azul royal + creme, com hachura fina).
+//  - Computador: a parede corre conforme o mouse e é curva (3D): a foto do meio fica de frente e as
+//    das bordas recuam e viram. A foto sob o mouse ganha cor e chega pra frente; o nome e o ensaio
+//    dela aparecem embaixo à esquerda.
+//  - Celular: a parede do omrimalka no telefone, com os mesmos números do site dele. Uma lente em
+//    barril (o meio maior, as bordas comprimidas), a foto que passa pelo meio cresce e troca o recorte
+//    quase reto por um torto (parece que gira) e a parede é infinita. Parado em gravura até o
+//    "Vamos colocar uma cor?": aí vira a tela inteira e anda pra qualquer lado (dedo ou rodinha);
+//    só volta a ficar parado (e a página a rolar) no "voltar pro azul".
+//    Começa em gravura azul com o cartão do título no meio; o botão brilhando "Vamos colocar uma cor?"
+//    colore as fotos numa onda que sai do meio e escurece o fundo, como o dele.
+//  - Clicar/tocar numa foto abre o detalhe: um painel colorido inclinado com a foto em cor, o nome,
+//    o ensaio e o link para o ensaio (como o detalhe das peças no omrimalka).
+// Botão "embaralhar" (o shuffle do omrimalka): as fotos trocam de lugar deslizando.
+// No meio, um cartão com a frase. Quem revela o mural é a Intro (evento "mural:revelar").
+import { Image, getImage } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+import { categorias } from '../../data/site';
+import { url } from '../../lib/url';
+
+interface Props {
+  fotos: Foto[];
+  totalFotos: number;
+  sitesNoAr: number;
+  projetos: number;
+}
+
+const { fotos, totalFotos, sitesNoAr, projetos } = Astro.props;
+
+// 12 x 6 casas, 4 delas são do cartão do meio: 68 fotos (repete se faltar)
+const CASAS = 68;
+const lista = Array.from({ length: CASAS }, (_, i) => fotos[i % fotos.length]).filter(Boolean);
+const ensaioDe = (slug: string) => categorias.find((c) => c.slug === slug)?.titulo ?? slug;
+const totalDe = (slug: string) => fotos.filter((f) => f.categoria === slug).length;
+
+// versão grande (para o detalhe), uma por foto
+const grandes = new Map<string, string>();
+for (const f of fotos) {
+  grandes.set(`${f.categoria}/${f.nome}`, (await getImage({ src: f.src, width: 1000, format: 'webp', quality: 78 })).src);
+}
+
+// cor do painel de detalhe de cada ensaio
+const CORES: Record<string, string> = {
+  pedras: '#c8553d',
+  jaragua: '#6b4fa8',
+  carneiros: '#2f8a68',
+  ato: '#b3304d',
+  estudio: '#1f3f99',
+};
+---
+
+<section class="mural" data-lente="foto" data-tema="claro" aria-label="Mural de fotos">
+  <div class="mural-palco">
+    <div class="mural-centro">
+      <div class="mural-grade">
+        <div class="mural-cartao">
+          <span class="rotulo">Francis Avila · Maceió</span>
+          <h1 class="mural-titulo">Eu crio <span class="voz-codigo">sites</span> com olhar de <span class="voz-foto">fotógrafo</span>.</h1>
+          <span class="rotulo">{sitesNoAr} sites no ar · {projetos} projetos · {totalFotos} fotos</span>
+        </div>
+        {
+          lista.map((f, i) => (
+            <figure
+              class="mural-foto"
+              tabindex="0"
+              data-ensaio={ensaioDe(f.categoria)}
+              data-slug={f.categoria}
+              data-total={totalDe(f.categoria)}
+              data-grande={grandes.get(`${f.categoria}/${f.nome}`)}
+              data-cor={CORES[f.categoria] ?? '#1f3f99'}
+            >
+              <Image src={f.src} alt={f.alt} widths={[240, 400, 560]} sizes="(max-width: 760px) 46vw, 14vw" format="webp" loading={i < 24 ? 'eager' : 'lazy'} />
+            </figure>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+  <p class="mural-legenda" aria-live="polite"><b></b><span class="rotulo"></span></p>
+  <div class="mural-dica">
+    <p class="rotulo dica-pc" aria-hidden="true">mova o mouse · clique na foto pra abrir</p>
+    <button class="mural-embaralhar rotulo" type="button">embaralhar ↻</button>
+  </div>
+  <button class="mural-cor" type="button" aria-pressed="false"><span>Vamos colocar uma cor?</span></button>
+
+  <!-- detalhe da foto -->
+  <div class="detalhe" role="dialog" aria-modal="true" aria-label="Foto" hidden>
+    <div class="detalhe-fundo" data-fechar-detalhe></div>
+    <button class="detalhe-fechar" type="button" aria-label="Fechar" data-fechar-detalhe>✕</button>
+    <div class="detalhe-painel">
+      <figure class="detalhe-foto"><img alt="" /></figure>
+      <div class="detalhe-texto">
+        <h2 class="detalhe-titulo"></h2>
+        <p class="detalhe-ensaio"></p>
+        <div class="detalhe-tags"><span class="tag-ensaio"></span><span class="tag-total"></span></div>
+        <a class="detalhe-link" href="#">ver o ensaio →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline define:vars={{ base: url('/') }}>
+  window.__baseMural = base;
+</script>
+
+<style>
+  .mural {
+    position: relative;
+    height: 100svh;
+    margin: -110px calc(var(--margem) * -1) 40px; /* sai do padding do <main>: ocupa a tela toda */
+  }
+  .mural-palco {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    background: var(--fundo); /* o mesmo branco quente do site entre as fotos */
+    perspective: 1100px;
+  }
+  /* a caixa de fora só centraliza; a grade de dentro só anda (GSAP).
+     Separados porque o GSAP reescreve o transform inteiro de quem ele anima. */
+  .mural-centro {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-style: preserve-3d;
+    pointer-events: none;
+  }
+  .mural-grade {
+    --lado: clamp(150px, 13vw, 240px);
+    transform-style: preserve-3d;
+    pointer-events: none; /* as casas recuam para trás do plano da grade: o mouse tem que chegar nelas */
+    display: grid;
+    grid-template-columns: repeat(12, var(--lado));
+    grid-auto-rows: var(--lado);
+    gap: 6px;
+    will-change: transform;
+  }
+
+  /* ---------- foto em gravura azul ---------- */
+  .mural-foto {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 6px;
+    isolation: isolate;
+    background: var(--gravura);
+    cursor: pointer;
+    pointer-events: auto;
+    scale: var(--r, 1); /* a revelação da intro anima o --r; o transform é da curvatura 3D */
+  }
+  .mural-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.25) brightness(1.06);
+    transition:
+      filter 0.6s ease,
+      transform 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+    -webkit-user-drag: none;
+    user-select: none;
+  }
+  /* claro vira creme (com hachura fina de gravura) e escuro vira azul royal */
+  .mural-foto::before,
+  .mural-foto::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .mural-foto::before {
+    background:
+      repeating-linear-gradient(-35deg, rgb(12 21 48 / 0.16) 0 1px, transparent 1px 4px),
+      var(--creme);
+    mix-blend-mode: multiply;
+  }
+  .mural-foto::after {
+    background: var(--gravura);
+    mix-blend-mode: lighten;
+  }
+  /* em cor: sob o mouse (computador) ou com foco do teclado */
+  @media (hover: hover) {
+    .mural-foto:hover img {
+      filter: none;
+      transform: scale(1.06);
+    }
+    .mural-foto:hover::before,
+    .mural-foto:hover::after {
+      opacity: 0;
+    }
+  }
+  .mural-foto:focus-visible img {
+    filter: none;
+  }
+  .mural-foto:focus-visible::before,
+  .mural-foto:focus-visible::after {
+    opacity: 0;
+  }
+
+  /* ---------- cartão do meio ---------- */
+  .mural-cartao {
+    grid-column: 6 / span 2;
+    grid-row: 3 / span 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    padding: clamp(16px, 1.6vw, 26px);
+    border-radius: 6px;
+    background: var(--creme);
+    color: var(--gravura);
+    pointer-events: auto;
+    scale: var(--r, 1);
+  }
+  .mural-titulo {
+    margin: 0;
+    font-size: calc(var(--lado) * 0.21);
+    font-weight: 700;
+    font-stretch: 75%;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .mural-titulo .voz-codigo {
+    font-size: 0.82em;
+    font-weight: 500;
+  }
+  .mural-cartao .rotulo {
+    color: var(--gravura);
+    opacity: 0.75;
+    font-size: 10px;
+  }
+
+  /* nome e ensaio da foto em destaque (como o título da peça no omrimalka) */
+  .mural-legenda {
+    position: absolute;
+    left: var(--margem);
+    bottom: 22px;
+    z-index: 2;
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgb(247 245 240 / 0.9);
+    color: var(--gravura);
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 0.3s,
+      transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+    pointer-events: none;
+  }
+  .mural-legenda.ativa {
+    opacity: 1;
+    transform: none;
+  }
+  .mural-legenda b {
+    font-size: 22px;
+    font-weight: 800;
+    font-stretch: 75%;
+    line-height: 1;
+    text-transform: lowercase;
+  }
+  .mural-legenda .rotulo {
+    color: var(--gravura);
+    opacity: 0.7;
+  }
+
+  .mural-dica {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 4px 4px 14px;
+    border-radius: 999px;
+    background: rgb(241 230 204 / 0.94);
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .mural-dica p {
+    margin: 0;
+    color: var(--gravura);
+  }
+  .mural-embaralhar {
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--gravura);
+    color: var(--creme);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .mural-embaralhar:hover {
+    background: var(--texto);
+  }
+  /* intro rodando: o mural espera escondido pelo "clique" */
+  :global(html.intro-on) .mural-foto,
+  :global(html.intro-on) .mural-cartao,
+  :global(html.intro-on) .mural-dica {
+    opacity: 0;
+  }
+
+  /* ---------- detalhe da foto: painel colorido inclinado ---------- */
+  .detalhe {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  .detalhe[hidden] {
+    display: none;
+  }
+  .detalhe-fundo {
+    position: absolute;
+    inset: 0;
+    background: rgb(12 21 48 / 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .detalhe-fechar {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    z-index: 3;
+    width: 52px;
+    height: 52px;
+    margin-left: -26px;
+    border: 0;
+    background: none;
+    color: #fff;
+    font-size: 34px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  }
+  .detalhe-fechar:hover {
+    transform: rotate(90deg) scale(1.1);
+  }
+  .detalhe-painel {
+    --cor: var(--gravura);
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(20px, 4vw, 56px);
+    width: min(1040px, 94vw);
+    margin-top: 40px;
+    padding: clamp(24px, 4vw, 56px);
+    background: var(--cor);
+    color: #fff;
+    transform: rotate(-1.4deg);
+    box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.6);
+  }
+  .detalhe-foto {
+    margin: 0;
+    transform: rotate(2.4deg);
+    box-shadow: 0 30px 50px -25px rgb(0 0 0 / 0.6);
+  }
+  .detalhe-foto img {
+    display: block;
+    width: 100%;
+    max-height: 62svh;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  .detalhe-texto {
+    display: grid;
+    gap: 12px;
+  }
+  .detalhe-titulo {
+    margin: 0;
+    font-size: clamp(32px, 4vw, 60px);
+    font-weight: 800;
+    font-stretch: 75%;
+    line-height: 0.95;
+    text-transform: lowercase;
+  }
+  .detalhe-ensaio {
+    margin: 0;
+    font-size: 15px;
+    opacity: 0.85;
+  }
+  .detalhe-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .detalhe-tags span {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: rgb(255 255 255 / 0.88);
+    color: #111;
+    font: 700 11px/1 var(--fonte);
+  }
+  .detalhe-link {
+    justify-self: start;
+    margin-top: 8px;
+    padding-bottom: 3px;
+    border-bottom: 2px solid currentColor;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  /* botão "Vamos colocar uma cor?": só no celular (no computador o mouse já colore) */
+  .mural-cor {
+    display: none;
+  }
+
+  /* ---------- celular: a parede do omrimalka ---------- */
+  @media (max-width: 760px), (hover: none) {
+    .mural-palco {
+      perspective: none;
+      touch-action: pan-y; /* parado: a página rola normal */
+      transition: background-color 0.9s ease;
+    }
+    .mural-centro,
+    .mural-grade {
+      transform-style: flat;
+    }
+    .mural-grade {
+      --lado: 26vw;
+      grid-template-columns: repeat(8, var(--lado));
+      gap: 6px;
+      will-change: auto;
+    }
+    .mural-foto,
+    .mural-cartao {
+      transform-origin: 50% 50%;
+      will-change: transform;
+      transition: clip-path 0.46s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    /* chegando no meio: o recorte entorta com mola (o "girar" do omrimalka) */
+    .mural-foto.perto {
+      transition: clip-path 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .mural-cartao {
+      grid-column: 4 / span 2;
+      grid-row: 4 / span 2;
+      padding: 12px;
+      gap: 6px;
+    }
+    .mural-titulo {
+      font-size: calc(var(--lado) * 0.17);
+    }
+    .mural-cartao .rotulo {
+      font-size: 8px;
+    }
+
+    /* em cor: o mural vira a tela inteira, solto pra qualquer lado, e o fundo escurece;
+       a onda de cor sai do meio (cada foto espera --atraso) */
+    .mural.em-cor .mural-palco {
+      position: fixed;
+      inset: 0;
+      z-index: 45; /* abaixo da barra */
+      background: #0b0f1e;
+      touch-action: none;
+      transform: none !important;
+      border-radius: 0 !important;
+    }
+    .mural.em-cor .mural-legenda,
+    .mural.em-cor .mural-dica,
+    .mural.em-cor .mural-cor {
+      position: fixed;
+      z-index: 46;
+    }
+    :global(html.mural-em-cor) {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    .mural-foto img,
+    .mural-foto::before,
+    .mural-foto::after {
+      transition-delay: var(--atraso, 0ms);
+    }
+    .mural.em-cor .mural-foto img {
+      filter: none;
+    }
+    .mural.em-cor .mural-foto::before,
+    .mural.em-cor .mural-foto::after {
+      opacity: 0;
+    }
+
+    /* legenda e embaralhar no canto de baixo, como no omrimalka */
+    .mural-legenda {
+      left: 12px;
+      right: auto;
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 162px);
+    }
+    .mural-legenda b {
+      font-size: 19px;
+    }
+    .mural-dica {
+      left: 12px;
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 124px);
+      padding: 0;
+      background: none;
+      transform: none;
+    }
+    .dica-pc {
+      display: none;
+    }
+    .mural-embaralhar {
+      border-radius: 4px;
+      background: #fff;
+      color: #111;
+      box-shadow: 0 6px 16px -8px rgb(0 0 0 / 0.5);
+    }
+
+    /* "Vamos colocar uma cor?" brilhando embaixo */
+    .mural-cor {
+      position: absolute;
+      left: 50%;
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 74px);
+      z-index: 3;
+      display: block;
+      padding: 11px 18px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--gravura);
+      transform: translateX(-50%);
+      white-space: nowrap;
+      cursor: pointer;
+      animation: brilho-botao 2.4s ease-in-out infinite;
+    }
+    .mural-cor span {
+      font: 700 14px/1 var(--fonte);
+      background: linear-gradient(100deg, var(--creme) 30%, #fff 50%, var(--creme) 70%);
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: brilho-texto 2.4s linear infinite;
+    }
+    .mural.em-cor .mural-cor {
+      background: rgb(255 255 255 / 0.92);
+      animation: none;
+    }
+    .mural.em-cor .mural-cor span {
+      background: none;
+      color: #111;
+      animation: none;
+    }
+    @keyframes brilho-texto {
+      from {
+        background-position: 120% 0;
+      }
+      to {
+        background-position: -120% 0;
+      }
+    }
+    @keyframes brilho-botao {
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgb(31 63 153 / 0.45), 0 10px 24px -10px rgb(31 63 153 / 0.7);
+      }
+      50% {
+        box-shadow: 0 0 0 7px rgb(31 63 153 / 0), 0 10px 30px -8px rgb(106 169 236 / 0.9);
+      }
+    }
+    :global(html.intro-on) .mural-cor {
+      opacity: 0;
+    }
+    .detalhe {
+      padding: 0;
+      align-items: start;
+    }
+    .detalhe-fechar {
+      top: 8px;
+    }
+    .detalhe-painel {
+      grid-template-columns: 1fr;
+      width: 92vw;
+      max-height: calc(100svh - 80px);
+      margin-top: 64px;
+      padding: 22px 20px 26px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      gap: 18px;
+    }
+    .detalhe-foto img {
+      max-height: 48svh;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { Flip } from 'gsap/Flip';
+
+  gsap.registerPlugin(ScrollTrigger, Flip);
+
+  const mural = document.querySelector<HTMLElement>('.mural');
+  if (mural) {
+    const raiz = document.documentElement;
+    const palco = mural.querySelector<HTMLElement>('.mural-palco')!;
+    const grade = mural.querySelector<HTMLElement>('.mural-grade')!;
+    const fotos = [...mural.querySelectorAll<HTMLElement>('.mural-foto')];
+    const casas = [mural.querySelector<HTMLElement>('.mural-cartao')!, ...fotos];
+    const legenda = mural.querySelector<HTMLElement>('.mural-legenda')!;
+    const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const comMouse = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 761px)').matches;
+    const lenis = () => (window as unknown as { lenis?: { stop(): void; start(): void } }).lenis;
+
+    // centro de cada casa em relação ao meio da grade (a grade só anda por transform, então isso
+    // não muda enquanto ela anda; mede de novo no resize e depois de embaralhar)
+    let centros: { x: number; y: number }[] = [];
+    const medir = () => {
+      const meioX = grade.offsetWidth / 2;
+      const meioY = grade.offsetHeight / 2;
+      centros = casas.map((c) => ({ x: c.offsetLeft + c.offsetWidth / 2 - meioX, y: c.offsetTop + c.offsetHeight / 2 - meioY }));
+    };
+    medir();
+    addEventListener('resize', medir);
+
+    let visivel = true;
+    new IntersectionObserver(([e]) => (visivel = e.isIntersecting)).observe(palco);
+
+    const mostrarLegenda = (f: HTMLElement | null) => {
+      if (!f) return legenda.classList.remove('ativa');
+      legenda.querySelector('b')!.textContent = f.querySelector('img')?.alt ?? '';
+      legenda.querySelector('span')!.textContent = `${f.dataset.ensaio} · ${f.dataset.total} fotos`;
+      legenda.classList.add('ativa');
+    };
+
+    let pausar = false; // o Flip do embaralhar também mexe no transform das casas
+
+    if (comMouse) {
+      // ---------- computador: a parede corre com o mouse ----------
+      const irX = gsap.quickTo(grade, 'x', { duration: semMovimento ? 0 : 1.4, ease: 'power3.out' });
+      const irY = gsap.quickTo(grade, 'y', { duration: semMovimento ? 0 : 1.4, ease: 'power3.out' });
+      palco.addEventListener('pointermove', (e) => {
+        const caixa = palco.getBoundingClientRect();
+        const sobraX = Math.max(0, grade.offsetWidth - caixa.width + 80);
+        const sobraY = Math.max(0, grade.offsetHeight - caixa.height + 80);
+        irX((0.5 - (e.clientX - caixa.left) / caixa.width) * sobraX);
+        irY((0.5 - (e.clientY - caixa.top) / caixa.height) * sobraY);
+      });
+
+      // ---------- computador: parede curva (3D) ----------
+      // Cada casa vira e recua conforme a distância até o meio da tela: o meio fica de frente e
+      // perto, as bordas viram para fora. A casa sob o mouse chega mais perto.
+      let sob: HTMLElement | null = null;
+      const perto = new Map<HTMLElement, number>();
+      fotos.forEach((f) => {
+        f.addEventListener('pointerenter', () => {
+          sob = f;
+          mostrarLegenda(f);
+        });
+        f.addEventListener('pointerleave', () => {
+          if (sob === f) sob = null;
+          mostrarLegenda(null);
+        });
+      });
+      if (!semMovimento) {
+        const limite = (v: number) => Math.max(-1.6, Math.min(1.6, v));
+        gsap.ticker.add(() => {
+          if (pausar || !visivel) return;
+          const gx = Number(gsap.getProperty(grade, 'x'));
+          const gy = Number(gsap.getProperty(grade, 'y'));
+          const meiaL = palco.clientWidth / 2;
+          const meiaA = palco.clientHeight / 2;
+          casas.forEach((c, i) => {
+            const nx = limite((centros[i].x + gx) / meiaL);
+            const ny = limite((centros[i].y + gy) / meiaA);
+            const p = (perto.get(c) ?? 0) + ((c === sob ? 1 : 0) - (perto.get(c) ?? 0)) * 0.12;
+            perto.set(c, p);
+            const z = -(nx * nx + ny * ny) * 170 + p * 70;
+            c.style.transform = `translateZ(${z.toFixed(1)}px) rotateY(${(nx * 16).toFixed(2)}deg) rotateX(${(-ny * 14).toFixed(2)}deg)`;
+          });
+        });
+      }
+      fotos.forEach((f) => f.addEventListener('click', () => abrirDetalhe(f)));
+    } else {
+      // ---------- celular: a parede do omrimalka (mesmos números do site dele) ----------
+      const Gt = 0.24; // força da lente em barril
+      const Xi = 0.07; // o meio um pouco maior
+      const Ui = 0.05; // some na borda da lente
+      const Zi = (1 / (3 * Gt)) * 0.94;
+      const GANHO = 0.26; // quanto a foto do foco cresce
+      const suave = (a: number, b: number, x: number) => {
+        const k = Math.max(0, Math.min(1, (x - a) / (b - a)));
+        return k * k * (3 - 2 * k);
+      };
+      // recortes tortos com semente fixa por casa: quase reto parado, bem torto no meio
+      const semente = (s: string) => {
+        let h = 2166136261;
+        for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+        let e = h >>> 0;
+        return () => ((e = (Math.imul(e, 1664525) + 1013904223) >>> 0), e / 4294967296);
+      };
+      const poligono = (chave: string, q: number) => {
+        const r = semente(chave);
+        const v = () => (q * (0.3 + r() * 0.7)).toFixed(2);
+        return `polygon(${v()}% ${v()}%, ${100 - +v()}% ${v()}%, ${100 - +v()}% ${100 - +v()}%, ${v()}% ${100 - +v()}%)`;
+      };
+      casas.forEach((c, i) => {
+        c.dataset.repouso = poligono(`casa${i}`, 3.2);
+        c.dataset.quente = poligono(`casa${i}:quente`, 10);
+        c.style.clipPath = c.dataset.repouso;
+      });
+
+      // câmera: começa com o cartão do título no meio. A parede só anda depois do
+      // "Vamos colocar uma cor?" (antes o mural fica parado e a página rola normal).
+      const cam = { x: centros[0].x, y: centros[0].y, vx: 0, vy: 0 };
+      let emCor = false;
+      const estado = casas.map(() => ({ escala: 1, perto: false, tf: '', op: '', z: '' }));
+      let largura = 0;
+      let altura = 0;
+      const medirParede = () => {
+        largura = grade.offsetWidth + 6;
+        altura = grade.offsetHeight + 6;
+      };
+      medirParede();
+      addEventListener('resize', medirParede);
+      const envolver = (v: number, t: number) => ((((v + t / 2) % t) + t) % t) - t / 2;
+
+      // em cor: arrasta com o dedo pra qualquer lado (sem cor, só o toque que abre a foto)
+      let arrastando = false;
+      let moveu = 0;
+      let desceu = 0;
+      let ultimo = { x: 0, y: 0 };
+      let alvoToque: HTMLElement | null = null;
+      palco.addEventListener('pointerdown', (e) => {
+        arrastando = true;
+        moveu = 0;
+        desceu = performance.now();
+        ultimo = { x: e.clientX, y: e.clientY };
+        alvoToque = (e.target as HTMLElement).closest('.mural-foto');
+        cam.vx = cam.vy = 0;
+      });
+      palco.addEventListener('pointermove', (e) => {
+        if (!arrastando) return;
+        const dx = e.clientX - ultimo.x;
+        const dy = e.clientY - ultimo.y;
+        ultimo = { x: e.clientX, y: e.clientY };
+        moveu += Math.hypot(dx, dy);
+        if (!emCor) return;
+        cam.x -= dx;
+        cam.y -= dy;
+        cam.vx = cam.vx * 0.4 - dx * 0.6;
+        cam.vy = cam.vy * 0.4 - dy * 0.6;
+      });
+      palco.addEventListener('pointerup', () => {
+        if (!arrastando) return;
+        arrastando = false;
+        if (moveu < 7 && performance.now() - desceu < 320 && alvoToque) {
+          cam.vx = cam.vy = 0;
+          abrirDetalhe(alvoToque);
+        }
+      });
+      palco.addEventListener('pointercancel', () => (arrastando = false)); // virou rolagem da página
+      // em cor, a rodinha/trackpad também anda a parede, pros dois lados (como o omrimalka)
+      palco.addEventListener(
+        'wheel',
+        (e) => {
+          if (!emCor) return;
+          e.preventDefault();
+          cam.vx = Math.max(-44, Math.min(44, cam.vx + e.deltaX * 0.062));
+          cam.vy = Math.max(-44, Math.min(44, cam.vy + e.deltaY * 0.062));
+        },
+        { passive: false },
+      );
+
+      // a intro revela o mural pela opacidade: só depois dela a lente mexe na opacidade
+      let mexerOpacidade = !raiz.classList.contains('intro-on');
+      document.addEventListener('mural:revelar', () => setTimeout(() => (mexerOpacidade = true), 1700));
+
+      let focoAtual: HTMLElement | null = null;
+      gsap.ticker.add((_t, dt) => {
+        if (pausar || !visivel) return;
+        if (!arrastando && (Math.abs(cam.vx) > 0.01 || Math.abs(cam.vy) > 0.01)) {
+          cam.x += cam.vx;
+          cam.y += cam.vy;
+          const atrito = Math.pow(0.935, dt / 16.67);
+          cam.vx *= atrito;
+          cam.vy *= atrito;
+        }
+        const vw = palco.clientWidth;
+        const vh = palco.clientHeight;
+        const n = Math.hypot(vw / 2, vh / 2) || 1;
+        const raio = Math.max(330, vh * 0.45);
+        const resto = emCor ? 0.62 : 1; // em cor, o que está longe do meio apaga um pouco
+        const passo = semMovimento ? 1 : Math.min(1, dt * 0.014);
+        let foco: HTMLElement | null = null;
+        let maior = 0;
+        casas.forEach((c, i) => {
+          const e = estado[i];
+          const sx = envolver(centros[i].x - cam.x, largura);
+          const sy = envolver(centros[i].y - cam.y, altura);
+          // a lente (a mesma conta do omrimalka)
+          const l = Math.min((sx * sx + sy * sy) / (n * n), Zi);
+          const v = (1 - Gt * l) / (1 - Gt);
+          const m = (1 - 3 * Gt * l) / (1 - Gt);
+          const u = 1 + Xi * Math.max(0, 1 - l);
+          const px = sx * v;
+          const py = sy * v;
+          const st = Math.max(1e-4, v) * u;
+          const sr = Math.max(Math.max(1e-4, v) * 0.62, m) * u;
+          const sumir = suave(0, Ui, m);
+          const peso = 1 - suave(0, raio, Math.hypot(px, py));
+          const cartao = i === 0;
+          e.escala += ((cartao ? 1 : 1 + peso * GANHO) - e.escala) * passo;
+          const k = Math.sqrt(st * sr) * e.escala;
+          const tf = `translate(${(px - centros[i].x).toFixed(1)}px, ${(py - centros[i].y).toFixed(1)}px) scale(${k.toFixed(3)})`;
+          if (tf !== e.tf) c.style.transform = e.tf = tf;
+          const z = String(Math.max(0, Math.round((k - 1) * 24)));
+          if (z !== e.z) c.style.zIndex = e.z = z;
+          if (mexerOpacidade) {
+            const op = (resto + (1 - resto) * peso) * sumir;
+            const o = op > 0.999 ? '' : op.toFixed(2);
+            if (o !== e.op) c.style.opacity = e.op = o;
+          }
+          if (cartao) return;
+          const perto = peso > (e.perto ? 0.2 : 0.38);
+          if (perto !== e.perto) {
+            e.perto = perto;
+            c.classList.toggle('perto', perto);
+            c.style.clipPath = (perto ? c.dataset.quente : c.dataset.repouso) ?? '';
+          }
+          if (peso > maior) {
+            maior = peso;
+            foco = c;
+          }
+        });
+        const novo = maior > 0.5 ? foco : null;
+        if (novo !== focoAtual) {
+          focoAtual = novo;
+          mostrarLegenda(novo);
+        }
+      });
+
+      // "Vamos colocar uma cor?": as fotos ganham cor numa onda que sai do meio da tela e o mural
+      // vira a tela inteira, solto pra qualquer lado. Só fica parado de novo no "voltar pro azul"
+      // (ou num link do menu), e aí a página volta a rolar normal.
+      const botaoCor = mural.querySelector<HTMLButtonElement>('.mural-cor')!;
+      const colorir = (ligar: boolean) => {
+        if (ligar === emCor) return;
+        emCor = ligar;
+        if (ligar) {
+          (window as unknown as { lenis?: { scrollTo(y: number, o?: object): void } }).lenis?.scrollTo(0, { immediate: true });
+          scrollTo(0, 0);
+        }
+        fotos.forEach((f) => {
+          const r = f.getBoundingClientRect();
+          const d = Math.hypot(r.left + r.width / 2 - innerWidth / 2, r.top + r.height / 2 - innerHeight / 2);
+          f.style.setProperty('--atraso', `${Math.round(Math.min(d, 900) * 0.9)}ms`);
+        });
+        mural.classList.toggle('em-cor', ligar);
+        raiz.classList.toggle('mural-em-cor', ligar);
+        if (ligar) lenis()?.stop();
+        else {
+          lenis()?.start();
+          // volta com o cartão do título pro meio
+          cam.vx = cam.vy = 0;
+          gsap.to(cam, { x: centros[0].x, y: centros[0].y, duration: semMovimento ? 0 : 1.1, ease: 'power3.inOut' });
+        }
+        botaoCor.setAttribute('aria-pressed', String(ligar));
+        botaoCor.querySelector('span')!.textContent = ligar ? 'voltar pro azul' : 'Vamos colocar uma cor?';
+      };
+      botaoCor.addEventListener('click', () => colorir(!emCor));
+      document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', () => colorir(false)));
+    }
+    // ---------- detalhe da foto ----------
+    const detalhe = mural.querySelector<HTMLElement>('.detalhe')!;
+    const painel = detalhe.querySelector<HTMLElement>('.detalhe-painel')!;
+    const base = ((window as unknown as { __baseMural?: string }).__baseMural ?? '/').replace(/\/$/, '');
+    let quemAbriu: HTMLElement | null = null;
+
+    function abrirDetalhe(f: HTMLElement) {
+      quemAbriu = f;
+      const img = detalhe.querySelector<HTMLImageElement>('.detalhe-foto img')!;
+      img.src = f.dataset.grande ?? f.querySelector('img')!.currentSrc;
+      img.alt = f.querySelector('img')?.alt ?? '';
+      detalhe.querySelector('.detalhe-titulo')!.textContent = img.alt;
+      detalhe.querySelector('.detalhe-ensaio')!.textContent = `Do ensaio ${f.dataset.ensaio}.`;
+      detalhe.querySelector('.tag-ensaio')!.textContent = f.dataset.ensaio ?? '';
+      detalhe.querySelector('.tag-total')!.textContent = `${f.dataset.total} fotos`;
+      detalhe.querySelector<HTMLAnchorElement>('.detalhe-link')!.href = `${base}/${f.dataset.slug}`;
+      painel.style.setProperty('--cor', f.dataset.cor ?? '#1f3f99');
+      detalhe.hidden = false;
+      raiz.style.overflow = 'hidden';
+      lenis()?.stop();
+      detalhe.querySelector<HTMLElement>('.detalhe-fechar')!.focus({ preventScroll: true });
+      if (semMovimento) return;
+      gsap
+        .timeline()
+        .fromTo('.detalhe-fundo', { opacity: 0 }, { opacity: 1, duration: 0.35 })
+        .fromTo('.detalhe-fechar', { scale: 0, rotate: -180 }, { scale: 1, rotate: 0, duration: 0.6, ease: 'back.out(2)' }, 0.1)
+        .fromTo(painel, { yPercent: 50, rotate: 8, opacity: 0 }, { yPercent: 0, rotate: -1.4, opacity: 1, duration: 0.8, ease: 'expo.out' }, 0)
+        .fromTo('.detalhe-foto', { scale: 0.7, rotate: -12 }, { scale: 1, rotate: 2.4, duration: 0.9, ease: 'back.out(1.6)' }, 0.15)
+        .fromTo('.detalhe-texto > *', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.07, ease: 'power3.out' }, 0.3);
+    }
+    function fecharDetalhe() {
+      if (detalhe.hidden) return;
+      const terminar = () => {
+        detalhe.hidden = true;
+        raiz.style.overflow = '';
+        lenis()?.start();
+        quemAbriu?.focus({ preventScroll: true });
+      };
+      if (semMovimento) return terminar();
+      gsap
+        .timeline({ onComplete: terminar })
+        .to(painel, { yPercent: 60, rotate: -9, opacity: 0, duration: 0.45, ease: 'power3.in' })
+        .to('.detalhe-fundo', { opacity: 0, duration: 0.3 }, 0.15)
+        .to('.detalhe-fechar', { scale: 0, duration: 0.25 }, 0);
+    }
+    detalhe.querySelectorAll('[data-fechar-detalhe]').forEach((b) => b.addEventListener('click', fecharDetalhe));
+    addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') fecharDetalhe();
+      if (e.key === 'Enter' && (document.activeElement as HTMLElement)?.classList.contains('mural-foto')) abrirDetalhe(document.activeElement as HTMLElement);
+    });
+
+    // ---------- embaralhar: as fotos trocam de lugar deslizando (o cartão fica no meio) ----------
+    mural.querySelector('.mural-embaralhar')!.addEventListener('click', () => {
+      pausar = true;
+      const estado = Flip.getState(fotos);
+      const sorteio = [...fotos].sort(() => Math.random() - 0.5);
+      sorteio.forEach((f) => grade.append(f));
+      Flip.from(estado, {
+        duration: semMovimento ? 0 : 1.1,
+        ease: 'power3.inOut',
+        stagger: { amount: 0.35, from: 'random' },
+        absolute: true,
+        onComplete: () => {
+          medir();
+          pausar = false;
+        },
+      });
+    });
+
+    // ---------- "BUM": a intro dispara e o mural aparece do centro para fora ----------
+    document.addEventListener('mural:revelar', () => {
+      if (semMovimento) return;
+      gsap.fromTo(
+        casas,
+        { opacity: 0, '--r': 0.4 },
+        {
+          opacity: 1,
+          '--r': 1,
+          duration: 0.9,
+          ease: 'expo.out',
+          stagger: { grid: 'auto', from: 'center', amount: 0.7 },
+          clearProps: 'opacity,--r',
+        },
+      );
+      gsap.from(mural.querySelector('.mural-dica'), { opacity: 0, y: 10, delay: 1.2, duration: 0.6 });
+    });
+
+    // ---------- rolando para os sites (computador): o mural recua e vira um quadro ----------
+    if (!semMovimento && comMouse) {
+      gsap.to(palco, {
+        scale: 0.9,
+        borderRadius: 28,
+        ease: 'none',
+        scrollTrigger: { trigger: mural, start: 'top top', end: 'bottom top', scrub: true },
+      });
+    }
+  }
+</script>

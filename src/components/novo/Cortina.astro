@@ -1,0 +1,111 @@
+---
+// Cor por seção (a transição do manoel.ink, versão de out/2026): cada seção diz seu tom em
+// data-tema="claro" | "tinta" | "azul". Quando a seção cruza o meio da tela, a cor nova sobe atrás
+// do conteúdo (desce, se você estiver voltando). A borda da cor nova é um degradê comprido, não uma
+// linha seca: a troca parece a luz mudando, como um céu escurecendo.
+// O tom atual fica em data-tema no <html>, e o novo.css troca as cores do texto para cada tom.
+// "claro" não tem cor própria: a cortina some e volta a luz do Fundo.astro.
+---
+
+<div class="cortina-base" aria-hidden="true"></div>
+<div class="cortina" aria-hidden="true"></div>
+
+<style>
+  .cortina-base,
+  .cortina {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .cortina-base {
+    top: 0;
+    bottom: 0;
+    transition: opacity 0.6s ease;
+  }
+  /* a camada que passa: a tela inteira de cor + uma faixa de degradê (60% da tela) na borda */
+  .cortina {
+    top: 0;
+    height: 160vh;
+    opacity: 0;
+    will-change: transform;
+  }
+</style>
+
+<script>
+  const CORES = { claro: '#f7f5f0', tinta: '#0c1530', azul: '#1f3f99' } as const;
+  type Tema = keyof typeof CORES;
+
+  const raiz = document.documentElement;
+  const base = document.querySelector<HTMLElement>('.cortina-base')!;
+  const cortina = document.querySelector<HTMLElement>('.cortina')!;
+  const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let atual: Tema = 'claro';
+  let ultimoY = scrollY;
+  let animacao: Animation | null = null;
+  let trocaTexto = 0;
+
+  function pintarBase(tema: Tema) {
+    base.style.background = CORES[tema];
+    base.style.opacity = tema === 'claro' ? '0' : '1'; // no claro aparece a luz do fundo
+  }
+
+  function trocar(tema: Tema) {
+    if (tema === atual) return;
+    const descendo = scrollY >= ultimoY;
+    atual = tema;
+    animacao?.finish();
+    cancelAnimationFrame(trocaTexto);
+    if (semMovimento) {
+      raiz.dataset.tema = tema;
+      return pintarBase(tema);
+    }
+    // o texto troca de cor quando a parte sólida da cor nova passa do meio da tela
+    // (nunca texto branco no claro, nem escuro no escuro)
+    const olharMeio = () => {
+      const ty = new DOMMatrix(getComputedStyle(cortina).transform).m42;
+      const alturaFaixa = innerHeight * 0.6; // o degradê da borda
+      const passou = descendo ? ty + alturaFaixa <= innerHeight / 2 : ty + innerHeight * 1.6 - alturaFaixa >= innerHeight / 2;
+      if (passou || atual !== tema) {
+        if (atual === tema) raiz.dataset.tema = tema;
+        return;
+      }
+      trocaTexto = requestAnimationFrame(olharMeio);
+    };
+    trocaTexto = requestAnimationFrame(olharMeio);
+
+    const cor = CORES[tema];
+    // descendo: a cor nova vem de baixo, com o degradê na borda de cima (e o contrário voltando)
+    cortina.style.background = descendo
+      ? `linear-gradient(to bottom, transparent, ${cor} 37.5%)`
+      : `linear-gradient(to top, transparent, ${cor} 37.5%)`;
+    cortina.style.opacity = '1';
+    const esta = cortina.animate(
+      descendo
+        ? [{ transform: 'translateY(100vh)' }, { transform: 'translateY(-60vh)' }]
+        : [{ transform: 'translateY(-160vh)' }, { transform: 'translateY(0)' }],
+      { duration: 1300, easing: 'cubic-bezier(0.55, 0, 0.25, 1)', fill: 'forwards' },
+    );
+    animacao = esta;
+    esta.onfinish = () => {
+      if (atual === tema) raiz.dataset.tema = tema;
+      pintarBase(tema);
+      // se outra troca já começou, a cortina é dela: só esta animação sai de cena
+      if (animacao === esta) {
+        cortina.style.opacity = '0';
+        animacao = null;
+      }
+      esta.cancel();
+    };
+  }
+
+  addEventListener('scroll', () => requestAnimationFrame(() => (ultimoY = scrollY)), { passive: true });
+  const olho = new IntersectionObserver(
+    (entradas) => entradas.forEach((e) => e.isIntersecting && trocar((e.target as HTMLElement).dataset.tema as Tema)),
+    { rootMargin: '-50% 0px -50% 0px' },
+  );
+  document.querySelectorAll<HTMLElement>('[data-tema]').forEach((el) => olho.observe(el));
+  raiz.dataset.tema = atual;
+  pintarBase(atual);
+</script>

@@ -1,0 +1,302 @@
+---
+// Intro do site novo: a Nikon 3D (src/lib/camera3d.ts) com o nome ao lado e um cartão de código
+// narrando cada passo. Toca sozinha ao abrir a página: a câmera vira, dá zoom, foca ("focando…")
+// e dispara. No flash, a intro some e o mural de fotos aparece (evento "mural:revelar").
+// Rolar, tocar ou apertar uma tecla acelera; "pular" também. Quem liga a intro é o script inline
+// do <head> do novo.astro (classe intro-on no <html>): sem ele, com "reduzir movimento" ou
+// abrindo direto num #link, a página começa no mural.
+import { getImage } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+import type { InfoDisplay } from '../../lib/camera3d';
+
+interface Props {
+  nome: string;
+  foto?: Foto; // aparece no display da câmera
+  info: InfoDisplay;
+}
+
+const { nome, foto, info } = Astro.props;
+const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format: 'webp', quality: 70 })).src : undefined;
+const [primeiro, ...resto] = nome.split(' ');
+---
+
+<div class="intro" data-foto={fotoDisplay} data-info={JSON.stringify(info)}>
+  <div class="intro-texto">
+    <h2 class="intro-nome titulo-cartaz" aria-label={nome}>
+      <span><span>{primeiro}</span></span>
+      <span><span>{resto.join(' ')}</span></span>
+    </h2>
+    <div class="intro-codigo voz-codigo" aria-hidden="true">
+      <div class="c">// abrindo o portfólio…</div>
+      <div><b>const</b> camera = <b>new</b> Nikon(<i>'D3200'</i>);</div>
+      <div>camera.virar(<em data-v="virar">0.00</em>);</div>
+      <div>camera.zoom(<em data-v="zoom">18</em>mm);</div>
+      <div>camera.foco(<em data-v="foco">0.00</em>); <span class="c" data-v="estado"></span></div>
+      <div>camera.disparar(); <span class="c" data-v="clique">// aguardando…</span></div>
+    </div>
+  </div>
+  <div class="intro-cena">
+    <canvas aria-hidden="true"></canvas>
+  </div>
+  <button class="intro-pular rotulo" type="button">pular intro →</button>
+  <div class="intro-flash" aria-hidden="true"></div>
+</div>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: none;
+    grid-template-columns: 1fr 1.25fr;
+    align-items: center;
+    gap: 24px;
+    padding: 40px var(--margem);
+    background:
+      radial-gradient(60% 50% at 75% 30%, rgb(169 166 232 / 0.3), transparent 70%),
+      radial-gradient(50% 50% at 10% 90%, rgb(106 169 236 / 0.2), transparent 70%),
+      var(--fundo);
+  }
+  :global(html.intro-on) .intro,
+  :global(html.intro-saindo) .intro {
+    display: grid;
+  }
+  :global(html.intro-on) {
+    overflow: hidden;
+  }
+
+  .intro-texto {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: clamp(20px, 3vw, 40px);
+  }
+  .intro-nome {
+    margin: 0;
+    /* limitado pela altura também: em notebook baixo o cartão de código tem que caber embaixo */
+    font-size: clamp(56px, min(13vw, 25svh), 230px);
+    color: var(--texto);
+  }
+  /* cada linha do nome sobe de dentro de uma "janela" */
+  .intro-nome > span {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.04em;
+  }
+  .intro-nome > span > span {
+    display: block;
+  }
+  .intro-codigo {
+    width: fit-content;
+    max-width: 100%;
+    padding: 18px 22px;
+    border: 1px solid var(--linha);
+    border-radius: 16px;
+    background: var(--vidro);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: clamp(11px, 1vw, 14px);
+    line-height: 1.9;
+    color: var(--texto);
+    white-space: nowrap;
+  }
+  .intro-codigo b {
+    color: var(--azul);
+    font-weight: 500;
+  }
+  .intro-codigo i {
+    color: #b0532f;
+    font-style: normal;
+  }
+  .intro-codigo em {
+    display: inline-block;
+    min-width: 3.4ch;
+    color: var(--azul);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+  }
+  .intro-codigo .c {
+    color: var(--texto-suave);
+  }
+  .intro-codigo .focando {
+    color: var(--azul);
+    animation: piscar 0.6s steps(2) infinite;
+  }
+  .intro-codigo .ok {
+    color: #1f8f5a;
+    animation: none;
+  }
+  @keyframes piscar {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .intro-cena {
+    position: relative;
+    height: 100%;
+    min-height: 60vh;
+  }
+  .intro-cena canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .intro-cena.pronta canvas {
+    opacity: 1;
+  }
+
+  .intro-pular {
+    position: absolute;
+    right: var(--margem);
+    bottom: 24px;
+    padding: 8px 14px;
+    border: 1px solid var(--linha);
+    border-radius: 999px;
+    background: var(--vidro);
+    cursor: pointer;
+  }
+  .intro-pular:hover {
+    color: var(--texto);
+  }
+  .intro-flash {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (max-width: 760px) {
+    /* celular: nome em cima, câmera grande no meio, código embaixo */
+    .intro {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+      align-items: stretch;
+      gap: 12px;
+      padding-top: 48px;
+      padding-bottom: 76px;
+    }
+    .intro-texto {
+      display: contents;
+    }
+    .intro-cena {
+      order: 1;
+    }
+    .intro-codigo {
+      order: 2;
+      font-size: 11px;
+      padding: 12px 14px;
+    }
+    .intro-cena {
+      min-height: 0;
+    }
+    .intro-pular {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import type { Camera3D } from '../../lib/camera3d';
+
+  const raiz = document.documentElement;
+  const intro = document.querySelector<HTMLElement>('.intro');
+
+  if (intro && raiz.classList.contains('intro-on')) {
+    const lenis = () => (window as unknown as { lenis?: { stop(): void; start(): void; scrollTo(y: number, o?: object): void } }).lenis;
+    const valor = (nome: string) => intro.querySelector<HTMLElement>(`[data-v="${nome}"]`)!;
+    const cena = intro.querySelector<HTMLElement>('.intro-cena')!;
+    const flash = intro.querySelector<HTMLElement>('.intro-flash')!;
+    const pose = { virar: 0, zoom: 0, foco: 0 };
+    let camera: Camera3D | null = null;
+    let pronta = false;
+
+    scrollTo(0, 0);
+    lenis()?.stop();
+
+    const aplicar = () => {
+      camera?.definir(pose);
+      valor('virar').textContent = pose.virar.toFixed(2);
+      valor('zoom').textContent = String(Math.round(18 + pose.zoom * 37));
+      valor('foco').textContent = pose.foco.toFixed(2);
+    };
+    const comentario = (nome: string, texto: string, classe = '') => {
+      const el = valor(nome);
+      el.textContent = texto;
+      el.className = `c ${classe}`;
+    };
+
+    const tl = gsap.timeline({ defaults: { ease: 'power2.inOut' } });
+    tl.from('.intro-nome > span > span', { yPercent: 110, duration: 0.9, stagger: 0.1, ease: 'power4.out' })
+      .from('.intro-codigo > div', { opacity: 0, x: -10, duration: 0.3, stagger: 0.1, ease: 'power1.out' }, 0.3)
+      // espera a câmera 3D carregar (ou desistir dela)
+      .call(() => { if (!pronta) tl.pause(); }, undefined, 0.9)
+      .to(pose, { virar: 1, duration: 1.4, onUpdate: aplicar }, 0.9)
+      .to(pose, { zoom: 1, duration: 0.8, onUpdate: aplicar })
+      .call(() => comentario('estado', '// focando…', 'focando'))
+      .to(pose, { foco: 1, duration: 0.9, onUpdate: aplicar })
+      .call(() => comentario('estado', '// ✓ em foco', 'ok'))
+      .call(disparar, undefined, '+=0.3')
+      .call(revelar, undefined, '+=0.12')
+      .to(intro, { opacity: 0, duration: 0.7, ease: 'power1.out' })
+      .call(encerrar);
+
+    function disparar() {
+      camera?.disparar();
+      comentario('clique', '// ✓ click!', 'ok');
+      flash.animate([{ opacity: 0 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 700, easing: 'ease-out' });
+    }
+    function revelar() {
+      raiz.classList.add('intro-saindo');
+      raiz.classList.remove('intro-on');
+      document.dispatchEvent(new Event('mural:revelar'));
+    }
+    function encerrar() {
+      raiz.classList.remove('intro-saindo');
+      intro!.remove();
+      camera?.parar();
+      lenis()?.scrollTo(0, { immediate: true });
+      lenis()?.start();
+      ScrollTrigger.refresh(); // a barra de rolagem voltou: as seções travadas medem de novo
+      removeEventListener('wheel', acelerar);
+      removeEventListener('touchstart', acelerar);
+      removeEventListener('keydown', acelerar);
+    }
+
+    const seguir = () => {
+      pronta = true;
+      if (tl.paused()) tl.resume();
+    };
+    import('../../lib/camera3d')
+      .then(({ montarCamera }) => montarCamera(cena.querySelector('canvas')!, intro.dataset.foto, JSON.parse(intro.dataset.info!)))
+      .then((c) => {
+        camera = c;
+        aplicar();
+        cena.classList.add('pronta');
+      })
+      .catch(() => cena.remove()) // sem WebGL: o código narra sozinho
+      .finally(seguir);
+    setTimeout(seguir, 4000); // câmera demorando demais: segue sem ela
+
+    // pressa: rolar, tocar ou teclar acelera; o botão pula de vez
+    function acelerar() {
+      tl.timeScale(4);
+      seguir();
+    }
+    addEventListener('wheel', acelerar, { passive: true });
+    addEventListener('touchstart', acelerar, { passive: true });
+    addEventListener('keydown', acelerar);
+    intro.querySelector('.intro-pular')!.addEventListener('click', () => {
+      tl.timeScale(10);
+      seguir();
+    });
+  }
+</script>

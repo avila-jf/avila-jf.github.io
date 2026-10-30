@@ -1,959 +1,746 @@
 ---
-import { Image, getImage } from 'astro:assets';
-import Base from '../layouts/Base.astro';
-import Destaques from '../components/Destaques.astro';
-import Projetos from '../components/Projetos.astro';
-import CameraCena from '../components/CameraCena.astro';
-import TerminalCamera from '../components/TerminalCamera.astro';
-import { site, categorias, criacaoDeSites, destaques, projetos } from '../data/site';
-import { capa, fotosDa, fotosEmDestaque } from '../lib/fotos';
+// Página inicial (o site novo, lançado em 30/10/2026; o antigo fica no histórico do git). Feito por camadas:
+//  CAMADA 1 — wireframe: as caixas marcam onde cada coisa vai entrar
+//  CAMADA 2 — fundo e barra: branco com luzes suaves que mudam de lente (foto/código), fontes e barra
+//  CAMADA 3 — fotos e prints: fotos com as cores delas, prints dos sites, gravura só como cenário
+//  CAMADA 4 — 3D: intro com a câmera que fotografa e revela o mural de fotos, notebook que abre nos sites
+// O foco é vender sites: eles vêm logo depois da abertura e ganham mais espaço; as fotos
+// aparecem como o "olhar" por trás dos sites.
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import Fundo from '../components/novo/Fundo.astro';
+import Barra from '../components/novo/Barra.astro';
+import Gravura from '../components/novo/Gravura.astro';
+import Cenario from '../components/novo/Cenario.astro';
+import Intro from '../components/novo/Intro.astro';
+import Mural from '../components/novo/Mural.astro';
+import Cortina from '../components/novo/Cortina.astro';
+import Sobre from '../components/novo/Sobre.astro';
 import { url } from '../lib/url';
+import Aparelho from '../components/novo/Aparelho.astro';
+import { site, categorias, projetos, destaques, criacaoDeSites, github } from '../data/site';
+import { fotos, fotosDa, fotosEmDestaque, selecionadas } from '../lib/fotos';
+import '../styles/novo.css';
 
-// Fotos da capa: alternam sozinhas (em gravura). Troque os nomes aqui para usar outras fotos;
-// se nenhuma for encontrada, a capa usa a foto principal de site.ts.
-const fotosDeCapa = ['barcos na hora dourada']; // a mesma do rodapé (com uma só, a capa fica parada)
-const fotoCapa = capa();
-const fotosCapa = (() => {
-  const todas = categorias.flatMap((c) => fotosDa(c.slug));
-  const achadas = fotosDeCapa.flatMap((nome) => todas.filter((f) => f.alt === nome).slice(0, 1));
-  return achadas.length > 0 ? achadas : fotoCapa ? [fotoCapa] : [];
-})();
-const fotosDestaque = fotosEmDestaque(destaques);
 const ensaios = categorias.map((c) => ({ ...c, foto: fotosDa(c.slug)[0], total: fotosDa(c.slug).length }));
-const totalFotos = ensaios.reduce((soma, e) => soma + e.total, 0);
-const linkSite =`https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
+const totalFotos = ensaios.reduce((s, e) => s + e.total, 0);
+const sites = projetos.filter((p) => p.destaque);
+const outros = projetos.filter((p) => !p.destaque);
+
+// Prints dos sites (src/assets/projetos/<imagem>.jpg)
+const prints = import.meta.glob<{ default: ImageMetadata }>('/src/assets/projetos/*.{jpg,png,webp}', { eager: true });
+const printDe = (nome?: string) =>
+  nome ? Object.entries(prints).find(([caminho]) => caminho.includes(`/${nome}.`))?.[1].default : undefined;
+
+const sitesComPrint = sites.map((p) => ({ ...p, print: printDe(p.imagem) }));
+
+// Foto do display da câmera da intro: a 2ª dos destaques
+const fotosDestaque = fotosEmDestaque(destaques);
+const fotoCamera = fotosDestaque[1] ?? fotosDestaque[0];
+
+// 02 · as três perguntas de uma foto, e como cada uma vira código. Troque a foto pela chave
+// 'categoria/nome-do-arquivo'.
+const fotoDe = (chave: string) => fotos.find((f) => `${f.categoria}/${f.nome}` === chave) ?? fotosDestaque[0];
+const licoes = [
+  {
+    titulo: 'Enquadramento',
+    texto: 'Na foto, é onde o olho entra primeiro. No site, é o grid: o que fica grande, o que respira, o que corta a borda.',
+    foto: fotoDe('pedras/10-capa-mortal-no-barco'),
+    codigo: '.capa {\n  display: grid;\n  grid-template-columns: 1fr 1.618fr;\n  aspect-ratio: 4 / 5;\n}',
+  },
+  {
+    titulo: 'Luz',
+    texto: 'Na foto, a luz escolhe o que importa. No site, é o contraste: o botão que acende e o fundo que se apaga.',
+    foto: fotoDe('estudio/01-luz-do-estudio'),
+    codigo: '.botao {\n  background: var(--azul);\n  box-shadow: 0 20px 50px -30px\n    var(--azul);\n}',
+  },
+  {
+    titulo: 'Ritmo',
+    texto: 'Numa série, é o tempo entre um clique e outro. No site, é espaço e movimento: nada chega tudo de uma vez.',
+    foto: fotoDe('pedras/12-wonder-why'),
+    codigo: '.secao > * {\n  transition: transform .8s\n    cubic-bezier(.2, .7, .2, 1);\n  transition-delay: calc(var(--i) * 80ms);\n}',
+  },
+];
+
+// Paisagem do cenário em gravura (no contato). Troque o nome para usar outra foto.
+const fotoCenario = fotos.find((f) => f.alt === 'barcos na hora dourada') ?? fotos[0];
+
+const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
+const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Olá! Vi seu portfólio e quero marcar um ensaio.')}`;
+const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/$/, '');
 ---
 
-<Base>
-  <!-- Capa estilo editorial (inspirada na Superhuman): foto em tela cheia e título fino, com parallax. -->
-  <!-- Capa em "gravura": as fotos viram ilustração gravada em azul-marinho e creme (como o rodapé)
-       e alternam sozinhas. Para voltar às fotos coloridas, é só tirar a classe "hero-gravura" daqui. -->
-  <section class="hero hero-gravura" data-parallax>
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-      <filter id="gravura-capa" color-interpolation-filters="sRGB">
-        <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="cinza" />
-        <!-- um granulado fino misturado antes de reduzir os tons: as passagens entre um tom e outro
-             viram pontinhos, como o pontilhado de uma gravura, em vez de manchas -->
-        <feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="1" seed="3" />
-        <feColorMatrix type="saturate" values="0" result="granulado" />
-        <feComposite in="cinza" in2="granulado" operator="arithmetic" k1="0" k2="1" k3="0.22" k4="-0.11" />
-        <feComponentTransfer>
-          <feFuncR type="discrete" tableValues="0 0.14 0.28 0.44 0.6 0.76 0.9 1" />
-          <feFuncG type="discrete" tableValues="0 0.14 0.28 0.44 0.6 0.76 0.9 1" />
-          <feFuncB type="discrete" tableValues="0 0.14 0.28 0.44 0.6 0.76 0.9 1" />
-        </feComponentTransfer>
-        <!-- escuro → azul-marinho do site (#0b1f4f), claro → creme (#efe7d3) -->
-        <feColorMatrix
-          type="matrix"
-          values="0.894 0 0 0 0.043
-                  0.784 0 0 0 0.122
-                  0.518 0 0 0 0.31
-                  0     0 0 1 0"
-        />
-      </filter>
-    </svg>
-    <div class="hero-moldura">
-      {
-        fotosCapa.length > 0 ? (
-          fotosCapa.map((foto, i) => (
-            <Image
-              class:list={['hero-foto', 'hero-slide', { ativa: i === 0 }]}
-              src={foto.src}
-              alt={foto.alt}
-              widths={[800, 1400, 2000, 2400]}
-              sizes="100vw"
-              format="webp"
-              quality={80}
-              loading="eager"
-              fetchpriority={i === 0 ? 'high' : 'low'}
-            />
-          ))
-        ) : (
-          <div class="hero-foto hero-vazio">
-            <span>sua foto de capa</span>
-          </div>
-        )
-      }
-    </div>
-
-    <div class="hero-texto container">
-      <p class="hero-selo entrar"><i aria-hidden="true"></i> Agenda aberta · Fotografia & sites · {site.cidade.split(',')[0]}</p>
-      <h1 class="entrar">
-        {site.frase.inicio} <em class="marca-texto">{site.frase.destaque}</em>
-        <!-- Cópia dourada do título por cima, revelada por uma faixa que passa: a luz do pôr do sol
-             correndo pelas letras ("Gradient Sweep", visto no Details Vault) -->
-        <span class="titulo-brilho" aria-hidden="true">
-          {site.frase.inicio} <em class="marca-texto">{site.frase.destaque}</em>
-        </span>
-      </h1>
-      <p class="hero-assinatura entrar">
-        {site.nome} — {categorias.map((c) => c.titulo).join(' · ')} · Sites
-      </p>
-      <div class="hero-acoes entrar">
-        <a class="botao" href="#ensaios">Ver ensaios</a>
-        <a class="botao-claro" href={linkSite} target="_blank" rel="noopener">
-          Quero meu site
-          <span class="botao-claro-icone" aria-hidden="true">↗</span>
-        </a>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- Câmera 3D que mira em você, dá zoom, foca e dispara (flash → slider); o terminal narra em código -->
-  <CameraCena
-    foto={fotosDestaque[0]}
-    info={{
-      nome: site.nome,
-      cidade: site.cidade.split(',')[0],
-      ensaios: ensaios.map((e) => ({ titulo: e.titulo, total: e.total })),
-      totalFotos: ensaios.reduce((soma, e) => soma + e.total, 0),
-      sitesNoAr: projetos.filter((p) => p.destaque).length,
-    }}
-  >
-    <TerminalCamera
-      slot="lado"
-      nome={site.nome}
-      cidade={site.cidade.split(',')[0]}
-      ensaios={ensaios}
-      sitesNoAr={projetos.filter((p) => p.destaque).length}
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={`Francis Avila: eu crio sites com olhar de fotógrafo. Sites para clientes e fotografia em `+site.cidade.split(',')[0]+`.`} />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <meta name="theme-color" content="#f7f5f0" />
+    <title>{site.nome} · sites com olhar de fotógrafo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap"
     />
-    <Destaques fotos={fotosDestaque} />
-  </CameraCena>
-
-  <!-- Faixa de texto que corre para o lado com a rolagem (ScrollTrigger) -->
-  <div class="faixa-area">
-    <div class="faixa" aria-hidden="true">
-      <p class="faixa-texto">
-        {Array.from({ length: 4 }, () => categorias.map((c) => <span>{c.titulo} <i>✦</i> </span>))}
-      </p>
-    </div>
-  </div>
-
-  <section id="ensaios" class="container secao">
-    <p class="rotulo">Ensaios</p>
-    <div class="ensaios">
-      {
-        ensaios.map((ensaio, i) => (
-          <a class="ensaio revelar" href={url(`/${ensaio.slug}`)}>
-            <div class="ensaio-imagem" data-tilt>
-              {ensaio.foto ? (
-                <Image src={ensaio.foto.src} alt={ensaio.foto.alt} widths={[480, 800]} sizes="(max-width: 760px) 100vw, 33vw" format="webp" />
-              ) : (
-                <div class="ensaio-vazio" />
-              )}
-            </div>
-            <span class="ensaio-numero">0{i + 1}</span>
-            <h2>
-              {ensaio.titulo} <span class="ensaio-seta" aria-hidden="true">→</span>
-            </h2>
-            <p>{ensaio.total > 0 ? `${ensaio.total} fotos` : 'em breve'}</p>
-          </a>
-        ))
+    <script is:inline>
+      // Liga a intro (câmera que fotografa e revela o mural) antes da primeira pintura. Não toca com
+      // "reduzir movimento" nem quando a página abre direto num #link.
+      if (!location.hash && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        history.scrollRestoration = 'manual';
+        document.documentElement.classList.add('intro-on');
       }
-    </div>
-  </section>
+    </script>
+  </head>
+  <body id="topo">
+    <Fundo />
+    <Cortina />
+    <Sobre />
+    <Barra />
+    <Gravura />
+    <Intro
+      nome={site.nome}
+      foto={fotoCamera}
+      info={{
+        nome: site.nome,
+        cidade: site.cidade.split(',')[0],
+        ensaios: ensaios.map((e) => ({ titulo: e.titulo, total: e.total })),
+        totalFotos,
+        sitesNoAr: sites.length,
+      }}
+    />
 
-  <section class="container chamada revelar">
-    <h2>Vamos <em class="marca-texto">fotografar?</em></h2>
-    <p>Ensaios de retrato, trabalhos autorais e parcerias.</p>
-    <a class="botao" href={url('/contato')}>Entrar em contato</a>
-  </section>
+    <main>
+      <!-- 00 · ABERTURA: a câmera da intro dispara e revela o mural de fotos -->
+      <Mural fotos={selecionadas(fotos.length)} totalFotos={totalFotos} sitesNoAr={sites.length} projetos={projetos.length} />
 
-  <!-- Projetos de programação (dados em site.ts → projetos) -->
-  <section id="sites" class="container secao-codigo">
-    <!-- Abertura que vende (ideias da agência do Gustavo Campelo): selo, frase forte, um botão
-         claro de orçamento e três diferenciais. Premium = espaço e hierarquia, não excesso. -->
-    <div class="codigo-topo">
-      <p class="hero-selo selo-sites"><i aria-hidden="true"></i> Também crio sites</p>
-      <h2>Sites que fazem sua marca parecer o que ela <em class="marca-texto">vale.</em></h2>
-      <p class="codigo-descricao">{criacaoDeSites.texto}</p>
-      <div class="codigo-links">
-        <a class="botao-claro" href={linkSite} target="_blank" rel="noopener">
-          Solicitar orçamento
-          <span class="botao-claro-icone" aria-hidden="true">↗</span>
-        </a>
-        <a class="link-seta" href={url('/projetos')}>Todos os projetos <span aria-hidden="true">→</span></a>
-      </div>
-    </div>
+      <!-- 01 · SITES (o foco) -->
+      <section class="ato" id="sites" data-lente="codigo" data-tema="claro">
+        <p class="ato-id rotulo">01 · Sites no ar</p>
+        <Aparelho sites={sitesComPrint} />
+      </section>
 
-    <ul class="diferenciais">
-      <li class="revelar">
-        <span class="diferencial-num">01</span>
-        <h3>Feito do zero</h3>
-        <p>Nada de modelo pronto: o visual nasce da sua marca, das suas cores e do seu público.</p>
-      </li>
-      <li class="revelar">
-        <span class="diferencial-num">02</span>
-        <h3>Animação na medida</h3>
-        <p>Movimento que guia o olhar e valoriza o produto, sem pesar nem distrair.</p>
-      </li>
-      <li class="revelar">
-        <span class="diferencial-num">03</span>
-        <h3>Rápido no celular</h3>
-        <p>Pensado primeiro para o telefone, carrega rápido e está pronto para o link da bio.</p>
-      </li>
-    </ul>
+      <!-- 02 · O OLHAR POR TRÁS DO CÓDIGO: a tela trava e as três lições passam de lado -->
+      <section class="ato horizontal" data-lente="ambos" data-tema="tinta">
+        <div class="h-palco">
+          <p class="ato-id rotulo">02 · O olhar por trás do código</p>
+          <div class="h-trilho">
+            <article class="olhar-abre">
+              <h2 class="titulo-cartaz">O olhar<br />por trás<br />do código</h2>
+              <p class="voz-foto">Todo site que eu faço passa pelas mesmas três perguntas de uma foto.</p>
+              <span class="rotulo">role para o lado →</span>
+            </article>
+            {
+              licoes.map((l, i) => (
+                <article class="olhar-licao" data-lente-hover="foto">
+                  {l.foto && (
+                    <figure class="foto olhar-foto">
+                      <Image src={l.foto.src} alt={l.foto.alt} widths={[480, 800, 1200]} sizes="(max-width: 760px) 80vw, 32vw" format="webp" />
+                      <figcaption class="legenda">{l.foto.alt}</figcaption>
+                    </figure>
+                  )}
+                  <div class="olhar-texto">
+                    <span class="rotulo">0{i + 1} / 0{licoes.length}</span>
+                    <b class="titulo-cartaz">{l.titulo}</b>
+                    <p>{l.texto}</p>
+                    <pre class="olhar-codigo voz-codigo"><code>{l.codigo}</code></pre>
+                  </div>
+                </article>
+              ))
+            }
+          </div>
+          <div class="h-progresso" aria-hidden="true"><i></i></div>
+        </div>
+      </section>
 
-    <Projetos />
-  </section>
+      <!-- 03 · ENSAIOS: um ensaio por tela, passando de lado com a rolagem -->
+      <section class="ato horizontal" id="ensaios" data-lente="foto" data-tema="azul">
+        <div class="h-palco">
+          <p class="ato-id rotulo">03 · Ensaios · {ensaios.length} lugares, {totalFotos} fotos</p>
+          <div class="h-trilho">
+            {
+              ensaios.map((e, i) => (
+                <a class="painel foto" href={url(`/${e.slug}`)}>
+                  {e.foto && (
+                    <Image src={e.foto.src} alt={e.foto.alt} widths={[800, 1400, 2000]} sizes="(max-width: 760px) 90vw, 70vw" format="webp" />
+                  )}
+                  <span class="painel-texto">
+                    <span class="rotulo">0{i + 1} · {e.total > 0 ? `${e.total} fotos` : 'em breve'}</span>
+                    <strong class="titulo-cartaz">{e.titulo}</strong>
+                    <span class="painel-descricao">{e.descricao}</span>
+                  </span>
+                </a>
+              ))
+            }
+          </div>
+          <div class="h-progresso" aria-hidden="true"><i></i></div>
+        </div>
+      </section>
 
-</Base>
+      <!-- 04 · OUTROS PROJETOS (só código, lista enxuta) -->
+      <section class="ato" data-lente="codigo" data-tema="claro">
+        <p class="ato-id rotulo">04 · Outros projetos</p>
+        <ul class="outros">
+          {
+            outros.map((p) => (
+              <li>
+                <a href={p.site ?? p.codigo} target="_blank" rel="noopener">
+                  <b class="titulo-cartaz">{p.nome}</b>
+                  <span class="outros-descricao">{p.descricao}</span>
+                  <span class="voz-codigo">{p.tecnologias.join(' · ')}</span>
+                  <span class="outros-seta" aria-hidden="true">↗</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
 
-<script>
-  // Capa: alterna as fotos a cada 7 s (só enquanto a capa está na tela e a aba está aberta)
-  const slides = [...document.querySelectorAll<HTMLElement>('.hero-slide')];
-  if (slides.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    let atual = 0;
-    let capaVisivel = true;
-    new IntersectionObserver(([e]) => (capaVisivel = e.isIntersecting)).observe(document.querySelector('.hero')!);
-    setInterval(() => {
-      if (!capaVisivel || document.hidden) return;
-      slides[atual].classList.remove('ativa');
-      atual = (atual + 1) % slides.length;
-      slides[atual].classList.add('ativa');
-    }, 7000);
+      <!-- 05 · STACK -->
+      <section class="ato" data-lente="codigo" data-tema="tinta">
+        <p class="ato-id rotulo">05 · O que eu sei usar</p>
+        <div class="caixa stack">
+          <b class="voz-codigo">Astro · Three.js · GSAP · Supabase · Vite · Python · Java · MySQL</b>
+          <span class="voz-foto">e uma Nikon D3200</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- 06 · CONTATO + RODAPÉ: bloco azul com a paisagem em gravura (pegada "sequel") -->
+    <footer data-lente="ambos" data-tema="azul">
+      <Cenario foto={fotoCenario} class="contato">
+        <div class="contato-topo">
+          <p class="rotulo contato-rotulo">06 · Contato</p>
+          <h2 class="titulo-cartaz">Bora criar?</h2>
+          <p class="contato-texto voz-foto">Um site que parece foto: bem enquadrado, com luz e com ritmo.</p>
+          <div class="botoes">
+            <a class="botao-principal" href={linkSite} target="_blank" rel="noopener" data-lente-hover="codigo">Quero meu site ↗</a>
+            <a class="botao-secundario" href={linkEnsaio} target="_blank" rel="noopener" data-lente-hover="foto">Quero um ensaio</a>
+          </div>
+        </div>
+        <nav class="contato-links rotulo" aria-label="Redes">
+          <a href={`https://instagram.com/${site.contato.instagram}`} target="_blank" rel="noopener">Instagram</a>
+          <a href={`https://wa.me/${site.contato.whatsapp}`} target="_blank" rel="noopener">WhatsApp</a>
+          <a href={github} target="_blank" rel="noopener">GitHub</a>
+          <span>© {new Date().getFullYear()} {site.nome} · {dominio(Astro.site?.toString())}</span>
+        </nav>
+      </Cenario>
+    </footer>
+
+    <script>
+      // 02 e 03: a seção trava na tela e o trilho anda para o lado junto com a rolagem
+      // (como os flashes do manoel.ink). A barrinha embaixo mostra quanto falta.
+      import { gsap } from 'gsap';
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const celular = matchMedia('(max-width: 760px)').matches;
+        document.querySelectorAll<HTMLElement>('.horizontal').forEach((secao, n) => {
+          if (celular && secao.id === 'ensaios') return; // no celular os ensaios são uma lista
+          const trilho = secao.querySelector<HTMLElement>('.h-trilho')!;
+          const barra = secao.querySelector<HTMLElement>('.h-progresso i');
+          trilho.style.overflow = 'visible';
+          const distancia = () => Math.max(0, trilho.scrollWidth - trilho.clientWidth);
+          gsap.to(trilho, {
+            x: () => -distancia(),
+            ease: 'none',
+            scrollTrigger: {
+              trigger: secao,
+              start: 'top top',
+              end: () => `+=${distancia()}`,
+              pin: secao.querySelector('.h-palco'),
+              scrub: 0.6,
+              invalidateOnRefresh: true,
+              refreshPriority: -1 - n, // as seções de cima calculam primeiro
+              onUpdate: (s) => barra && (barra.style.transform = `scaleX(${s.progress})`),
+            },
+          });
+        });
+        ScrollTrigger.sort();
+        addEventListener('load', () => ScrollTrigger.refresh());
+      }
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  main {
+    padding: 110px var(--margem) 40px;
   }
-
-</script>
-
-<style>
-  /* ---------- CAPA ---------- */
-  .hero {
-    position: relative;
-    min-height: 100svh;
+  /* Caixas do wireframe (o que ainda vai virar 3D): vidro claro sobre o fundo vivo */
+  .caixa {
     display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-    padding-block: 120px clamp(48px, 9vh, 96px);
-  }
-
-
-
-
-  /* Foto em tela cheia, como capa de cinema. Um véu da cor do fundo sobe de baixo e vem da
-     esquerda para o texto ficar legível, sem mudar a foto. */
-  .hero-moldura {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-  }
-
-
-  .hero-moldura::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      linear-gradient(to top, var(--fundo) 0%, rgb(0 0 0 / 0.35) 38%, transparent 70%),
-      linear-gradient(to right, rgb(0 0 0 / 0.55) 0%, transparent 55%);
-  }
-
-  /* ---------- Fotos da capa alternando: troca em fade, com um zoom bem lento na que está à vista ---------- */
-  .hero-slide {
-    opacity: 0;
-    scale: 1.06;
-    transition:
-      opacity 1.8s ease,
-      scale 9s linear;
-  }
-
-  .hero-slide.ativa {
-    opacity: 1;
-    scale: 1;
-  }
-
-  /* ---------- TESTE: capa em gravura azul e creme ---------- */
-  .hero-gravura .hero-foto {
-    filter: contrast(1.2) url(#gravura-capa);
-    object-position: center 68%; /* mostra a cidade e os barcos, como no rodapé, em vez de só céu */
-  }
-
-  /* hachuras finas por cima, como os riscos de uma gravura em metal */
-  .hero-gravura .hero-moldura::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background:
-      repeating-linear-gradient(118deg, rgb(11 31 79 / 0.2) 0 1px, transparent 1px 3.5px),
-      repeating-linear-gradient(28deg, rgb(11 31 79 / 0.08) 0 1px, transparent 1px 5px);
-    mix-blend-mode: multiply;
-  }
-
-  /* véu azul-marinho (em vez de preto) para o texto continuar legível sobre o creme */
-  .hero-gravura .hero-moldura::after {
-    z-index: 1;
-    background:
-      linear-gradient(to top, var(--fundo) 0%, rgb(8 20 52 / 0.55) 35%, transparent 70%),
-      linear-gradient(to right, rgb(8 20 52 / 0.75) 0%, rgb(8 20 52 / 0.25) 45%, transparent 70%);
-  }
-
-
-  .hero-foto {
-    position: absolute;
-    inset: -30px; /* sobra nas bordas para a foto poder se mexer */
-    width: calc(100% + 60px);
-    height: calc(100% + 60px);
-    max-width: none; /* a regra geral img{max-width:100%} cortava a sobra da direita */
-    object-fit: cover;
-    animation: zoom 18s ease-out both;
-    translate: calc(var(--px, 0) * -30px) calc(var(--py, 0) * -30px);
-    transition: translate 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  /* ---------- Brilho de pôr do sol passando pelo título ---------- */
-  .hero h1 {
-    position: relative;
-  }
-
-  .titulo-brilho {
-    position: absolute;
-    inset: 0;
-    color: #fff3dc; /* creme da gravura */
-    text-shadow:
-      0 0 18px rgb(255 236 200 / 0.6),
-      0 2px 24px rgb(0 0 0 / 0.35);
-    pointer-events: none;
-    /* só a faixa diagonal aparece; ela entra pela esquerda e atravessa o título até sair à direita */
-    -webkit-mask: linear-gradient(105deg, transparent 40%, #000 48%, #000 52%, transparent 60%) 100% 0 / 300% 100% no-repeat;
-    mask: linear-gradient(105deg, transparent 40%, #000 48%, #000 52%, transparent 60%) 100% 0 / 300% 100% no-repeat;
-    animation: varrer 2.4s 1.5s cubic-bezier(0.45, 0, 0.2, 1) both;
-  }
-
-  /* na cópia, sem marca-texto azul e sem a animação dela */
-  .titulo-brilho .marca-texto {
-    background: none;
-    animation: none;
-  }
-
-  .hero h1:hover .titulo-brilho {
-    animation: varrer-de-novo 1.6s cubic-bezier(0.45, 0, 0.2, 1) both;
-  }
-
-  @keyframes varrer {
-    from {
-      -webkit-mask-position: 100% 0;
-      mask-position: 100% 0;
-    }
-    to {
-      -webkit-mask-position: 0% 0;
-      mask-position: 0% 0;
-    }
-  }
-
-  /* mesma coisa com outro nome, para o hover reiniciar a animação */
-  @keyframes varrer-de-novo {
-    from {
-      -webkit-mask-position: 100% 0;
-      mask-position: 100% 0;
-    }
-    to {
-      -webkit-mask-position: 0% 0;
-      mask-position: 0% 0;
-    }
-  }
-
-  /* Selo em pílula no topo do texto (ideia da capa da agência WebHub) */
-  .hero-selo {
-    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
-    margin: 0;
-    padding: 8px 16px;
-    border: 1px solid rgb(255 255 255 / 0.16);
-    border-radius: 99px;
-    background: rgb(255 255 255 / 0.07);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    font-size: 0.72rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: rgb(236 233 242 / 0.88);
-  }
-
-  .hero-selo i {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 0 0 rgb(74 222 128 / 0.7);
-    animation: pulso-selo 2s ease-out infinite;
-  }
-
-  @keyframes pulso-selo {
-    to {
-      box-shadow: 0 0 0 9px transparent;
-    }
-  }
-
-  /* Botão claro com o ícone num círculo (como o "Solicitar orçamento" da WebHub) */
-  .botao-claro {
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    padding: 6px 6px 6px 22px;
-    border-radius: 99px;
-    background: var(--texto);
-    color: var(--fundo);
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    transition:
-      background 0.3s,
-      translate 0.3s;
-  }
-
-  .botao-claro-icone {
-    display: grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: var(--botao);
-    color: var(--texto);
-    font-size: 1rem;
-    letter-spacing: 0;
-    transition: rotate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  .botao-claro:hover {
-    background: #fff;
-  }
-
-  .botao-claro:hover .botao-claro-icone {
-    rotate: 45deg;
-  }
-
-  .hero-vazio {
-    display: grid;
-    place-items: center;
-    background:
-      radial-gradient(ellipse at 60% 35%, #0d1f3b 0%, transparent 60%),
-      linear-gradient(160deg, #081021, #03050b);
-  }
-
-  .hero-vazio span {
-    font-family: var(--fonte-titulo);
-    font-style: italic;
-    font-size: 1.3rem;
+    text-align: center;
+    padding: 16px;
+    border: 1px solid var(--linha);
+    border-radius: 18px;
+    background: var(--vidro);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: var(--texto-suave);
-  }
-
-  .hero-texto {
-    position: relative;
-    z-index: 2;
-    translate: calc(var(--px, 0) * 16px) calc(var(--py, 0) * 12px);
-    transition: translate 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  /* Frase grande e pesada, estilo revista */
-  /* Título editorial: fino, grande e em caixa normal ("sussurra em vez de gritar") */
-  /* Título em Instrument Serif: a serifa editorial dos portfólios premium da Refero (mesmo desenho
-     da PP Editorial New, mas gratuita). "O mundo" em pé numa linha, "pelas minhas lentes." em itálico
-     na outra. O resto do site segue na Inter, como nos portfólios de fotografia de referência. */
-  .hero h1 {
-    margin: 1.1rem 0 1.5rem;
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-size: clamp(2.8rem, 8.6vw, 9rem);
-    font-weight: 400;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
-    text-shadow: 0 2px 24px rgb(0 0 0 / 0.35);
-  }
-
-  .hero h1 .marca-texto {
-    font-family: inherit;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    text-transform: none;
-    font-size: 1em;
-    display: block; /* sempre na linha de baixo... */
-    width: fit-content; /* ...e o marca-texto só do tamanho da frase */
-    white-space: nowrap;
-  }
-
-  /* Marca-texto azul embaixo da frase (ideia do portfólio da Melyssa Griffin) */
-  .marca-texto {
-    font-style: italic;
-    background: linear-gradient(transparent 62%, rgb(var(--brilho) / 0.85) 62%, rgb(var(--brilho) / 0.85) 90%, transparent 90%)
-      no-repeat;
-    background-size: 100% 100%; /* fora da capa, o Rolagem.astro anima isso ao rolar */
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    padding-inline: 0.05em;
-  }
-
-  .hero .marca-texto {
-    background-size: 0% 100%;
-    animation: marcar 1s 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-  }
-
-  /* ---------- FAIXA DE TEXTO ---------- */
-  .faixa {
-    overflow: hidden;
-    padding-block: clamp(56px, 10vh, 110px) 0;
-  }
-
-  .faixa-texto {
+    font-size: 14px;
     margin: 0;
-    white-space: nowrap;
-    font-family: var(--fonte-texto);
-    font-weight: 800;
-    font-size: clamp(3.5rem, 11vw, 10rem);
-    line-height: 1;
-    letter-spacing: -0.04em;
-    text-transform: uppercase;
-    color: transparent;
-    -webkit-text-stroke: 1px rgb(236 233 242 / 0.25);
+  }
+  .caixa b {
+    color: var(--texto);
+  }
+  .tres-d {
+    border-style: dashed;
+    border-color: rgb(35 70 168 / 0.35);
+    background: rgb(255 255 255 / 0.25);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
-  .faixa-texto i {
-    font-style: normal;
-    font-size: 0.4em;
-    vertical-align: middle;
-    color: var(--destaque);
-    -webkit-text-stroke: 0;
+  .ato {
+    margin-bottom: 120px;
+  }
+  .ato-id {
+    margin: 0 0 16px;
+    color: var(--texto);
+  }
+  .ato-id small {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--texto-suave);
+    text-transform: none;
+    letter-spacing: 0;
   }
 
-  .hero-assinatura {
-    margin: 0 0 2rem;
-    font-size: 0.8rem;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: rgb(236 233 242 / 0.8);
-    text-shadow: 0 1px 12px rgb(0 0 0 / 0.6);
-  }
-
-  .hero-acoes {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1.5rem 2rem;
-  }
-
-  .link-seta {
-    font-size: 0.78rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    transition: color 0.3s;
-  }
-
-  .link-seta span {
-    display: inline-block;
-    transition: translate 0.3s;
-  }
-
-  .link-seta:hover {
-    color: var(--destaque);
-  }
-
-  .link-seta:hover span {
-    translate: 6px 0;
-  }
-
-  /* Texto da capa entra deslizando, um depois do outro */
-  .entrar {
-    animation: entrar 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  h1.entrar {
-    animation-delay: 0.1s;
-  }
-
-  .hero-assinatura.entrar {
-    animation-delay: 0.25s;
-  }
-
-  .hero-acoes.entrar {
-    animation-delay: 0.4s;
-  }
-
-  /* ---------- ENSAIOS ---------- */
-  .secao {
-    padding-top: clamp(88px, 16vh, 180px);
-  }
-
-  .secao > .rotulo {
-    margin: 0 0 2rem;
-  }
-
-  .ensaios {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(16px, 2vw, 32px);
-  }
-
-  .ensaio-imagem {
-    aspect-ratio: 3 / 4;
+  /* Fotos: com as cores delas, cantos arredondados e um zoom lento no hover */
+  .foto {
+    position: relative;
+    margin: 0;
     overflow: hidden;
+    border-radius: 18px;
     background: var(--fundo-2);
-    margin-bottom: 1.2rem;
   }
-
-  .ensaio-imagem img {
+  .foto img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: grayscale(0.4) brightness(0.85);
-    transition: transform 1s cubic-bezier(0.2, 0.6, 0.2, 1), filter 0.8s;
+    transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .foto:hover img {
+    transform: scale(1.04);
   }
 
-  .ensaio:hover .ensaio-imagem img {
-    transform: scale(1.05);
-    filter: none;
+  /* Sites: aparelho grande + lista (o maior bloco da página) */
+  .sites {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 14px;
   }
-
-  .ensaio-vazio {
-    height: 100%;
-    background: linear-gradient(160deg, #081021, #03050b);
-    border: 1px solid var(--linha);
+  .grande {
+    min-height: 70vh;
   }
-
-  .ensaio-numero {
-    font-size: 0.75rem;
-    color: var(--destaque);
-    letter-spacing: 0.2em;
+  .lista {
+    display: grid;
+    gap: 14px;
   }
-
-  .ensaio h2 {
-    font-size: clamp(2rem, 3.5vw, 2.8rem);
-    font-style: italic;
-    margin: 0.2rem 0;
-    transition: color 0.3s;
+  .site {
+    align-items: flex-start;
+    justify-content: flex-end;
+    text-align: left;
+    padding: 14px 14px 20px;
+    text-decoration: none;
+    transition:
+      border-color 0.4s,
+      box-shadow 0.4s;
   }
-
-  .ensaio:hover h2 {
-    color: var(--destaque);
+  .site:hover {
+    border-color: var(--cor);
+    box-shadow: 0 20px 50px -30px var(--cor);
   }
-
-  .ensaio-seta {
-    display: inline-block;
-    font-family: var(--fonte-texto);
+  .site b {
+    font-size: clamp(30px, 3.4vw, 52px);
+  }
+  .site b span {
     font-size: 0.5em;
-    font-style: normal;
-    vertical-align: middle;
-    opacity: 0;
-    translate: -10px 0;
-    transition: opacity 0.3s, translate 0.3s;
+    vertical-align: top;
+  }
+  .site-print {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    margin-bottom: 8px;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px var(--linha);
+  }
+  .site-print img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .site:hover .site-print img {
+    transform: scale(1.04);
   }
 
-  .ensaio:hover .ensaio-seta {
-    opacity: 1;
-    translate: 0 0;
+  /* ---------- 02 e 03: a tela trava e o trilho passa de lado com a rolagem ---------- */
+  .horizontal {
+    margin-left: calc(var(--margem) * -1);
+    margin-right: calc(var(--margem) * -1);
   }
-
-  .ensaio p {
+  .h-palco {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    min-height: 100svh;
+    padding: 96px 0 34px;
+    overflow: hidden;
+  }
+  .h-palco > .ato-id {
     margin: 0;
-    font-size: 0.85rem;
+    padding: 0 var(--margem);
+  }
+  .h-trilho {
+    display: flex;
+    gap: clamp(14px, 2vw, 28px);
+    padding: 0 var(--margem);
+    overflow-x: auto; /* sem JS (ou com "reduzir movimento"): arrasta com o dedo */
+    scrollbar-width: none;
+    will-change: transform;
+  }
+  .h-trilho::-webkit-scrollbar {
+    display: none;
+  }
+  .h-trilho > * {
+    flex: none;
+  }
+  .h-progresso {
+    height: 2px;
+    margin: 0 var(--margem);
+    background: var(--linha);
+  }
+  .h-progresso i {
+    display: block;
+    height: 100%;
+    background: var(--texto);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* 02 · abertura e as três lições (foto + texto + o código que ela vira) */
+  .olhar-abre {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    width: min(78vw, 640px);
+  }
+  .olhar-abre h2 {
+    margin: 0;
+    font-size: clamp(56px, min(9vw, 15svh), 150px);
+  }
+  .olhar-abre p {
+    max-width: 30ch;
+    margin: 0;
+    font-size: clamp(20px, 2vw, 28px);
+    line-height: 1.25;
     color: var(--texto-suave);
   }
-
-  /* ---------- CHAMADA ---------- */
-  .chamada {
-    padding-top: clamp(96px, 16vh, 180px);
-    text-align: center;
+  .olhar-licao {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(18px, 3vw, 44px);
+    width: min(84vw, 1060px);
   }
-
-  .chamada h2 {
-    font-size: clamp(2.6rem, 7vw, 5rem);
+  .olhar-foto {
+    height: min(64svh, 600px);
   }
-
-  .chamada p {
+  .olhar-texto {
+    display: grid;
+    gap: 14px;
+    align-content: center;
+  }
+  .olhar-texto b {
+    font-size: clamp(38px, 4.6vw, 84px); /* "ENQUADRAMENTO" tem que caber na coluna */
+  }
+  .olhar-texto p {
+    max-width: 38ch;
+    margin: 0;
+    font-size: clamp(16px, 1.3vw, 19px);
     color: var(--texto-suave);
-    margin: 1rem 0 2.5rem;
+  }
+  .olhar-codigo {
+    margin: 6px 0 0;
+    padding: 16px 18px;
+    border: 1px solid var(--linha);
+    border-radius: 14px;
+    background: var(--vidro);
+    color: var(--azul);
+    font-size: clamp(11px, 0.95vw, 14px);
+    line-height: 1.7;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .legenda {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 40px 16px 12px;
+    background: linear-gradient(transparent, rgb(12 21 48 / 0.6));
+    color: #fff;
+    font-family: var(--fonte-codigo);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
-  /* ---------- PROJETOS DE CÓDIGO ---------- */
-  .secao-codigo {
-    margin-top: clamp(96px, 16vh, 180px);
-    padding-top: clamp(64px, 10vh, 110px);
+  /* 03 · ensaios: um por tela, título gigante por cima (pegada storm lab) */
+  .painel {
+    display: block;
+    width: min(72vw, 1100px);
+    height: min(70svh, 700px);
+    color: #fff;
+    text-decoration: none;
+  }
+  .painel img {
+    position: absolute;
+    inset: 0;
+  }
+  .painel-texto {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: clamp(18px, 3vw, 40px);
+    background: linear-gradient(180deg, transparent 40%, rgb(12 21 48 / 0.75));
+    pointer-events: none;
+  }
+  .painel-texto .rotulo {
+    color: #fff;
+  }
+  .painel-texto strong {
+    font-size: clamp(44px, 8vw, 140px);
+  }
+  .painel-descricao {
+    max-width: 46ch;
+    opacity: 0.85;
+  }
+  /* Outros projetos: lista de linhas, sem imagem */
+  .outros {
+    margin: 0;
+    padding: 0;
+    list-style: none;
     border-top: 1px solid var(--linha);
   }
+  .outros a {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 2fr auto auto;
+    align-items: baseline;
+    gap: 24px;
+    padding: 22px 4px;
+    border-bottom: 1px solid var(--linha);
+    color: var(--texto-suave);
+    text-decoration: none;
+    transition:
+      padding 0.4s,
+      color 0.4s;
+  }
+  .outros a:hover {
+    padding-left: 16px;
+    color: var(--texto);
+  }
+  .outros b {
+    font-size: clamp(26px, 3vw, 40px);
+    color: var(--texto);
+  }
+  .outros-seta {
+    color: var(--azul);
+  }
 
-  .codigo-links {
+  .stack {
+    min-height: 30vh;
+    font-size: clamp(16px, 2vw, 24px);
+  }
+
+  /* Contato: bloco azul royal com a paisagem em gravura embaixo */
+  .contato {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    padding: calc(clamp(60px, 10vw, 140px) + 120px) var(--margem) 28px;
+    /* o topo do bloco azul some em degradê na cor de cima: sem linha seca entre as seções */
+    -webkit-mask-image: linear-gradient(transparent, #000 220px);
+    mask-image: linear-gradient(transparent, #000 220px);
+  }
+  .contato .cenario-conteudo {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    gap: 48px;
+  }
+  .contato-rotulo {
+    color: var(--creme);
+    opacity: 0.8;
+  }
+  .contato h2 {
+    margin: 12px 0 16px;
+    font-size: clamp(64px, 14vw, 240px);
+  }
+  .contato-texto {
+    max-width: 30ch;
+    margin: 0 0 28px;
+    font-size: clamp(22px, 2.4vw, 32px);
+    line-height: 1.2;
+  }
+  .botoes {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.5rem 2rem;
+    gap: 12px;
   }
-
-  .codigo-descricao {
-    max-width: 52ch;
-    margin: 0 0 2.2rem;
-    font-size: 1.05rem;
-    color: var(--texto-suave);
+  .botao-principal,
+  .botao-secundario {
+    padding: 14px 26px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
   }
-
-  .codigo-topo {
-    max-width: 980px;
-    margin-bottom: clamp(56px, 9vh, 96px);
+  .botao-principal {
+    background: var(--creme);
+    color: var(--gravura);
   }
-
-  .codigo-topo h2 {
-    max-width: 16ch;
-    margin: 1.4rem 0 1.4rem;
-    font-family: var(--fonte-texto);
-    font-weight: 400;
-    font-size: clamp(2.6rem, 6.4vw, 5.6rem);
-    line-height: 1;
-    letter-spacing: -0.045em;
+  .botao-principal:hover {
+    background: #fff;
   }
-
-  .codigo-topo h2 .marca-texto {
-    font-family: var(--fonte-titulo);
-    font-weight: 500;
-    letter-spacing: 0;
+  .botao-secundario {
+    border: 1px solid rgb(241 230 204 / 0.5);
+    background: rgb(31 63 153 / 0.75);
+    color: var(--creme);
   }
-
-  /* ---------- Três diferenciais numa linha fina ---------- */
-  .diferenciais {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin: 0 0 clamp(80px, 14vh, 150px);
-    padding: 0;
-    list-style: none;
-    border-top: 1px solid var(--linha);
+  .botao-secundario:hover {
+    background: rgb(241 230 204 / 0.12);
   }
-
-  .diferenciais li {
-    padding: 1.8rem 2rem 0 0;
+  .contato-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    color: var(--creme);
   }
-
-  .diferenciais li + li {
-    padding-left: 2rem;
-    border-left: 1px solid var(--linha);
+  .contato-links a {
+    color: inherit;
+    text-decoration: none;
   }
-
-  .diferencial-num {
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    color: var(--destaque);
+  .contato-links a:hover {
+    text-decoration: underline;
   }
-
-  .diferenciais h3 {
-    margin: 0.8rem 0 0.5rem;
-    font-family: var(--fonte-titulo);
-    font-style: italic;
-    font-weight: 500;
-    font-size: clamp(1.5rem, 2.2vw, 1.9rem);
-  }
-
-  .diferenciais p {
-    margin: 0;
-    max-width: 32ch;
-    font-size: 0.9rem;
-    color: var(--texto-suave);
+  .contato-links span {
+    margin-left: auto;
+    opacity: 0.8;
   }
 
   @media (max-width: 760px) {
-    .diferenciais {
-      grid-template-columns: 1fr;
-    }
-
-    .diferenciais li,
-    .diferenciais li + li {
-      padding: 1.4rem 0;
-      border-left: 0;
-      border-bottom: 1px solid var(--linha);
-    }
-  }
-
-  /* ---------- CRIAÇÃO DE SITES ---------- */
-  .sites {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    align-items: center;
-    gap: clamp(32px, 6vw, 96px);
-    margin-top: clamp(96px, 16vh, 180px);
-    padding-top: clamp(64px, 10vh, 110px);
-    border-top: 1px solid var(--linha);
-  }
-
-  .sites h2 {
-    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
-    font-style: italic;
-    margin: 0.75rem 0 1.2rem;
-  }
-
-  .sites-texto > p:not(.rotulo) {
-    color: var(--texto-suave);
-    max-width: 46ch;
-  }
-
-  .sites ul {
-    list-style: none;
-    padding: 0;
-    margin: 1.5rem 0 2.2rem;
-  }
-
-  .sites li {
-    padding: 0.7rem 0;
-    border-bottom: 1px solid var(--linha);
-    font-size: 0.95rem;
-  }
-
-  .sites li::before {
-    content: '✦';
-    color: var(--destaque);
-    margin-right: 0.8rem;
-  }
-
-  .navegador {
-    border: 1px solid var(--linha);
-    background: var(--fundo-2);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  .navegador-barra {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--linha);
-  }
-
-  .navegador-barra i {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--linha);
-  }
-
-  .navegador-barra span {
-    margin-left: 12px;
-    padding: 2px 12px;
-    border-radius: 99px;
-    background: var(--fundo);
-    font-size: 0.7rem;
-    color: var(--texto-suave);
-  }
-
-  .navegador-tela {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    padding: 12% 8%;
-    background: var(--fundo);
-  }
-
-  .navegador-tela > div {
-    position: relative;
-  }
-
-  .mini-bloco {
-    position: absolute !important;
-    left: 10%;
-    bottom: 26%;
-    width: 30%;
-    height: 32%;
-    background: linear-gradient(135deg, var(--destaque-forte), #07183a);
-  }
-
-  .mini-foto {
-    position: absolute !important;
-    right: 0;
-    top: 10%;
-    width: 55%;
-    height: 62%;
-    background: radial-gradient(ellipse at 60% 40%, #0d1f3b, #080c17);
-  }
-
-  .mini-linha {
-    height: 8px;
-    width: 40%;
-    margin-bottom: 8px;
-    background: var(--texto-suave);
-    opacity: 0.5;
-  }
-
-  .mini-linha.grande {
-    height: 16px;
-    width: 55%;
-    background: var(--texto);
-    opacity: 0.9;
-  }
-
-  .mini-linha.curta {
-    width: 38%;
-  }
-
-  .mini-grade {
-    position: absolute !important;
-    left: 8%;
-    right: 8%;
-    bottom: 6%;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-
-  .mini-grade b {
-    height: 22px;
-    background: #0b1426;
-  }
-
-  /* ---------- CELULAR ---------- */
-  @media (max-width: 860px) {
-    .hero {
-      padding-top: 96px;
-    }
-
-    .hero-selo {
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-    }
-
     .sites {
       grid-template-columns: 1fr;
     }
-  }
-
-  @media (max-width: 760px) {
-    .ensaios {
+    /* celular: as fotos já estão no mural (em tela cheia, coloridas), então aqui fica só
+       a lição e o código; e os ensaios viram uma lista enxuta, sem travar a tela */
+    .olhar-licao {
       grid-template-columns: 1fr;
+      width: 84vw;
+      gap: 14px;
     }
-
-    .ensaio-imagem {
-      aspect-ratio: 4 / 3;
+    .olhar-foto {
+      display: none;
     }
-  }
-
-  /* ---------- ANIMAÇÕES ---------- */
-  @keyframes zoom {
-    from {
-      transform: scale(1.08);
+    .olhar-texto {
+      gap: 8px;
     }
-  }
-
-  @keyframes entrar {
-    from {
-      opacity: 0;
-      translate: 0 30px;
+    .olhar-texto p {
+      font-size: 14px;
     }
-  }
-
-  @keyframes marcar {
-    to {
-      background-size: 100% 100%;
+    .olhar-codigo {
+      font-size: 10.5px;
+      padding: 12px 14px;
     }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero-foto,
-    .hero-selo i,
-    .titulo-brilho,
-    .hero h1:hover .titulo-brilho,
-    .entrar {
-      animation: none;
+    #ensaios .h-palco {
+      min-height: 0;
+      padding-top: 40px;
     }
-
-    .hero .marca-texto {
-      animation: none;
-      background-size: 100% 100%;
+    #ensaios .h-trilho {
+      flex-direction: column;
+      gap: 0;
+      overflow: visible;
+      border-top: 1px solid var(--linha);
+    }
+    #ensaios .h-progresso {
+      display: none;
+    }
+    .painel {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      align-items: center;
+      gap: 14px;
+      width: auto;
+      height: auto;
+      padding: 12px 0;
+      border-radius: 0;
+      border-bottom: 1px solid var(--linha);
+      background: none;
+      color: var(--texto);
+    }
+    .painel::after {
+      content: '↗';
+      color: var(--texto-suave);
+    }
+    .painel img {
+      position: static;
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+    }
+    .painel-texto {
+      position: static;
+      gap: 2px;
+      padding: 0;
+      background: none;
+    }
+    .painel-texto .rotulo {
+      color: var(--texto-suave);
+      font-size: 10px;
+    }
+    .painel-texto strong {
+      font-size: 28px;
+    }
+    .painel-descricao {
+      display: none;
+    }
+    .outros a {
+      grid-template-columns: 1fr auto;
+      gap: 8px 16px;
+    }
+    .outros-descricao {
+      grid-column: 1 / -1;
+      order: 3;
+    }
+    .outros .voz-codigo {
+      grid-column: 1 / -1;
+      order: 4;
+    }
+    .contato-links span {
+      margin-left: 0;
     }
   }
 </style>

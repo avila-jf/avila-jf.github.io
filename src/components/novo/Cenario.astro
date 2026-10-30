@@ -1,0 +1,75 @@
+---
+// Paisagem em gravura azul e creme que serve de fundo para um bloco (ideia do rodapé "sequel":
+// bloco azul royal liso em cima, e a paisagem gravada "nasce" dele embaixo).
+// Precisa do Gravura.astro na página. O conteúdo do bloco vai no slot, por cima da paisagem.
+import { Image } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+
+interface Props {
+  foto?: Foto;
+  class?: string;
+}
+
+const { foto, class: classe } = Astro.props;
+---
+
+<div class:list={['cenario', classe]}>
+  {
+    foto && (
+      <div class="cenario-paisagem" aria-hidden="true">
+        <Image src={foto.src} alt="" widths={[800, 1400, 2000, 2400]} sizes="100vw" format="webp" quality={75} loading="lazy" />
+      </div>
+    )
+  }
+  <div class="cenario-conteudo">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .cenario {
+    position: relative;
+    overflow: hidden;
+    background: var(--gravura);
+    color: var(--creme);
+  }
+  .cenario-paisagem {
+    position: absolute;
+    inset: auto 0 0;
+    height: 48%;
+    /* some em cima, misturando com o azul liso do bloco */
+    -webkit-mask-image: linear-gradient(transparent, #000 55%);
+    mask-image: linear-gradient(transparent, #000 55%);
+  }
+  .cenario-paisagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 60%;
+    filter: contrast(1.25) url(#gravura-novo);
+  }
+  /* hachuras finas, como os riscos de uma gravura em metal */
+  .cenario-paisagem::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(118deg, rgb(20 45 120 / 0.3) 0 1px, transparent 1px 3.5px),
+      repeating-linear-gradient(28deg, rgb(20 45 120 / 0.12) 0 1px, transparent 1px 5px);
+    mix-blend-mode: multiply;
+  }
+  /* granulado de papel no azul liso */
+  .cenario::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  .cenario-conteudo {
+    position: relative;
+    z-index: 1;
+  }
+</style>

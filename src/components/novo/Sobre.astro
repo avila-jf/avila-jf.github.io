@@ -1,0 +1,455 @@
+---
+// "Sobre mim" do site novo (pegada do about do omrimalka): um painel azul inclinado que entra por
+// cima do site, com o texto, os links, uma polaroid e o "boneco na caixa" (o Francis de brinquedo,
+// com a Nikon e o notebook de acessórios). Tudo animado: o painel sobe girando até assentar, o texto
+// entra em cascata, a polaroid voa para o lugar e a caixa cai balançando, depois fica flutuando com
+// um brilho passando no plástico. No computador a caixa inclina seguindo o mouse.
+// Abre com qualquer elemento [data-abrir-sobre]; fecha no ✕, no Esc ou clicando fora.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { site, github } from '../../data/site';
+
+const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu.{jpg,jpeg,png,webp}', { eager: true }))[0]?.default;
+---
+
+<div class="sobre" role="dialog" aria-modal="true" aria-labelledby="sobre-titulo" hidden>
+  <div class="sobre-fundo" data-fechar-sobre></div>
+  <button class="sobre-fechar" type="button" aria-label="Fechar" data-fechar-sobre>✕</button>
+
+  <div class="sobre-painel">
+    <div class="sobre-texto">
+      <h2 id="sobre-titulo" class="titulo-cartaz">Sobre</h2>
+      {site.bio.map((p) => <p>{p}</p>)}
+      <p class="sobre-equipamento rotulo">{site.equipamento.join(' · ')} · {site.cidade}</p>
+      <nav class="sobre-links" aria-label="Redes">
+        <a href={`https://instagram.com/${site.contato.instagram}`} target="_blank" rel="noopener">Instagram ↗</a>
+        <a href={`https://wa.me/${site.contato.whatsapp}`} target="_blank" rel="noopener">WhatsApp ↗</a>
+        <a href={github} target="_blank" rel="noopener">GitHub ↗</a>
+      </nav>
+    </div>
+
+    <div class="sobre-pilha" aria-hidden="true">
+      {
+        eu && (
+          <figure class="sobre-polaroid">
+            <Image src={eu} alt="" widths={[320, 560]} sizes="(max-width: 760px) 36vw, 16vw" format="webp" />
+            <figcaption>eu, no espelho</figcaption>
+          </figure>
+        )
+      }
+
+      <!-- o boneco na caixa -->
+      <div class="caixa-boneco">
+        <span class="caixa-furo"></span>
+        <div class="caixa-topo">
+          <b class="titulo-cartaz">Francis<br />Avila</b>
+          <span class="caixa-selo">fotógrafo<br />+ dev</span>
+        </div>
+        <div class="caixa-bolha">
+          {eu && <Image src={eu} alt="" widths={[360, 640]} sizes="(max-width: 760px) 44vw, 20vw" format="webp" />}
+          <span class="caixa-brilho"></span>
+        </div>
+        <div class="caixa-acessorios">
+          <span>
+            <svg viewBox="0 0 32 24"><rect x="2" y="6" width="28" height="16" rx="3" /><rect x="10" y="2" width="12" height="6" rx="1.5" /><circle cx="16" cy="14" r="5.5" fill="var(--creme)" /><circle cx="16" cy="14" r="3" /></svg>
+            Nikon D3200
+          </span>
+          <span>
+            <svg viewBox="0 0 32 24"><rect x="5" y="3" width="22" height="14" rx="2" /><rect x="8" y="6" width="16" height="8" fill="var(--creme)" /><path d="M1 19h30l-2 3H3z" /></svg>
+            notebook
+          </span>
+        </div>
+        <span class="caixa-novo titulo-cartaz">Novo<br />boneco!</span>
+        <span class="caixa-preco voz-codigo">orçamento<br />grátis</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .sobre {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  .sobre[hidden] {
+    display: none;
+  }
+  .sobre-fundo {
+    position: absolute;
+    inset: 0;
+    background: rgb(12 21 48 / 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .sobre-fechar {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    z-index: 3;
+    width: 52px;
+    height: 52px;
+    margin-left: -26px;
+    border: 0;
+    background: none;
+    color: var(--creme);
+    font-size: 34px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  }
+  .sobre-fechar:hover {
+    transform: rotate(90deg) scale(1.1);
+  }
+
+  .sobre-painel {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(20px, 4vw, 60px);
+    align-items: center;
+    width: min(1120px, 94vw);
+    max-height: calc(100svh - 96px);
+    margin-top: 40px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding: clamp(28px, 5vw, 72px) clamp(24px, 6vw, 90px);
+    background: var(--gravura);
+    color: var(--creme);
+    transform: rotate(-1.6deg);
+    box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.6);
+  }
+
+  .sobre-texto {
+    display: grid;
+    gap: 14px;
+    max-width: 46ch;
+    font-size: clamp(14px, 1.05vw, 16px);
+    line-height: 1.6;
+  }
+  .sobre-texto h2 {
+    margin: 0 0 10px;
+    font-size: clamp(48px, 6vw, 96px);
+  }
+  .sobre-texto p {
+    margin: 0;
+  }
+  .sobre-equipamento {
+    color: var(--creme);
+    opacity: 0.7;
+  }
+  .sobre-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin-top: 14px;
+  }
+  .sobre-links a {
+    padding-bottom: 3px;
+    border-bottom: 2px solid currentColor;
+    color: var(--creme);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .sobre-links a:hover {
+    color: #fff;
+  }
+
+  /* ---------- a pilha: polaroid + boneco na caixa ---------- */
+  .sobre-pilha {
+    position: relative;
+    height: min(62svh, 560px);
+    min-height: 380px;
+    perspective: 900px;
+  }
+  .sobre-polaroid {
+    position: absolute;
+    left: 4%;
+    top: 10%;
+    z-index: 1;
+    width: 40%;
+    margin: 0;
+    padding: 8px 8px 30px;
+    background: #fff;
+    box-shadow: 0 20px 40px -18px rgb(0 0 0 / 0.55);
+    transform: rotate(-7deg);
+  }
+  .sobre-polaroid img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+  .sobre-polaroid figcaption {
+    position: absolute;
+    left: 10px;
+    bottom: 7px;
+    color: #333;
+    font-family: var(--fonte-codigo);
+    font-size: 10px;
+  }
+
+  .caixa-boneco {
+    --cor: #f05a28;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 10px;
+    width: 64%;
+    height: 100%;
+    padding: 34px 14px 14px;
+    border-radius: 14px;
+    background:
+      radial-gradient(circle at 50% 55%, rgb(255 255 255 / 0.18), transparent 60%),
+      repeating-conic-gradient(from 0deg at 50% 55%, rgb(255 255 255 / 0.07) 0 6deg, transparent 6deg 12deg),
+      var(--cor);
+    box-shadow:
+      0 30px 60px -25px rgb(0 0 0 / 0.6),
+      inset 0 0 0 3px rgb(0 0 0 / 0.15);
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .caixa-furo {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 46px;
+    height: 12px;
+    margin-left: -23px;
+    border-radius: 999px;
+    background: var(--gravura);
+    box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.5);
+  }
+  .caixa-topo {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .caixa-topo b {
+    font-size: clamp(26px, 3vw, 46px);
+    line-height: 0.82;
+    color: #fff;
+    -webkit-text-stroke: 1.5px #111;
+    text-shadow: 3px 3px 0 #111;
+  }
+  .caixa-selo {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 84px;
+    height: 84px;
+    padding: 14px;
+    border-radius: 50%;
+    background: #3fd598;
+    color: #111;
+    font: 800 9px/1.05 var(--fonte);
+    text-align: center;
+    text-transform: uppercase;
+    transform: rotate(12deg);
+    box-shadow: 0 0 0 3px #111;
+    clip-path: polygon(50% 0, 61% 12%, 77% 6%, 80% 22%, 96% 26%, 88% 41%, 100% 54%, 85% 63%, 90% 80%, 73% 80%, 66% 96%, 52% 86%, 38% 98%, 31% 82%, 14% 86%, 16% 69%, 1% 60%, 12% 46%, 3% 30%, 20% 26%, 21% 9%, 37% 14%);
+  }
+  /* a bolha de plástico com o boneco dentro */
+  .caixa-bolha {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px 22px 40px 40px;
+    background: rgb(255 255 255 / 0.25);
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 0.7),
+      inset 0 0 30px rgb(255 255 255 / 0.4);
+  }
+  .caixa-bolha img {
+    position: absolute;
+    inset: 8px;
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+    object-fit: cover;
+    object-position: 50% 40%;
+    border-radius: 16px 16px 34px 34px;
+  }
+  .caixa-brilho {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.55) 45%, transparent 55%);
+    transform: translateX(-120%);
+    animation: brilho 3.6s ease-in-out 1.4s infinite;
+  }
+  @keyframes brilho {
+    0%,
+    55% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(120%);
+    }
+  }
+  .caixa-acessorios {
+    display: flex;
+    gap: 8px;
+  }
+  .caixa-acessorios span {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: rgb(255 255 255 / 0.85);
+    color: #111;
+    font: 700 11px/1.1 var(--fonte);
+  }
+  .caixa-acessorios svg {
+    flex: none;
+    width: 26px;
+    fill: var(--gravura);
+  }
+  .caixa-novo {
+    position: absolute;
+    left: -18px;
+    bottom: 64px;
+    padding: 10px 14px;
+    background: #ffe14d;
+    color: #e0201b;
+    font-size: clamp(18px, 1.8vw, 26px);
+    line-height: 0.85;
+    transform: rotate(-12deg);
+    box-shadow: 0 0 0 3px #111;
+  }
+  .caixa-preco {
+    position: absolute;
+    right: -10px;
+    top: 38%;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: #fff;
+    color: #111;
+    font-size: 10px;
+    line-height: 1.2;
+    text-align: center;
+    transform: rotate(9deg);
+    box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.5);
+  }
+
+  @media (max-width: 760px) {
+    .sobre {
+      padding: 0;
+      align-items: start;
+    }
+    .sobre-fechar {
+      top: 8px;
+    }
+    .sobre-painel {
+      grid-template-columns: 1fr;
+      width: 96vw;
+      max-height: calc(100svh - 72px);
+      margin-top: 64px;
+      padding: 28px 22px 22px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      transform: rotate(-1.2deg);
+    }
+    .sobre-texto {
+      font-size: 14px;
+    }
+    .sobre-pilha {
+      height: 420px;
+    }
+    .caixa-boneco {
+      width: 70%;
+    }
+    .caixa-selo {
+      width: 64px;
+      height: 64px;
+      padding: 10px;
+      font-size: 7px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+
+  const sobre = document.querySelector<HTMLElement>('.sobre');
+  if (sobre) {
+    const raiz = document.documentElement;
+    const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const comMouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const painel = sobre.querySelector<HTMLElement>('.sobre-painel')!;
+    const caixa = sobre.querySelector<HTMLElement>('.caixa-boneco')!;
+    const lenis = () => (window as unknown as { lenis?: { stop(): void; start(): void } }).lenis;
+    let flutuar: gsap.core.Tween | null = null;
+    let quemAbriu: HTMLElement | null = null;
+
+    function abrir(e?: Event) {
+      quemAbriu = (e?.currentTarget as HTMLElement) ?? null;
+      sobre!.hidden = false;
+      raiz.classList.add('sobre-aberto');
+      raiz.style.overflow = 'hidden';
+      lenis()?.stop();
+      sobre!.querySelector<HTMLElement>('.sobre-fechar')!.focus({ preventScroll: true });
+      if (semMovimento) return;
+
+      gsap.killTweensOf([painel, caixa]);
+      const tl = gsap.timeline();
+      tl.fromTo('.sobre-fundo', { opacity: 0 }, { opacity: 1, duration: 0.4 })
+        .fromTo('.sobre-fechar', { scale: 0, rotate: -180 }, { scale: 1, rotate: 0, duration: 0.6, ease: 'back.out(2)' }, 0.1)
+        // o painel sobe girando e assenta inclinado
+        .fromTo(painel, { yPercent: 60, rotate: 9, opacity: 0 }, { yPercent: 0, rotate: -1.6, opacity: 1, duration: 0.9, ease: 'expo.out' }, 0)
+        .from('.sobre-texto > *', { y: 24, opacity: 0, duration: 0.6, stagger: 0.06, ease: 'power3.out' }, 0.3)
+        // a polaroid voa para o lugar
+        .fromTo('.sobre-polaroid', { x: -160, y: 80, rotate: -40, opacity: 0 }, { x: 0, y: 0, rotate: -7, opacity: 1, duration: 1, ease: 'back.out(1.4)' }, 0.45)
+        // a caixa cai de cima e balança no gancho até parar
+        .fromTo(caixa, { y: '-120%', rotate: 0, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'bounce.out' }, 0.55)
+        .to(caixa, { keyframes: { rotate: [6, -4, 2.5, -1.2, 0] }, duration: 1.6, ease: 'sine.inOut' }, 1.1)
+        .from('.caixa-novo, .caixa-selo, .caixa-preco', { scale: 0, rotate: '-=40', duration: 0.6, stagger: 0.12, ease: 'back.out(3)' }, 1.15)
+        .call(() => {
+          // depois fica flutuando de leve
+          flutuar = gsap.to(caixa, { y: -10, rotate: 1.5, duration: 2.4, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+        });
+    }
+
+    function fechar() {
+      if (sobre!.hidden) return;
+      const terminar = () => {
+        flutuar?.kill();
+        sobre!.hidden = true;
+        raiz.classList.remove('sobre-aberto');
+        raiz.style.overflow = '';
+        lenis()?.start();
+        quemAbriu?.focus({ preventScroll: true });
+      };
+      if (semMovimento) return terminar();
+      gsap.timeline({ onComplete: terminar })
+        .to(painel, { yPercent: 70, rotate: -10, opacity: 0, duration: 0.5, ease: 'power3.in' })
+        .to('.sobre-fundo', { opacity: 0, duration: 0.3 }, 0.2)
+        .to('.sobre-fechar', { scale: 0, duration: 0.3 }, 0);
+    }
+
+    document.querySelectorAll<HTMLElement>('[data-abrir-sobre]').forEach((b) => b.addEventListener('click', abrir));
+    sobre.querySelectorAll('[data-fechar-sobre]').forEach((b) => b.addEventListener('click', fechar));
+    addEventListener('keydown', (e) => e.key === 'Escape' && fechar());
+
+    // no computador a caixa inclina seguindo o mouse (como pegar o brinquedo na mão)
+    if (comMouse && !semMovimento) {
+      const girarX = gsap.quickTo(caixa, 'rotationX', { duration: 0.8, ease: 'power3.out' });
+      const girarY = gsap.quickTo(caixa, 'rotationY', { duration: 0.8, ease: 'power3.out' });
+      sobre.addEventListener('pointermove', (e) => {
+        const r = caixa.getBoundingClientRect();
+        girarY(((e.clientX - (r.left + r.width / 2)) / innerWidth) * 30);
+        girarX((-(e.clientY - (r.top + r.height / 2)) / innerHeight) * 20);
+      });
+    }
+  }
+</script>

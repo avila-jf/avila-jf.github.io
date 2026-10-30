@@ -166,4 +166,10 @@ export const categorias: { slug: string; titulo: string; descricao: string; capa
     descricao: 'A rua em dia de manifestação: cartazes, bandeiras e gente junta.',
     capa: '09-pela-defesa-da-democracia',
   },
+  {
+    slug: 'estudio',
+    titulo: 'No estúdio',
+    descricao: 'Uma sessão de tatuagem de perto: luz de estúdio, luvas azuis e o traço na pele.',
+    capa: '01-luz-do-estudio',
+  },
 ];

@@ -1,0 +1,118 @@
+/* Site novo ("Duas lentes"): cores, fontes e base. Tudo que é visual geral começa aqui.
+   Tema claro: fundo quase branco com luzes suaves (a sensação de site "bem feito"), texto em
+   azul-marinho e o azul royal + creme da gravura como cor da marca (inspirado no rodapé "sequel").
+   As fotos ficam com as cores delas; a gravura é decoração (cenários, rodapé).
+   --lente vai de 0 (foto) a 1 (código) e quem muda é o Fundo.astro; o site pende para o código. */
+:root {
+  --fundo: #f7f5f0; /* branco quente */
+  --fundo-2: #eeebe3;
+  --texto: #0c1530; /* azul-marinho quase preto */
+  --texto-suave: #5d6479;
+  --linha: rgb(12 21 48 / 0.1);
+  --vidro: rgb(255 255 255 / 0.55);
+
+  --azul: #2346a8; /* azul royal: a cor da marca */
+  --azul-claro: #6aa9ec; /* azul-céu do site original */
+  --lavanda: #a9a6e8; /* luz suave das bolhas do fundo */
+  --gravura: #1f3f99; /* tom escuro da gravura (o azul do "sequel") */
+  --creme: #f1e6cc; /* tom claro da gravura */
+
+  /* Uma família só (a pegada do omrimalka): Archivo estreita e pesada nos títulos, larga e fina
+     na voz das fotos; o código fica no mono */
+  --fonte: 'Archivo', system-ui, sans-serif;
+  --fonte-codigo: 'JetBrains Mono', ui-monospace, monospace;
+
+  --margem: clamp(16px, 4vw, 56px);
+  --lente: 0.65;
+  color-scheme: light;
+}
+
+/* Tons por seção (Cortina.astro): no escuro o texto vira claro */
+html[data-tema='tinta'] {
+  --texto: #f7f5f0;
+  --texto-suave: rgb(247 245 240 / 0.62);
+  --linha: rgb(247 245 240 / 0.14);
+  --vidro: rgb(255 255 255 / 0.06);
+  --azul: #8fb0ff;
+}
+html[data-tema='azul'] {
+  --texto: var(--creme);
+  --texto-suave: rgb(241 230 204 / 0.7);
+  --linha: rgb(241 230 204 / 0.2);
+  --vidro: rgb(255 255 255 / 0.08);
+  --azul: var(--creme);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+html,
+body {
+  overflow-x: clip; /* nada passa da largura da tela (as seções travadas medem 100vw) */
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--azul);
+  color: #fff;
+}
+
+/* Vozes tipográficas, para usar em qualquer lugar */
+.voz-foto {
+  font-family: var(--fonte);
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: 115%;
+  letter-spacing: -0.01em;
+}
+.voz-codigo {
+  font-family: var(--fonte-codigo);
+  font-size: 0.85em;
+  letter-spacing: 0;
+}
+/* Título "cartaz": estreito, pesado e apertado (a pegada foldfolio/mondragon) */
+.titulo-cartaz {
+  font-family: var(--fonte);
+  font-stretch: 68%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+/* Rótulo pequeno em mono, tudo maiúsculo */
+.rotulo {
+  font-family: var(--fonte-codigo);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
