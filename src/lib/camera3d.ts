@@ -211,7 +211,7 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string, in
   await document.fonts?.ready;
 
   const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); // com antialias, 1.5x já fica nítido e pesa bem menos que 2x
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 

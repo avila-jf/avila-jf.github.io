@@ -23,6 +23,7 @@
     position: fixed;
     inset: 0;
     z-index: -1;
+    overflow: hidden; /* o granulado é 2x a tela: corta o que sobra (ninguém vê, e pesa menos) */
     pointer-events: none;
     /* se o WebGL não rodar, fica este degradê no lugar */
     background:
@@ -66,7 +67,8 @@
 </style>
 
 <script>
-  import * as THREE from 'three';
+  // A luz é WebGL puro (sem three.js): é um quadro só com um shader, e assim o three.js (pesado)
+  // não segura o resto da página; ele só carrega quando a câmera e o notebook 3D precisam.
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import Lenis from 'lenis';
@@ -134,50 +136,80 @@
   `;
 
   const canvas = document.querySelector<HTMLCanvasElement>('.fundo-luz')!;
-  const uniformes = {
-    uTempo: { value: 0 },
-    uLente: { value: VALOR.ambos },
-    uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-    uRes: { value: new THREE.Vector2(1, 1) },
-  };
+  const fundo = document.querySelector<HTMLElement>('.fundo')!;
+  const uniformes = { uTempo: 0, uLente: VALOR.ambos as number, uMouse: [0.5, 0.5], uRes: [1, 1] };
   let desenhar = () => {};
 
-  try {
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'low-power' });
-    // a luz é toda suave: desenhar em meia resolução não muda nada no olho e pesa 4x menos
-    renderer.setPixelRatio(0.5);
-    const cena = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    cena.add(
-      new THREE.Mesh(
-        new THREE.PlaneGeometry(2, 2),
-        new THREE.ShaderMaterial({
-          uniforms: uniformes,
-          vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }',
-          fragmentShader: fragmento,
-        }),
-      ),
-    );
+  // a luz está coberta (pela intro, pelo mural em cor no celular ou pela cor de uma seção escura):
+  // não precisa desenhar o que ninguém vê
+  const coberta = () =>
+    raiz.classList.contains('intro-on') || raiz.classList.contains('mural-em-cor') || raiz.classList.contains('fundo-coberto');
 
+  try {
+    const opcoes = { antialias: false, depth: false, powerPreference: 'low-power' } as const;
+    const gl = (canvas.getContext('webgl2', opcoes) ?? canvas.getContext('webgl', opcoes)) as WebGLRenderingContext | null;
+    if (!gl) throw new Error('sem WebGL');
+    const shader = (tipo: number, codigo: string) => {
+      const s = gl.createShader(tipo)!;
+      gl.shaderSource(s, codigo);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) ?? 'shader');
+      return s;
+    };
+    const programa = gl.createProgram()!;
+    gl.attachShader(
+      programa,
+      shader(gl.VERTEX_SHADER, 'attribute vec2 posicao; varying vec2 vUv; void main() { vUv = posicao * 0.5 + 0.5; gl_Position = vec4(posicao, 0.0, 1.0); }'),
+    );
+    gl.attachShader(programa, shader(gl.FRAGMENT_SHADER, fragmento));
+    gl.linkProgram(programa);
+    if (!gl.getProgramParameter(programa, gl.LINK_STATUS)) throw new Error('programa');
+    gl.useProgram(programa);
+    // um triângulo só que cobre a tela inteira
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const posicao = gl.getAttribLocation(programa, 'posicao');
+    gl.enableVertexAttribArray(posicao);
+    gl.vertexAttribPointer(posicao, 2, gl.FLOAT, false, 0, 0);
+    const local = (nome: string) => gl.getUniformLocation(programa, nome);
+    const [uTempo, uLente, uMouse, uRes] = ['uTempo', 'uLente', 'uMouse', 'uRes'].map(local);
+
+    // a luz é toda suave: desenhar em meia resolução não muda nada no olho e pesa 4x menos
     const ajustar = () => {
-      renderer.setSize(innerWidth, innerHeight, false);
-      uniformes.uRes.value.set(innerWidth, innerHeight);
+      canvas.width = Math.floor(innerWidth * 0.5);
+      canvas.height = Math.floor(innerHeight * 0.5);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      uniformes.uRes = [innerWidth, innerHeight];
       desenhar();
     };
-    desenhar = () => renderer.render(cena, camera);
+    desenhar = () => {
+      gl.uniform1f(uTempo, uniformes.uTempo);
+      gl.uniform1f(uLente, uniformes.uLente);
+      gl.uniform2f(uMouse, uniformes.uMouse[0], uniformes.uMouse[1]);
+      gl.uniform2f(uRes, uniformes.uRes[0], uniformes.uRes[1]);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
     addEventListener('resize', ajustar);
     ajustar();
     canvas.classList.add('pronta');
 
     if (!semMovimento) {
-      const alvo = new THREE.Vector2(0.5, 0.5);
+      const alvo = [0.5, 0.5];
       if (temMouse) {
-        addEventListener('pointermove', (e) => alvo.set(e.clientX / innerWidth, 1 - e.clientY / innerHeight));
+        addEventListener('pointermove', (e) => {
+          alvo[0] = e.clientX / innerWidth;
+          alvo[1] = 1 - e.clientY / innerHeight;
+        });
       }
+      // a luz anda devagar: 30 quadros por segundo bastam (numa tela de 120 Hz eram 120)
+      let ultimo = -1;
       gsap.ticker.add((tempo) => {
         if (document.hidden) return;
-        uniformes.uTempo.value = tempo;
-        uniformes.uMouse.value.lerp(alvo, 0.04);
+        uniformes.uMouse[0] += (alvo[0] - uniformes.uMouse[0]) * 0.04;
+        uniformes.uMouse[1] += (alvo[1] - uniformes.uMouse[1]) * 0.04;
+        if (coberta() || tempo - ultimo < 1 / 30 - 0.004) return;
+        ultimo = tempo;
+        uniformes.uTempo = tempo;
         desenhar();
       });
     }
@@ -196,11 +228,14 @@
       duration: semMovimento ? 0 : 1.2,
       ease: 'power2.inOut',
       overwrite: true,
+      // durante a troca o --lente muda só no fundo (no <html> o navegador recalcularia a página
+      // inteira a cada quadro); no fim ele vai para o <html> também
       onUpdate: () => {
-        uniformes.uLente.value = estado.valor;
-        raiz.style.setProperty('--lente', estado.valor.toFixed(3));
+        uniformes.uLente = estado.valor;
+        fundo.style.setProperty('--lente', estado.valor.toFixed(3));
         if (semMovimento) desenhar();
       },
+      onComplete: () => raiz.style.setProperty('--lente', estado.valor.toFixed(3)),
     });
   }
 

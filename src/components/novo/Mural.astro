@@ -625,6 +625,14 @@ const CORES: Record<string, string> = {
     medir();
     addEventListener('resize', medir);
 
+    // tamanho do palco guardado (ler a cada quadro obrigava o navegador a recalcular a página)
+    let palcoL = palco.clientWidth;
+    let palcoA = palco.clientHeight;
+    new ResizeObserver(() => {
+      palcoL = palco.clientWidth;
+      palcoA = palco.clientHeight;
+    }).observe(palco);
+
     let visivel = true;
     new IntersectionObserver(([e]) => (visivel = e.isIntersecting)).observe(palco);
 
@@ -636,6 +644,7 @@ const CORES: Record<string, string> = {
     };
 
     let pausar = false; // o Flip do embaralhar também mexe no transform das casas
+    const poses: string[] = []; // a última pose escrita em cada casa (computador)
 
     if (comMouse) {
       // ---------- computador: a parede corre com o mouse ----------
@@ -670,15 +679,19 @@ const CORES: Record<string, string> = {
           if (pausar || !visivel) return;
           const gx = Number(gsap.getProperty(grade, 'x'));
           const gy = Number(gsap.getProperty(grade, 'y'));
-          const meiaL = palco.clientWidth / 2;
-          const meiaA = palco.clientHeight / 2;
+          const meiaL = palcoL / 2;
+          const meiaA = palcoA / 2;
           casas.forEach((c, i) => {
             const nx = limite((centros[i].x + gx) / meiaL);
             const ny = limite((centros[i].y + gy) / meiaA);
-            const p = (perto.get(c) ?? 0) + ((c === sob ? 1 : 0) - (perto.get(c) ?? 0)) * 0.12;
+            const alvo = c === sob ? 1 : 0;
+            let p = perto.get(c) ?? 0;
+            p += (alvo - p) * 0.12;
+            if (Math.abs(alvo - p) < 0.001) p = alvo;
             perto.set(c, p);
             const z = -(nx * nx + ny * ny) * 170 + p * 70;
-            c.style.transform = `translateZ(${z.toFixed(1)}px) rotateY(${(nx * 16).toFixed(2)}deg) rotateX(${(-ny * 14).toFixed(2)}deg)`;
+            const tf = `translateZ(${z.toFixed(1)}px) rotateY(${(nx * 16).toFixed(2)}deg) rotateX(${(-ny * 14).toFixed(2)}deg)`;
+            if (tf !== poses[i]) c.style.transform = poses[i] = tf;
           });
         });
       }
@@ -788,8 +801,8 @@ const CORES: Record<string, string> = {
           cam.vx *= atrito;
           cam.vy *= atrito;
         }
-        const vw = palco.clientWidth;
-        const vh = palco.clientHeight;
+        const vw = palcoL;
+        const vh = palcoA;
         const n = Math.hypot(vw / 2, vh / 2) || 1;
         const raio = Math.max(330, vh * 0.45);
         const resto = emCor ? 0.62 : 1; // em cor, o que está longe do meio apaga um pouco
@@ -937,6 +950,7 @@ const CORES: Record<string, string> = {
         absolute: true,
         onComplete: () => {
           medir();
+          poses.length = 0; // o Flip mexeu nas casas: escreve as poses de novo
           pausar = false;
         },
       });

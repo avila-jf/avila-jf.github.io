@@ -49,7 +49,8 @@ const fragmentoTela = /* glsl */ `
 
 export async function montarAparelho(tela: HTMLCanvasElement, urls: string[]): Promise<Aparelho> {
   const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  // no celular 1.5x basta (a tela é pequena); no computador fica 2x pro texto dos prints ficar nítido
+  renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 

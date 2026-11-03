@@ -269,6 +269,7 @@ const [primeiro, ...resto] = nome.split(' ');
       removeEventListener('wheel', acelerar);
       removeEventListener('touchstart', acelerar);
       removeEventListener('keydown', acelerar);
+      document.dispatchEvent(new Event('intro:fim')); // o notebook 3D (Aparelho) espera por isto
     }
 
     const seguir = () => {

@@ -46,15 +46,25 @@
   let animacao: Animation | null = null;
   let trocaTexto = 0;
 
+  // com a base escura por cima (depois do fade dela), a luz do Fundo.astro fica coberta e para de desenhar
+  let cobrir = 0;
+  const descobrir = () => {
+    clearTimeout(cobrir);
+    raiz.classList.remove('fundo-coberto');
+  };
+
   function pintarBase(tema: Tema) {
     base.style.background = CORES[tema];
     base.style.opacity = tema === 'claro' ? '0' : '1'; // no claro aparece a luz do fundo
+    descobrir();
+    if (tema !== 'claro') cobrir = window.setTimeout(() => atual === tema && raiz.classList.add('fundo-coberto'), 700);
   }
 
   function trocar(tema: Tema) {
     if (tema === atual) return;
     const descendo = scrollY >= ultimoY;
     atual = tema;
+    descobrir();
     animacao?.finish();
     cancelAnimationFrame(trocaTexto);
     if (semMovimento) {
@@ -100,7 +110,19 @@
     };
   }
 
-  addEventListener('scroll', () => requestAnimationFrame(() => (ultimoY = scrollY)), { passive: true });
+  let lendo = false;
+  addEventListener(
+    'scroll',
+    () => {
+      if (lendo) return;
+      lendo = true;
+      requestAnimationFrame(() => {
+        ultimoY = scrollY;
+        lendo = false;
+      });
+    },
+    { passive: true },
+  );
   const olho = new IntersectionObserver(
     (entradas) => entradas.forEach((e) => e.isIntersecting && trocar((e.target as HTMLElement).dataset.tema as Tema)),
     { rootMargin: '-50% 0px -50% 0px' },

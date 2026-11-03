@@ -254,7 +254,32 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     const pontos = [...raiz.querySelectorAll<HTMLElement>('.aparelho-pontos li')];
     const n = urls.length;
 
-    import('../../lib/aparelho3d')
+    // o notebook 3D só monta depois da intro e quando a seção chega perto da tela: assim ele não
+    // disputa a abertura com a câmera 3D (a página trava menos ao abrir)
+    const depoisDaIntro = new Promise<void>((ok) => {
+      const html = document.documentElement;
+      if (!html.classList.contains('intro-on') && !html.classList.contains('intro-saindo')) return ok();
+      document.addEventListener('intro:fim', () => ok(), { once: true });
+      setTimeout(ok, 15000); // segurança: a intro nunca passa disso
+    });
+    // e espera o navegador respirar (o mural ainda está terminando de aparecer)
+    const folga = () =>
+      new Promise<void>((ok) => ('requestIdleCallback' in window ? requestIdleCallback(() => ok(), { timeout: 1500 }) : setTimeout(ok, 600)));
+    const perto = new Promise<void>((ok) => {
+      const olho = new IntersectionObserver(
+        ([e]) => {
+          if (!e.isIntersecting) return;
+          olho.disconnect();
+          ok();
+        },
+        { rootMargin: '150% 0px' },
+      );
+      olho.observe(raiz);
+    });
+
+    Promise.all([depoisDaIntro, perto])
+      .then(folga)
+      .then(() => import('../../lib/aparelho3d'))
       .then(({ montarAparelho }) => {
         raiz.classList.add('ativo'); // liga o layout de palco antes de medir o canvas
         return montarAparelho(raiz.querySelector('canvas')!, urls);
