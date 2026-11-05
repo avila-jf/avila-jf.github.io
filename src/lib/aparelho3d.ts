@@ -56,7 +56,9 @@ export async function montarAparelho(tela: HTMLCanvasElement, urls: string[]): P
 
   const cena = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  cena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  // reflexo do alumínio: no celular em resolução menor (128 em vez de 256), a tela é pequena
+  cena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04, 0.1, 100, { size: innerWidth < 768 ? 128 : 256 }).texture;
+  pmrem.dispose();
   cena.environmentIntensity = 0.9;
   cena.add(new THREE.HemisphereLight(0xffffff, 0xb8c2d8, 0.8));
   const sol = new THREE.DirectionalLight(0xffffff, 1.4);
@@ -78,7 +80,7 @@ export async function montarAparelho(tela: HTMLCanvasElement, urls: string[]): P
             url,
             (t) => {
               t.colorSpace = THREE.NoColorSpace; // o shader devolve a cor como veio (já em sRGB)
-              t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+              t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy()); // 4x já deixa o print nítido inclinado
               ok(t);
             },
             undefined,
@@ -161,11 +163,29 @@ export async function montarAparelho(tela: HTMLCanvasElement, urls: string[]): P
   redimensionar();
   new ResizeObserver(redimensionar).observe(tela);
 
+  // só desenha quando algo mudou (rolagem, mouse/dedo, troca de site): parado, a GPU descansa
+  let sujo = true;
+  addEventListener('pointermove', () => (sujo = true), { passive: true });
+  new ResizeObserver(() => (sujo = true)).observe(tela);
+  const quase = (a: number, b: number) => Math.abs(a - b) < 0.0005;
+  const mudando = () =>
+    !quase(estado.abrir, suave.abrir) ||
+    !quase(estado.rolarA, suave.rolarA) ||
+    !quase(estado.mistura, suave.mistura) ||
+    !quase(mouse.x, mouse.sx) ||
+    !quase(mouse.y, mouse.sy) ||
+    !luzCor.color.equals(corAlvo);
+
   let visivel = true;
-  new IntersectionObserver(([e]) => (visivel = e.isIntersecting)).observe(tela);
+  new IntersectionObserver(([e]) => {
+    visivel = e.isIntersecting;
+    if (visivel) sujo = true;
+  }).observe(tela);
   const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 
-  function desenhar(tempo: number) {
+  function desenhar() {
+    if (!sujo && !mudando()) return;
+    sujo = false;
     suave.abrir += (estado.abrir - suave.abrir) * 0.1;
     suave.rolarA += (estado.rolarA - suave.rolarA) * 0.1;
     suave.mistura += (estado.mistura - suave.mistura) * 0.15;
@@ -180,16 +200,32 @@ export async function montarAparelho(tela: HTMLCanvasElement, urls: string[]): P
     uniformes.uMistura.value = suave.mistura;
 
     luzCor.color.lerp(corAlvo, 0.06);
+    // perto o bastante: encaixa na cor final, senão a mistura nunca termina e ele não para de desenhar
+    const c = luzCor.color;
+    if (Math.abs(c.r - corAlvo.r) + Math.abs(c.g - corAlvo.g) + Math.abs(c.b - corAlvo.b) < 0.004) c.copy(corAlvo);
     luzCor.intensity = 30 * abrir;
 
     // câmera: vista de cima com o notebook fechado, desce para a frente conforme abre
     const altura = THREE.MathUtils.lerp(6.5, 1.7, abrir);
     olho.position.set(mouse.sx * 0.8, altura - mouse.sy * 0.5, THREE.MathUtils.lerp(distancia * 0.62, distancia, abrir));
     olho.lookAt(0, THREE.MathUtils.lerp(0, 1.05, abrir), 0);
-    modelo.rotation.y = Math.sin(tempo / 2600) * 0.06 * abrir;
+    // o balanço segue a rolagem e o mouse/dedo (antes balançava sozinho e nunca parava de desenhar)
+    modelo.rotation.y = (Math.sin(suave.rolarA * Math.PI * 2) * 0.06 + mouse.sx * 0.12) * abrir;
     renderer.render(cena, olho);
   }
-  renderer.setAnimationLoop((t) => visivel && desenhar(t));
+
+  // prepara tudo antes da seção aparecer: sobe os prints pra GPU um por vez (nos intervalos do
+  // navegador) e compila os shaders. Assim a primeira imagem não engasga a rolagem.
+  const folga = () =>
+    new Promise<void>((ok) => ('requestIdleCallback' in window ? requestIdleCallback(() => ok(), { timeout: 400 }) : setTimeout(ok, 50)));
+  for (const t of texturas) {
+    await folga();
+    renderer.initTexture(t);
+  }
+  await folga();
+  renderer.compile(cena, olho);
+
+  renderer.setAnimationLoop(() => visivel && desenhar());
 
   return {
     definir(novo) {
@@ -208,6 +244,7 @@ export async function montarAparelho(tela: HTMLCanvasElement, urls: string[]): P
         uniformes.vB.value = fracao(b);
       }
       corAlvo.set(estado.cor);
+      sujo = true;
     },
   };
 }

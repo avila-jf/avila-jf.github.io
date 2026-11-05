@@ -210,14 +210,19 @@ function desenharMenu(g: CanvasRenderingContext2D, info: InfoDisplay, sel: numbe
 export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string, info?: InfoDisplay): Promise<Camera3D> {
   await document.fonts?.ready;
 
-  const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: true, alpha: true });
+  // no celular sem antialias: na tela pequena e com 1.5x de densidade a diferença quase não aparece,
+  // e o antialias é das coisas que mais pesam na GPU do telefone
+  const celular = matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+  const renderer = new THREE.WebGLRenderer({ canvas: tela, antialias: !celular, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); // com antialias, 1.5x já fica nítido e pesa bem menos que 2x
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const cena = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  cena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  // reflexo de ambiente: no celular em resolução menor (128 em vez de 256), é só um brilho suave no corpo
+  cena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04, 0.1, 100, { size: celular ? 128 : 256 }).texture;
+  pmrem.dispose();
   cena.environmentIntensity = 0.35;
 
   const olho = new THREE.PerspectiveCamera(FOV, 1, 0.05, 100);
@@ -554,6 +559,11 @@ export async function montarCamera(tela: HTMLCanvasElement, fotoUrl?: string, in
     mouse.x = e.clientX / innerWidth - 0.5;
     mouse.y = e.clientY / innerHeight - 0.5;
   });
+
+  // compila os shaders e sobe as texturas agora, enquanto a intro ainda espera a câmera ficar pronta:
+  // senão isso acontece no primeiro quadro em que ela gira, e é aí que dava o engasgo do começo
+  renderer.compile(cena, olho);
+  desenhar(0);
 
   // Só desenha enquanto a cena está na tela
   let visivel = true;

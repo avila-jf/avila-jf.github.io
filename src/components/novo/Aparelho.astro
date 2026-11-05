@@ -27,10 +27,12 @@ interface Props {
 const { sites } = Astro.props;
 const comPrint = sites.filter((s) => s.print);
 const urls = await Promise.all(comPrint.map(async (s) => (await getImage({ src: s.print!, width: 1400, format: 'webp', quality: 80 })).src));
+// no celular a tela do notebook é pequena: 800px bastam e a textura pesa 3x menos na GPU
+const urlsCelular = await Promise.all(comPrint.map(async (s) => (await getImage({ src: s.print!, width: 800, format: 'webp', quality: 78 })).src));
 const cores = comPrint.map((s) => s.cor ?? '#2346a8');
 ---
 
-<div class="aparelho" data-urls={JSON.stringify(urls)} data-cores={JSON.stringify(cores)} style={`--cor: ${cores[0] ?? '#2346a8'}`}>
+<div class="aparelho" data-urls={JSON.stringify(urls)} data-urls-celular={JSON.stringify(urlsCelular)} data-cores={JSON.stringify(cores)} style={`--cor: ${cores[0] ?? '#2346a8'}`}>
   <div class="aparelho-palco">
     <div class="aparelho-luz" aria-hidden="true"></div>
     <canvas class="aparelho-3d" aria-hidden="true"></canvas>
@@ -235,6 +237,12 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     .aparelho.ativo .aparelho-pontos {
       bottom: 0;
     }
+    /* no celular o brilho é um degradê: blur(80px) numa área grande é caro de compor */
+    .aparelho.ativo .aparelho-luz {
+      filter: none;
+      background: radial-gradient(closest-side, var(--cor), transparent);
+      opacity: 0.3;
+    }
   }
 </style>
 
@@ -248,7 +256,8 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (raiz && !semMovimento) {
-    const urls: string[] = JSON.parse(raiz.dataset.urls!);
+    const celular = matchMedia('(max-width: 760px)').matches;
+    const urls: string[] = JSON.parse((celular && raiz.dataset.urlsCelular) || raiz.dataset.urls!);
     const cores: string[] = JSON.parse(raiz.dataset.cores!);
     const infos = [...raiz.querySelectorAll<HTMLElement>('.aparelho-info')];
     const pontos = [...raiz.querySelectorAll<HTMLElement>('.aparelho-pontos li')];
