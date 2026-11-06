@@ -55,7 +55,7 @@ const CORES: Record<string, string> = {
       <div class="mural-grade">
         <div class="mural-cartao">
           <span class="rotulo">Francis Avila · Maceió</span>
-          <h1 class="mural-titulo">Through my <span class="voz-foto">lens.</span></h1>
+          <h1 class="mural-titulo">The world<br>through my <span class="voz-foto">lenses.</span></h1>
           <span class="rotulo">{categorias.length} series · {totalFotos} photos</span>
         </div>
         {
@@ -273,7 +273,7 @@ const CORES: Record<string, string> = {
   }
   .mural-titulo {
     margin: 0;
-    font-size: calc(var(--lado) * 0.21);
+    font-size: calc(var(--lado) * 0.19); /* "The world / through my lenses." em duas linhas */
     font-weight: 700;
     font-stretch: 75%;
     line-height: 1;
@@ -506,7 +506,7 @@ const CORES: Record<string, string> = {
       gap: 6px;
     }
     .mural-titulo {
-      font-size: calc(var(--lado) * 0.17);
+      font-size: calc(var(--lado) * 0.16);
     }
     .mural-cartao .rotulo {
       font-size: 8px;

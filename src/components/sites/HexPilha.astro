@@ -1,8 +1,8 @@
 ---
 // Projetos: o hexágono que vira pilha (pegada do "WORKS '26" → "Aether" do @echo_builds), um
 // efeito só, numa tela travada:
-//  0. logo depois da faixa de protótipos, TODOS os projetos aparecem juntos numa grade, e a
-//     grade vira o anel;
+//  0. logo depois da faixa de protótipos, os cartões nascem do centro (onde a faixa encolheu)
+//     e abrem no anel;
 //  1. os cartões dos projetos formam um anel em volta do hexágono "PROJETOS '26", cada um deitado
 //     na face dele; rolando, o anel gira e o projeto que passa no topo acende;
 //  2. o anel se fecha: cada cartão vai da face dele para o meio da tela e cresce, o hexágono some
@@ -318,21 +318,17 @@ const dois = (v: number) => String(v).padStart(2, '0');
       conta.textContent = `${dois(i + 1)} / ${dois(n)}`;
     };
 
-    // t = 0..1 da tela travada:
-    //  0–0,06  TODOS os projetos juntos, numa grade (ela sobe logo atrás da faixa de protótipos)
-    //  0,06–0,2 a grade vira o anel do hexágono · até 0,4 o anel gira
-    //  0,4–0,55 o anel fecha · 0,55–1 a pilha sobe (o efeito do final)
+    // t = 0..1 da tela travada (06/11: sem a grade, que repetia a faixa):
+    //  0–0,16  os cartões nascem do centro (onde a faixa de protótipos acabou de encolher) e abrem no anel
+    //  até 0,4 o anel gira · 0,4–0,55 o anel fecha · 0,55–1 a pilha sobe (o efeito do final)
     const grade = (i: number) => {
-      const cols = Math.ceil(n / 2);
-      const lin = Math.ceil(n / cols);
-      const celW = Math.min((innerWidth * 0.86) / cols, ((innerHeight * 0.62) / lin) * 1.6);
-      const celH = celW / 1.6;
-      const c = i % cols, l = Math.floor(i / cols);
-      return { x: (c - (cols - 1) / 2) * celW, y: (l - (lin - 1) / 2) * celH + innerHeight * 0.03, e: (celW * 0.9) / largura };
+      // ponto de partida: todos juntinhos no centro, pequenos, um pouco girados (a faixa que encolheu)
+      const a = ((i * passo + 40) * Math.PI) / 180;
+      return { x: Math.sin(a) * lado * 0.03, y: -Math.cos(a) * lado * 0.03, e: escalaAnel * 0.25 };
     };
     const desenhar = (t: number) => {
-      const entra = 1; // a grade já chega montada, subindo logo atrás da faixa de protótipos
-      const vira = suave(faixa(t, 0.06, 0.2)); // 0 = grade, 1 = anel
+      const entra = faixa(t, 0, 0.05); // aparecem logo no começo, saindo do centro
+      const vira = suave(faixa(t, 0, 0.16)); // 0 = no centro, 1 = anel
       const giro = -faixa(t, 0.2, 0.55) * passo * 3;
       const m = suave(faixa(t, 0.4, 0.55)); // 0 = anel, 1 = pilha
       const p = faixa(t, 0.55, 1) * (n - 1); // posição na pilha
@@ -391,7 +387,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
       scrollTrigger: {
         trigger: raiz,
         start: 'top top',
-        end: () => `+=${n * 55 + 330}%`, // + a grade do começo
+        end: () => `+=${n * 55 + 260}%`,
         pin: $('.hp-palco'),
         scrub: 0.7,
         invalidateOnRefresh: true,

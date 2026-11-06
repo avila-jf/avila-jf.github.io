@@ -230,8 +230,10 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
       const A = innerHeight;
       const w0 = celular ? 280 : 300;
       const h0 = celular ? 360 : 400;
-      const w1 = Math.min(L * 0.94, A * 0.86 * proporcao);
-      const h1 = w1 / proporcao;
+      // no celular o painel abre em pé (a foto largo deixava ~245px de altura e o texto e os botões
+      // não cabiam); no computador, no formato da foto
+      const w1 = celular ? L * 0.92 : Math.min(L * 0.94, A * 0.86 * proporcao);
+      const h1 = celular ? Math.min(A * 0.76, 640) : w1 / proporcao;
       const w = w0 + (w1 - w0) * p;
       const h = h0 + (h1 - h0) * p;
       const x = (L - w) / 2;

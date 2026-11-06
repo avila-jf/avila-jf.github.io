@@ -185,14 +185,21 @@ export async function lenteDoTopo(
   const descanso = () => ({ x: opcoes.alvo[0] * W, y: (1 - opcoes.alvo[1]) * H });
   const m = { x: 0, y: 0, tx: 0, ty: 0, forca: 0, ultimo: -1e9 };
   ({ x: m.x, y: m.y } = descanso());
+  const mirar = (cx: number, cy: number) => {
+    const r = caixa.getBoundingClientRect();
+    const x = cx - r.left, y = r.bottom - cy;
+    if (x < -80 || x > W + 80 || y < -80 || y > H + 80) { m.ultimo = -1e9; return; }
+    m.tx = x; m.ty = y; m.ultimo = performance.now();
+  };
   if (opcoes.temMouse) {
-    addEventListener('pointermove', (e) => {
-      const r = caixa.getBoundingClientRect();
-      const x = e.clientX - r.left, y = r.bottom - e.clientY;
-      if (x < -80 || x > W + 80 || y < -80 || y > H + 80) { m.ultimo = -1e9; return; }
-      m.tx = x; m.ty = y; m.ultimo = performance.now();
-    }, { passive: true });
+    addEventListener('pointermove', (e) => mirar(e.clientX, e.clientY), { passive: true });
+  } else {
+    // celular: a lente vai até onde o dedo toca (e segue o dedo enquanto ele arrasta)
+    caixa.addEventListener('touchstart', (e) => mirar(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    caixa.addEventListener('touchmove', (e) => mirar(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
   }
+  // sem mouse, a lente passeia sozinha pela foto: rosto → boné → camiseta → rosto
+  const passeio: [number, number][] = [opcoes.alvo, [0.5, 0.1], [0.42, 0.5], [0.58, 0.68]];
 
   const t0 = performance.now() + opcoes.atraso * 1000;
   const quadro = (agora: number) => {
@@ -202,11 +209,18 @@ export async function lenteDoTopo(
     const foco = Math.min(1, Math.max(0, t / 1.6));
     const focoSuave = 1 - Math.pow(1 - foco, 3);
     if (agora - m.ultimo > 1800) {
-      const d = descanso();
-      m.tx = d.x + Math.sin(t * .6) * 8; m.ty = d.y + Math.cos(t * .45) * 8;
+      if (opcoes.temMouse) {
+        const d = descanso();
+        m.tx = d.x + Math.sin(t * .6) * 8; m.ty = d.y + Math.cos(t * .45) * 8;
+      } else {
+        // troca de ponto a cada 2,6 s, depois que o foco acertou
+        const [ax, ay] = passeio[Math.floor(Math.max(0, t - 1.6) / 2.6) % passeio.length];
+        m.tx = ax * W + Math.sin(t * .9) * 10; m.ty = (1 - ay) * H + Math.cos(t * .7) * 10;
+      }
     }
     const px = m.x, py = m.y;
-    m.x = lerp(m.x, m.tx, .14); m.y = lerp(m.y, m.ty, .14);
+    const passo = opcoes.temMouse || agora - m.ultimo < 1800 ? .14 : .045; // passeio mais lento e suave que o dedo
+    m.x = lerp(m.x, m.tx, passo); m.y = lerp(m.y, m.ty, passo);
     m.forca = lerp(m.forca, Math.min(1, Math.hypot(m.x - px, m.y - py) / 18), .1);
     const raio = Math.min(W, H) * (.16 + .015 * Math.sin(t * .8)) * (.5 + .5 * focoSuave);
 

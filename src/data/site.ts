@@ -83,23 +83,12 @@ export const projetos: {
   destaque?: boolean;
   grupo?: 'prototipo';
 }[] = [
+  // (a versão clara do manoelink.github.io saiu do portfólio em 06/11: fica só esta, a com todos os efeitos)
   {
     nome: 'Manoel.ink',
     tipo: 'Client website',
     descricao:
-      'Website for Juan Manoel, a tattoo artist from Maceió: blackwork, fine line and geek tattoos, with a work gallery, available flashes, healed before/after and quote requests.',
-    tecnologias: ['HTML', 'CSS', 'JavaScript'],
-    site: 'https://manoelink.github.io/',
-    codigo: 'https://github.com/manoelink/manoelink.github.io',
-    imagem: 'manoelink',
-    cor: '#d8392c',
-    destaque: true,
-  },
-  {
-    nome: 'Manoel.ink (demo)',
-    tipo: 'Client showcase',
-    descricao:
-      'The version of Manoel\'s site with every effect, to show clients: razor intro, labeled cursor, magnetic buttons, word-by-word text and bands that bend as you scroll.',
+      'Website for Juan Manoel, a tattoo artist from Maceió: blackwork, fine line and geek tattoos, with a work gallery, healed before/after and every effect: razor intro, labeled cursor, magnetic buttons and bands that bend as you scroll.',
     tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
     site: 'https://josefrancisco-alt.github.io/manoel-ink-demo/',
     codigo: 'https://github.com/JoseFrancisco-alt/manoel-ink-demo',

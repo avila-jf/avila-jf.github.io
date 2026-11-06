@@ -201,3 +201,14 @@ main {
     grid-column: 1 / -1;
   }
 }
+
+/* a faixa de protótipos (que encolhe pro centro) emenda direto no hexágono: sem a tela vazia
+   que sobrava entre a faixa sumir e o anel aparecer (só quando o movimento está ligado) */
+@media (prefers-reduced-motion: no-preference) {
+  .faixa-curva[data-fecha] ~ .ato:has(.hexpilha) {
+    margin-top: -100svh;
+  }
+  .faixa-curva[data-fecha] ~ .ato:has(.hexpilha) > .ato-id {
+    visibility: hidden;
+  }
+}

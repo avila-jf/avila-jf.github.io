@@ -29,7 +29,7 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
       <button class="barra-sobre" type="button" data-abrir-sobre>About</button>
       <span class="barra-status rotulo"><i aria-hidden="true"></i>Booking open</span>
       <a class="barra-cta" href={linkSite} target="_blank" rel="noopener">
-        I want my website <span aria-hidden="true">↗</span>
+<span class="cta-longo">I want my website</span><span class="cta-curto">Get a site</span> <span class="cta-seta" aria-hidden="true">↗</span>
       </a>
     </div>
   </div>
@@ -199,10 +199,13 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
   .barra-cta:hover {
     background: var(--azul);
   }
-  .barra-cta span {
+  .cta-curto {
+    display: none;
+  }
+  .barra-cta .cta-seta {
     transition: transform 0.3s;
   }
-  .barra-cta:hover span {
+  .barra-cta:hover .cta-seta {
     transform: translate(2px, -2px);
   }
 
@@ -229,8 +232,21 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
     .barra-logo .titulo-cartaz {
       font-size: 19px;
     }
+    /* no celular o texto longo passava da cápsula: fica o curto */
     .barra-cta {
       padding: 9px 14px;
+      font-size: 13px;
+    }
+    .cta-longo {
+      display: none;
+    }
+    .cta-curto {
+      display: inline;
+    }
+    .barra-direita {
+      gap: 10px;
+    }
+    .barra-sobre {
       font-size: 13px;
     }
     .barra-lentes {
