@@ -170,28 +170,6 @@ export const projetos: {
     imagem: 'liv-sa',
     grupo: 'prototipo',
   },
-  {
-    nome: 'BookSmart',
-    tipo: 'Faculdade',
-    descricao:
-      'Sistema de gerenciamento de biblioteca: cadastro de livros e usuários, empréstimos, devoluções e consultas do acervo.',
-    tecnologias: ['Java', 'MySQL', 'NetBeans'],
-    codigo: 'https://github.com/JoseFrancisco-alt/BookSmart',
-  },
-  {
-    nome: 'BookSmart Web',
-    tipo: 'Faculdade',
-    descricao: 'A versão web do BookSmart, com o back-end em Java e a interface no navegador.',
-    tecnologias: ['Java', 'HTML', 'CSS', 'JavaScript'],
-    codigo: 'https://github.com/JoseFrancisco-alt/booksmartweb',
-  },
-  {
-    nome: 'Sistema de Leilões',
-    tipo: 'Faculdade',
-    descricao: 'Sistema para uma casa de leilões com cadastro e listagem de produtos, integrado ao banco de dados.',
-    tecnologias: ['Java', 'Swing', 'MySQL', 'JDBC'],
-    codigo: 'https://github.com/JoseFrancisco-alt/LeiloesTDSat',
-  },
 ];
 
 export const github = 'https://github.com/JoseFrancisco-alt';

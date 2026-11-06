@@ -1,16 +1,20 @@
 ---
 // Topo da home, no modelo do "EXPLORE MY PORTFOLIO" do @echo_builds, nas cores do site:
-//  - fundo claro (a luz do Fundo.astro), "EXPLORE" sólido em azul-tinta e "MEU PORTFÓLIO" em
-//    cinza-azulado que desbota de cima para baixo, atrás da cabeça;
-//  - a minha foto recortada, escura (o rosto na sombra, luz só no contorno), em duotone tinta →
-//    creme, sumindo embaixo num degradê: src/assets/eu-recorte-pb.png (rembg + tratamento);
+//  - fundo claro, "EXPLORE" sólido e "MEU PORTFÓLIO" desbotando, atrás da foto;
+//  - o meu retrato recortado em preto e branco de revista (src/assets/eu-retrato-pb.png), na
+//    frente do título, sumindo embaixo como o dele;
+//  - por cima, em WebGL (lib/lenteGL.ts): o retrato entra estourado e acerta o foco, e o mouse vira
+//    uma LENTE que mostra o mesmo recorte em cor (eu-retrato-cor.png), ampliado, com as cores
+//    abrindo na borda. Sem mouse, a lente fica parada no rosto;
 //  - textinhos nos cantos: assinatura à esquerda, o que eu faço à direita.
 // Ao rolar, o título sobe mais rápido que a foto (profundidade). Com o mouse, cada camada anda um tanto.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import { site } from '../../data/site';
 
-const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu-recorte-pb.png', { eager: true }))[0]?.default;
+const retratos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu-retrato-*.png', { eager: true });
+const pb = retratos['/src/assets/eu-retrato-pb.png']?.default;
+const cor = retratos['/src/assets/eu-retrato-cor.png']?.default;
 ---
 
 <section class="hero" data-lente="codigo" data-tema="claro" aria-label="Início">
@@ -20,9 +24,11 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
   </h1>
 
   {
-    recorte && (
-      <div class="hero-eu" aria-hidden="true">
-        <Image src={recorte} alt="" widths={[480, 800, 1200]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
+    pb && (
+      <div class="hero-eu">
+        <div class="hero-quadro" data-cor={cor?.src}>
+          <Image src={pb} alt={`Retrato de ${site.nome}`} widths={[480, 800, 1183]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
+        </div>
       </div>
     )
   }
@@ -78,19 +84,48 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     position: absolute;
     left: 50%;
     bottom: 0;
-    height: min(68svh, 800px);
+    height: min(72svh, 840px);
+    aspect-ratio: 1183 / 1629;
     translate: -50% 0;
-    /* a foto original acaba reta do lado direito: some em degradê como embaixo */
-    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 16%);
-    mask-image: linear-gradient(to left, transparent 0, #000 16%);
     will-change: transform;
   }
-  .hero-eu img {
-    display: block;
-    width: auto;
+  /* embaixo o retrato some no fundo, como o dele; a lateral direita (onde a foto acaba) também */
+  .hero-quadro {
+    position: absolute;
+    inset: 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 98%), linear-gradient(to left, transparent 0, #000 14%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 98%), linear-gradient(to left, transparent 0, #000 14%);
+    mask-composite: intersect;
+  }
+  .hero-quadro img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
     height: 100%;
   }
-
+  .hero-quadro :global(.lente-gl) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hero-quadro:global(.com-gl) img {
+    opacity: 0;
+  }
+  .hero-lente-dica {
+    position: absolute;
+    left: 50%;
+    top: -26px;
+    translate: -50% 0;
+    white-space: nowrap;
+    color: var(--texto-suave);
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .hero:hover .hero-lente-dica {
+    opacity: 0.8;
+  }
   .hero-assina {
     position: absolute;
     left: var(--margem);
@@ -138,7 +173,10 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
       font-size: 0.58em;
     }
     .hero-eu {
-      height: 58svh;
+      height: 60svh;
+    }
+    .hero-lente-dica {
+      display: none;
     }
     .hero-assina {
       top: 92px;
@@ -152,6 +190,7 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
 
 <script>
   import { gsap, semMovimento, temMouse } from '../../lib/movimento';
+  import { lenteDoTopo } from '../../lib/lenteGL';
 
   const hero = document.querySelector<HTMLElement>('.hero');
   if (hero && !semMovimento) {
@@ -159,6 +198,11 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     const atraso = document.documentElement.classList.contains('carregando') ? 1.5 : 0.2;
     gsap.from('.hero-linha', { yPercent: 40, opacity: 0, duration: 1.1, stagger: 0.12, ease: 'power4.out', delay: atraso });
     gsap.from('.hero-eu', { y: 60, opacity: 0, duration: 1.4, ease: 'power3.out', delay: atraso + 0.15 });
+
+    // a lente em WebGL: o foco acerta logo depois que a foto aparece.
+    // alvo = onde a lente descansa sem mouse: no rosto (0..1 da foto, de cima para baixo)
+    const quadro = hero.querySelector<HTMLElement>('.hero-quadro');
+    if (quadro?.dataset.cor) lenteDoTopo(quadro, { atraso: atraso + 0.2, temMouse, alvo: [0.47, 0.24], cor: quadro.dataset.cor });
 
     // rolando: o título sobe mais rápido que a foto (três profundidades)
     const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });

@@ -87,7 +87,7 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
     scrollbar-width: none;
     transform-style: preserve-3d;
     will-change: transform;
-    --largura: min(56vw, 860px);
+    --largura: min(50vw, 100svh, 820px); /* o cartão 16:10 cabe na altura da tela com a legenda */
   }
   [data-formato='retrato'] .fc-trilho {
     --largura: min(36vw, 520px);
@@ -152,6 +152,17 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
     bottom: 0;
   }
 
+  /* com WebGL, quem desenha os cartões é o canvas; os links continuam no lugar, invisíveis */
+  .fc-palco:global(.com-gl) .fc-card {
+    opacity: 0;
+  }
+  .fc-palco :global(.faixa-gl) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
   .fc-legenda {
     display: grid;
     justify-items: center;
@@ -176,20 +187,25 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
 </style>
 
 <script>
-  import { gsap, semMovimento, celular, prioridade } from '../../lib/movimento';
+  import { gsap, semMovimento, celular, prioridade, remedir } from '../../lib/movimento';
+  import { faixaQueCurva } from '../../lib/lenteGL';
 
   const FATIAS = 16;
 
-  document.querySelectorAll<HTMLElement>('.faixa-curva').forEach((secao) => {
+  document.querySelectorAll<HTMLElement>('.faixa-curva').forEach(async (secao) => {
     if (semMovimento) return;
+    const palco = secao.querySelector<HTMLElement>('.fc-palco')!;
     const trilho = secao.querySelector<HTMLElement>('.fc-trilho')!;
     const cards = [...trilho.querySelectorAll<HTMLElement>('.fc-card')];
     const legenda = secao.querySelector<HTMLElement>('.fc-legenda')!;
     trilho.style.overflow = 'visible';
     const distancia = () => Math.max(0, trilho.scrollWidth - trilho.clientWidth);
 
-    // corta cada cartão em tiras (só no computador)
-    const fatiasDe = celular
+    // 1º tenta a curva em WebGL (a imagem curva de verdade); sem WebGL, volta pras tiras em CSS
+    const gl = await faixaQueCurva(palco, cards, celular);
+
+    // corta cada cartão em tiras (só no computador e só sem WebGL)
+    const fatiasDe = celular || gl
       ? []
       : cards.map((c) => {
           const conteudo = c.innerHTML;
@@ -217,6 +233,7 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
     let atual = -1;
     const curvar = (velocidade: number) => {
       const x = gsap.getProperty(trilho, 'x') as number;
+      gl?.atualizar(x, velocidade);
       const meio = innerWidth / 2;
       fundura += (gsap.utils.clamp(0, 160, Math.abs(velocidade) / 16) - fundura) * 0.15;
       const A = 460 + fundura;
@@ -263,11 +280,12 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
         scrub: 0.6,
         invalidateOnRefresh: true,
         refreshPriority: prioridade(secao),
-        onRefresh: medir,
+        onRefresh: () => { medir(); gl?.medir(); },
       },
       onUpdate: () => curvar(tl.scrollTrigger?.getVelocity() ?? 0),
     });
     tl.to(trilho, { x: () => -distancia() });
     curvar(0);
+    remedir(); // a trava foi criada depois de carregar as fotos: reordena as medidas da página
   });
 </script>
