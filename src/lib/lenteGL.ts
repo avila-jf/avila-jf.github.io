@@ -171,7 +171,7 @@ export async function lenteDoTopo(
 
   let W = 1, H = 1;
   const medir = () => {
-    const dpr = dprLimite(1.75);
+    const dpr = dprLimite(opcoes.temMouse ? 1.75 : 1.25);
     const r = caixa.getBoundingClientRect();
     W = r.width; H = r.height;
     canvas.width = Math.round(W * dpr);
@@ -345,7 +345,7 @@ export async function faixaQueCurva(palco: HTMLElement, cards: HTMLElement[], ce
 
   let W = 1, H = 1, card = { w: 1, h: 1, topo: 0, esq: 0, passo: 1, raio: 18 };
   const medir = () => {
-    const dpr = dprLimite(1.5);
+    const dpr = dprLimite(celular ? 1.25 : 1.5);
     const rp = palco.getBoundingClientRect();
     W = rp.width; H = rp.height;
     canvas.width = Math.round(W * dpr);

@@ -10,6 +10,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger);
+// no celular, a barra de endereço aparece e some enquanto o dedo rola: isso muda a altura da tela e
+// fazia o ScrollTrigger remedir tudo no meio da rolagem (o "pulo"). Só remede em mudança de verdade.
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 export { gsap, ScrollTrigger };
 

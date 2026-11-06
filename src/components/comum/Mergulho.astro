@@ -92,6 +92,11 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
     object-fit: cover;
     filter: contrast(1.25) url(#gravura-novo);
   }
+  @media (max-width: 760px), (pointer: coarse) {
+    .m-fundo img {
+      filter: grayscale(1) contrast(1.4) sepia(0.25) hue-rotate(180deg);
+    }
+  }
   .m-fundo:not(.m-fundo-livre)::after {
     content: '';
     position: absolute;

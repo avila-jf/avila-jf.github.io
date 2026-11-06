@@ -164,8 +164,9 @@
 
     // a luz é toda suave: desenhar em meia resolução não muda nada no olho e pesa 4x menos
     const ajustar = () => {
-      canvas.width = Math.floor(innerWidth * 0.5);
-      canvas.height = Math.floor(innerHeight * 0.5);
+      const escala = temMouse ? 0.5 : 0.35; // no celular a luz é ainda mais suave: 0,35 basta
+      canvas.width = Math.floor(innerWidth * escala);
+      canvas.height = Math.floor(innerHeight * escala);
       gl.viewport(0, 0, canvas.width, canvas.height);
       uniformes.uRes = [innerWidth, innerHeight];
       desenhar();
@@ -195,7 +196,7 @@
         if (document.hidden) return;
         uniformes.uMouse[0] += (alvo[0] - uniformes.uMouse[0]) * 0.04;
         uniformes.uMouse[1] += (alvo[1] - uniformes.uMouse[1]) * 0.04;
-        if (coberta() || tempo - ultimo < 1 / 30 - 0.004) return;
+        if (coberta() || tempo - ultimo < 1 / (temMouse ? 30 : 20) - 0.004) return;
         ultimo = tempo;
         uniformes.uTempo = tempo;
         desenhar();
