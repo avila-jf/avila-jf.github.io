@@ -1,11 +1,12 @@
 ---
-// Seção de sites com o notebook 3D (o three.js mora em src/lib/aparelho3d.ts).
+// Seção de sites com o Clique, o robô-console do Francis (desenho original, só HTML/CSS, sem 3D).
 // A seção fica presa na tela enquanto você rola:
-//   1º trecho  → o notebook abre
+//   1º trecho  → o robô acorda (abre os olhos, a tela acende)
 //   depois     → um trecho por site: o print rola dentro da tela, a luz de trás pega a cor do site,
 //                e o painel ao lado troca nome, descrição e tecnologias. No fim de cada trecho a tela
 //                se mistura com o próximo site.
-// Sem WebGL ou com "reduzir movimento": nada fica preso e os sites aparecem como cartões normais.
+// Na tela fica o rosto do robô; passando o mouse (ou tocando, no celular) o rosto some e aparece o print.
+// Com "reduzir movimento": nada fica preso e os sites aparecem como cartões normais.
 import type { ImageMetadata } from 'astro';
 import { getImage, Image } from 'astro:assets';
 
@@ -35,7 +36,54 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
 <div class="aparelho" data-urls={JSON.stringify(urls)} data-urls-celular={JSON.stringify(urlsCelular)} data-cores={JSON.stringify(cores)} style={`--cor: ${cores[0] ?? '#2346a8'}`}>
   <div class="aparelho-palco">
     <div class="aparelho-luz" aria-hidden="true"></div>
-    <canvas class="aparelho-3d" aria-hidden="true"></canvas>
+    <div class="robo-cena">
+      <div class="robo" role="img" aria-label="Clique, a little console robot showing the website on its screen" tabindex="0">
+        <div class="robo-cima">
+          <span class="robo-antena"><i></i></span>
+          <span class="robo-visor"><i></i></span>
+          <span class="robo-braco robo-braco-esq"></span>
+          <span class="robo-braco robo-braco-dir"></span>
+          <div class="robo-corpo">
+            <div class="robo-moldura">
+              <div class="robo-tela">
+                <div class="robo-prints">
+                  {
+                    urls.map((u, i) => (
+                      <img
+                        src={urlsCelular[i]}
+                        srcset={`${urlsCelular[i]} 800w, ${u} 1400w`}
+                        sizes="(max-width: 760px) 60vw, 30vw"
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        style={i === 0 ? '' : 'opacity:0'}
+                      />
+                    ))
+                  }
+                </div>
+                <div class="robo-rosto">
+                  <span class="robo-olhos"><i></i><i></i></span>
+                  <span class="robo-bochecha robo-bochecha-esq"></span>
+                  <span class="robo-bochecha robo-bochecha-dir"></span>
+                  <span class="robo-boca"></span>
+                </div>
+                <span class="robo-vidro"></span>
+              </div>
+              <div class="robo-painel">
+                <span class="robo-alavanca"><i></i></span>
+                <span class="robo-pilulas"><i></i><i></i></span>
+                <span class="robo-dial"></span>
+              </div>
+              <span class="robo-grade"><i></i><i></i><i></i><i></i></span>
+            </div>
+          </div>
+        </div>
+        <span class="robo-perna robo-perna-esq"></span>
+        <span class="robo-perna robo-perna-dir"></span>
+        <span class="robo-chao"></span>
+      </div>
+      <p class="robo-dica voz-codigo" aria-hidden="true"><span class="so-mouse">hover the screen</span><span class="so-dedo">tap the screen</span></p>
+    </div>
 
     <div class="aparelho-infos">
       {
@@ -74,7 +122,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
 
 <style>
   /* ---------- sem 3D: cartões normais ---------- */
-  .aparelho-3d,
+  .robo-cena,
   .aparelho-luz,
   .aparelho-pontos {
     display: none;
@@ -150,11 +198,440 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     height: 100svh;
     padding: 90px 0 30px;
   }
-  .aparelho.ativo .aparelho-3d {
-    display: block;
-    width: 100%;
+  /* ---------- o robô ---------- */
+  /* tudo dentro dele é medido em em: 1em = 1% da largura do corpo, então ele escala inteiro */
+  .aparelho.ativo .robo-cena {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 2.2em;
     height: 100%;
     min-height: 0;
+    --l: min(380px, 28vw, 50svh);
+    font-size: calc(var(--l) / 100);
+  }
+  .robo {
+    --corpo: #ef6a3a;
+    --corpo-sombra: #c24f25;
+    --creme: #f4ecdc;
+    --tinta: #16255e;
+    --tela: #cfe7ff;
+    --acordar: 0;
+    position: relative;
+    width: 100em;
+    height: 152em;
+    outline: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .robo span,
+  .robo i {
+    display: block;
+    position: absolute;
+  }
+  /* a parte de cima balança devagar, as pernas ficam no chão */
+  .robo-cima {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 130em;
+    animation: robo-respira 3.2s ease-in-out infinite alternate;
+  }
+  @keyframes robo-respira {
+    to {
+      transform: translateY(-1.6em);
+    }
+  }
+  /* antena com a luz de "gravando" */
+  .robo-antena {
+    left: 74em;
+    top: 0;
+    width: 2.4em;
+    height: 14em;
+    border-radius: 2em;
+    background: var(--tinta);
+  }
+  .robo-antena i {
+    left: -2.3em;
+    top: -3em;
+    width: 7em;
+    height: 7em;
+    border-radius: 50%;
+    background: #ff4b3a;
+    box-shadow: 0 0 calc(var(--acordar) * 4em) #ff4b3a;
+    animation: robo-gravando 1.6s steps(2) infinite;
+  }
+  @keyframes robo-gravando {
+    50% {
+      background: #8a2a20;
+      box-shadow: none;
+    }
+  }
+  /* o visor de câmera em cima da cabeça, com a lente */
+  .robo-visor {
+    left: 12em;
+    top: 5em;
+    width: 30em;
+    height: 12em;
+    border-radius: 4em 4em 0 0;
+    background: var(--corpo-sombra);
+  }
+  .robo-visor i {
+    left: 8em;
+    top: -5em;
+    width: 14em;
+    height: 14em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 36% 34%, #fff 0 8%, #6f86d6 9% 22%, var(--tinta) 23% 52%, #0a1236 53% 66%, #2b2b2b 67%);
+    box-shadow: 0 0 0 1.4em var(--creme);
+  }
+  /* braços: um tubo que sai da lateral e desce em curva, com a mão na ponta */
+  .robo-braco {
+    top: 60em;
+    width: 20em;
+    height: 30em;
+    border: 6.5em solid var(--corpo);
+    border-bottom: 0;
+    animation: robo-aceno 3.2s ease-in-out infinite alternate;
+  }
+  .robo-braco::after {
+    content: '';
+    position: absolute;
+    bottom: -6em;
+    width: 11em;
+    height: 11em;
+    border-radius: 50%;
+    background: var(--creme);
+    box-shadow: inset 0 -1.6em 0 rgb(0 0 0 / 0.12);
+  }
+  .robo-braco-esq {
+    left: -15em;
+    border-right: 0;
+    border-top-left-radius: 18em;
+    transform-origin: 100% 0;
+  }
+  .robo-braco-esq::after {
+    left: -8.7em;
+  }
+  .robo-braco-dir {
+    right: -15em;
+    border-left: 0;
+    border-top-right-radius: 18em;
+    transform-origin: 0 0;
+    animation-direction: alternate-reverse;
+  }
+  .robo-braco-dir::after {
+    right: -8.7em;
+  }
+  @keyframes robo-aceno {
+    from {
+      rotate: -5deg;
+    }
+    to {
+      rotate: 5deg;
+    }
+  }
+  /* o chassi: a faixa mais escura à direita é a espessura da caixa */
+  .robo-corpo {
+    position: absolute;
+    left: 0;
+    top: 14em;
+    width: 100em;
+    height: 114em;
+    border-radius: 9em 9em 7em 7em;
+    background: linear-gradient(90deg, var(--corpo) 0 87%, var(--corpo-sombra) 87%);
+    box-shadow:
+      inset 0 1.2em 0 rgb(255 255 255 / 0.22),
+      inset 0 -2.6em 0 rgb(0 0 0 / 0.14),
+      0 3em 5em rgb(0 0 0 / 0.28);
+  }
+  /* moldura da frente, encaixada no chassi (borda interna + degrau de sombra) */
+  .robo-moldura {
+    position: absolute;
+    left: 5em;
+    top: 7em;
+    width: 78em;
+    bottom: 8em;
+    border-radius: 6em;
+    background: var(--creme);
+    box-shadow:
+      inset 0 0 0 0.9em rgb(0 0 0 / 0.06),
+      inset 0 -1.4em 0 rgb(0 0 0 / 0.08),
+      0 0.8em 0 rgb(0 0 0 / 0.2);
+  }
+  /* a tela, recuada: sombra por dentro em cima e um aro escuro */
+  .robo-tela {
+    position: absolute;
+    left: 6em;
+    right: 6em;
+    top: 6em;
+    height: 54em;
+    overflow: hidden;
+    border-radius: 4em;
+    background: var(--tela);
+    box-shadow:
+      inset 0 0 0 1em var(--tinta),
+      inset 0 2.4em 0 1em rgb(0 0 0 / 0.25);
+    filter: brightness(calc(0.55 + var(--acordar) * 0.45));
+  }
+  .robo-prints {
+    position: absolute;
+    inset: 1em;
+    border-radius: 3em;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.45s;
+  }
+  .robo-prints img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% calc(var(--rolar, 0) * 100%);
+  }
+  .robo-rosto {
+    position: absolute;
+    inset: 0;
+    transition:
+      opacity 0.45s,
+      scale 0.45s;
+  }
+  .robo-olhos {
+    left: 0;
+    right: 0;
+    top: 15em;
+    height: 12em;
+    transform: scaleY(calc(0.12 + var(--acordar) * 0.88));
+  }
+  .robo-olhos i {
+    top: 0;
+    width: 7em;
+    height: 12em;
+    border-radius: 4em;
+    background: var(--tinta);
+    animation: robo-pisca 4.6s infinite;
+  }
+  .robo-olhos i:first-child {
+    left: 20em;
+  }
+  .robo-olhos i:last-child {
+    right: 20em;
+  }
+  @keyframes robo-pisca {
+    0%,
+    94%,
+    100% {
+      transform: none;
+    }
+    97% {
+      transform: scaleY(0.1);
+    }
+  }
+  .robo-bochecha {
+    top: 30em;
+    width: 8em;
+    height: 4em;
+    border-radius: 50%;
+    background: #ff9db0;
+    opacity: 0.7;
+  }
+  .robo-bochecha-esq {
+    left: 12em;
+  }
+  .robo-bochecha-dir {
+    right: 12em;
+  }
+  /* boca aberta em D, com a língua */
+  .robo-boca {
+    left: 50%;
+    top: 31em;
+    width: 13em;
+    height: 7em;
+    translate: -50% 0;
+    overflow: hidden;
+    border-radius: 0.8em 0.8em 7em 7em;
+    background: var(--tinta);
+  }
+  .robo-boca::after {
+    content: '';
+    position: absolute;
+    left: 3em;
+    bottom: -2em;
+    width: 7em;
+    height: 5em;
+    border-radius: 50%;
+    background: #ff7a8a;
+  }
+  .robo-vidro {
+    inset: 1em;
+    border-radius: 3em;
+    pointer-events: none;
+    background:
+      linear-gradient(130deg, rgb(255 255 255 / 0.35) 0 18%, transparent 19%),
+      repeating-linear-gradient(0deg, rgb(0 0 0 / 0.05) 0 0.5em, transparent 0.5em 1.2em);
+  }
+  /* mouse em cima (ou toque no celular): o rosto some e aparece o print do site */
+  .robo:hover .robo-rosto,
+  .robo:focus-visible .robo-rosto,
+  .robo.mostra .robo-rosto {
+    opacity: 0;
+    scale: 0.85;
+  }
+  .robo:hover .robo-prints,
+  .robo:focus-visible .robo-prints,
+  .robo.mostra .robo-prints {
+    opacity: 1;
+  }
+  /* painel de controles */
+  .robo-painel {
+    position: absolute;
+    left: 6em;
+    right: 6em;
+    top: 64em;
+    height: 22em;
+  }
+  .robo-alavanca {
+    left: 2em;
+    top: 1em;
+    width: 19em;
+    height: 19em;
+    border-radius: 50%;
+    background: #dcd2bd;
+    box-shadow: inset 0 0.9em 0 rgb(0 0 0 / 0.15);
+  }
+  .robo-alavanca i {
+    left: 4.5em;
+    top: 3em;
+    width: 10em;
+    height: 10em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #4d63b8, var(--tinta) 60%);
+    box-shadow: 0 1.4em 0 #0b143a;
+  }
+  .robo-pilulas {
+    left: 27em;
+    top: 9em;
+    width: 22em;
+    height: 6em;
+    rotate: -22deg;
+  }
+  .robo-pilulas i {
+    top: 0;
+    width: 9.5em;
+    height: 4.6em;
+    border-radius: 3em;
+    background: var(--tinta);
+    box-shadow: 0 0.8em 0 #0b143a;
+  }
+  .robo-pilulas i:last-child {
+    right: 0;
+  }
+  /* o "dial" de câmera, serrilhado */
+  .robo-dial {
+    right: 1em;
+    top: 1em;
+    width: 15em;
+    height: 15em;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle, #ffc93c 0 46%, transparent 47%),
+      repeating-conic-gradient(var(--tinta) 0 10deg, #2c3d82 10deg 20deg);
+    box-shadow: 0 1.2em 0 #0b143a;
+  }
+  .robo-grade {
+    left: 50%;
+    bottom: 4.5em;
+    width: 30em;
+    height: 6em;
+    translate: -50% 0;
+  }
+  .robo-grade i {
+    left: 0;
+    right: 0;
+    height: 0.9em;
+    border-radius: 1em;
+    background: rgb(22 37 94 / 0.4);
+  }
+  .robo-grade i:nth-child(2) {
+    top: 1.7em;
+  }
+  .robo-grade i:nth-child(3) {
+    top: 3.4em;
+  }
+  .robo-grade i:nth-child(4) {
+    top: 5.1em;
+  }
+  /* pernas esticadas pra frente: a sola do pé fica de frente pra quem olha, maior que a perna */
+  .robo-perna {
+    bottom: 4em;
+    width: 12em;
+    height: 26em;
+    border-radius: 0 0 4em 4em;
+    background: var(--corpo-sombra);
+  }
+  .robo-perna::after {
+    content: '';
+    position: absolute;
+    left: -6em;
+    bottom: -4em;
+    width: 24em;
+    height: 15em;
+    border-radius: 50%;
+    background: var(--creme);
+    box-shadow:
+      inset 0 -3em 0 #b9ad95,
+      0 1em 1.5em rgb(0 0 0 / 0.2);
+  }
+  .robo-perna-esq {
+    left: 20em;
+    rotate: 8deg;
+  }
+  .robo-perna-dir {
+    left: 56em;
+    rotate: -8deg;
+  }
+  .robo-chao {
+    left: -12em;
+    right: -12em;
+    bottom: -2em;
+    height: 12em;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(0 0 0 / 0.35), transparent);
+  }
+  .robo-perna {
+    z-index: 0;
+  }
+  .robo-cima {
+    z-index: 1;
+  }
+  .robo-braco {
+    z-index: -1;
+  }
+  .robo-dica {
+    margin: 0;
+    color: var(--texto-suave);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .so-dedo {
+    display: none;
+  }
+  @media (hover: none) {
+    .so-mouse {
+      display: none;
+    }
+    .so-dedo {
+      display: inline;
+    }
+    /* sem mouse: os braços e a respiração param (menos trabalho pro celular) */
+    .robo-braco,
+    .robo-cima {
+      animation: none;
+    }
   }
   /* brilho na cor do site atrás do notebook */
   .aparelho.ativo .aparelho-luz {
@@ -227,6 +704,9 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     .aparelho.ativo .aparelho-infos {
       height: 36svh;
     }
+    .aparelho.ativo .robo-cena {
+      --l: min(58vw, 28svh);
+    }
     .aparelho.ativo .aparelho-info {
       inset: 0 0 auto;
       transform: translateY(12px);
@@ -253,77 +733,45 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (raiz && !semMovimento) {
-    const celular = matchMedia('(max-width: 760px)').matches;
-    const urls: string[] = JSON.parse((celular && raiz.dataset.urlsCelular) || raiz.dataset.urls!);
+    const robo = raiz.querySelector<HTMLElement>('.robo')!;
+    const prints = [...raiz.querySelectorAll<HTMLImageElement>('.robo-prints img')];
     const cores: string[] = JSON.parse(raiz.dataset.cores!);
     const infos = [...raiz.querySelectorAll<HTMLElement>('.aparelho-info')];
     const pontos = [...raiz.querySelectorAll<HTMLElement>('.aparelho-pontos li')];
-    const n = urls.length;
+    const n = prints.length;
+    raiz.classList.add('ativo');
 
-    // o notebook 3D só monta depois da intro e quando a seção chega perto da tela: assim ele não
-    // disputa a abertura com a câmera 3D (a página trava menos ao abrir)
-    const depoisDaIntro = new Promise<void>((ok) => {
-      const html = document.documentElement;
-      if (!html.classList.contains('intro-on') && !html.classList.contains('intro-saindo')) return ok();
-      document.addEventListener('intro:fim', () => ok(), { once: true });
-      setTimeout(ok, 15000); // segurança: a intro nunca passa disso
-    });
-    // e espera o navegador respirar (o mural ainda está terminando de aparecer)
-    const folga = () =>
-      new Promise<void>((ok) => ('requestIdleCallback' in window ? requestIdleCallback(() => ok(), { timeout: 1500 }) : setTimeout(ok, 600)));
-    const perto = new Promise<void>((ok) => {
-      const olho = new IntersectionObserver(
-        ([e]) => {
-          if (!e.isIntersecting) return;
-          olho.disconnect();
-          ok();
-        },
-        { rootMargin: '150% 0px' },
-      );
-      olho.observe(raiz);
-    });
+    // no celular não tem hover: um toque na tela mostra o print, outro volta o rosto
+    robo.addEventListener('click', () => robo.classList.toggle('mostra'));
 
-    Promise.all([depoisDaIntro, perto])
-      .then(folga)
-      .then(() => import('../../lib/aparelho3d'))
-      .then(({ montarAparelho }) => {
-        raiz.classList.add('ativo'); // liga o layout de palco antes de medir o canvas
-        return montarAparelho(raiz.querySelector('canvas')!, urls);
-      })
-      .then((aparelho) => {
-        const faixa = (p: number, de: number, ate: number) => Math.min(1, Math.max(0, (p - de) / (ate - de)));
-        let atual = -1;
-        ScrollTrigger.create({
-          trigger: raiz,
-          start: 'top top',
-          end: `+=${(n + 1) * 90}%`,
-          pin: raiz.querySelector('.aparelho-palco'),
-          refreshPriority: prioridade(raiz),
-          scrub: true,
-          onUpdate: ({ progress: p }) => {
-            const abrir = faixa(p, 0, 0.18);
-            const q = faixa(p, 0.18, 1) * n;
-            const i = Math.min(n - 1, Math.floor(q));
-            const local = q - i;
-            const ultimo = i === n - 1;
-            aparelho.definir({
-              abrir,
-              a: i,
-              b: ultimo ? i : i + 1,
-              mistura: ultimo ? 0 : faixa(local, 0.82, 1),
-              rolarA: faixa(local, 0.08, ultimo ? 0.95 : 0.8),
-              cor: cores[i],
-            });
-            if (i !== atual) {
-              atual = i;
-              infos.forEach((el, k) => el.classList.toggle('ativa', k === i));
-              pontos.forEach((el, k) => el.classList.toggle('ativa', k === i));
-              raiz.style.setProperty('--cor', cores[i]);
-            }
-          },
+    const faixa = (p: number, de: number, ate: number) => Math.min(1, Math.max(0, (p - de) / (ate - de)));
+    let atual = -1;
+    ScrollTrigger.create({
+      trigger: raiz,
+      start: 'top top',
+      end: `+=${(n + 1) * 90}%`,
+      pin: raiz.querySelector('.aparelho-palco'),
+      refreshPriority: prioridade(raiz),
+      scrub: true,
+      onUpdate: ({ progress: p }) => {
+        robo.style.setProperty('--acordar', faixa(p, 0, 0.12).toFixed(3));
+        const q = faixa(p, 0.18, 1) * n;
+        const i = Math.min(n - 1, Math.floor(q));
+        const local = q - i;
+        const ultimo = i === n - 1;
+        const mistura = ultimo ? 0 : faixa(local, 0.82, 1);
+        prints.forEach((img, k) => {
+          img.style.opacity = String(k === i ? 1 - mistura : k === i + 1 ? mistura : 0);
+          if (k === i) img.style.setProperty('--rolar', faixa(local, 0.08, ultimo ? 0.95 : 0.8).toFixed(3));
         });
-        remedir(); // criado depois das seções de baixo: volta para a ordem da página
-      })
-      .catch(() => raiz.classList.remove('ativo')); // sem WebGL: cartões normais
+        if (i !== atual) {
+          atual = i;
+          infos.forEach((el, k) => el.classList.toggle('ativa', k === i));
+          pontos.forEach((el, k) => el.classList.toggle('ativa', k === i));
+          raiz.style.setProperty('--cor', cores[i]);
+        }
+      },
+    });
+    remedir(); // as seções de cima podem ter medido antes: volta para a ordem da página
   }
 </script>
