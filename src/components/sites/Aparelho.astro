@@ -37,7 +37,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   <div class="aparelho-palco">
     <div class="aparelho-luz" aria-hidden="true"></div>
     <div class="robo-cena">
-      <div class="robo" role="img" aria-label="Clique, a little console robot: its front door opens to show the website and the gear inside" tabindex="0">
+      <div class="robo" role="img" aria-label="Clique, a little console robot: sitting on the floor, the websites play on its screen and its lid opens to show the gear inside" tabindex="0">
         <div class="robo-cima">
           <span class="robo-visor"><i></i></span>
           <span class="robo-braco robo-braco-esq"></span>
@@ -47,20 +47,11 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
             <!-- o que tem dentro: o monitor com o site e as coisas do fotógrafo -->
             <div class="robo-dentro">
               <div class="robo-monitor">
-                <div class="robo-prints">
-                  {
-                    urls.map((u, i) => (
-                      <img
-                        src={urlsCelular[i]}
-                        srcset={`${urlsCelular[i]} 800w, ${u} 1400w`}
-                        sizes="(max-width: 760px) 50vw, 26vw"
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        style={i === 0 ? '' : 'opacity:0'}
-                      />
-                    ))
-                  }
+                <div class="robo-rosto">
+                  <span class="robo-olhos"><i></i><i></i></span>
+                  <span class="robo-bochecha robo-bochecha-esq"></span>
+                  <span class="robo-bochecha robo-bochecha-dir"></span>
+                  <span class="robo-boca"></span>
                 </div>
               </div>
               <span class="robo-placa"><i></i><i></i><i></i></span>
@@ -74,7 +65,22 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
             <div class="robo-porta">
               <div class="robo-frente">
                 <div class="robo-tela">
-                  <div class="robo-rosto">
+                  <div class="robo-prints">
+                    {
+                      urls.map((u, i) => (
+                        <img
+                          src={urlsCelular[i]}
+                          srcset={`${urlsCelular[i]} 800w, ${u} 1400w`}
+                          sizes="(max-width: 760px) 50vw, 24vw"
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          style={i === 0 ? '' : 'opacity:0'}
+                        />
+                      ))
+                    }
+                  </div>
+                  <div class="robo-rosto robo-rosto-frente">
                     <span class="robo-olhos"><i></i><i></i></span>
                     <span class="robo-bochecha robo-bochecha-esq"></span>
                     <span class="robo-bochecha robo-bochecha-dir"></span>
@@ -97,7 +103,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
         <span class="robo-perna robo-perna-dir"></span>
         <span class="robo-chao"></span>
       </div>
-      <p class="robo-dica voz-codigo" aria-hidden="true"><span class="so-mouse">hover to open me</span><span class="so-dedo">tap to open me</span></p>
+      <p class="robo-dica voz-codigo" aria-hidden="true"><span class="so-mouse">hover to open the lid</span><span class="so-dedo">tap to open the lid</span></p>
     </div>
 
     <div class="aparelho-infos">
@@ -236,7 +242,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     --acordar: 0;
     position: relative;
     width: 100em;
-    height: 150em;
+    height: 146em;
     outline: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -366,6 +372,15 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     border-radius: 1.6em;
     overflow: hidden;
     background: #fff;
+  }
+  .robo-tela .robo-prints {
+    inset: 0.9em;
+    border-radius: 2.2em;
+  }
+  /* o rosto da frente cobre os sites só enquanto ele acorda (--rosto vem da rolagem) */
+  .robo-rosto-frente {
+    background: var(--creme);
+    opacity: var(--rosto, 1);
   }
   .robo-prints img {
     position: absolute;
@@ -709,30 +724,35 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   .robo-grade i:nth-child(4) {
     top: 5.1em;
   }
-  /* pernas: tubos finos e escuros que saem da base, com um pezinho */
+  /* sentado: as pernas saem da base e vêm pra frente; o pé mostra a sola pra quem olha */
   .robo-perna {
-    z-index: 0;
-    bottom: 5em;
-    width: 6em;
-    height: 26em;
-    border-radius: 0 0 3em 3em;
+    z-index: 2;
+    bottom: 7em;
+    width: 7em;
+    height: 15em;
+    border-radius: 3.5em;
     background: var(--tinta);
   }
   .robo-perna::after {
     content: '';
     position: absolute;
-    left: -3em;
-    bottom: -2.4em;
-    width: 12em;
-    height: 4.4em;
-    border-radius: 3em 3em 1.4em 1.4em;
+    left: -4em;
+    bottom: -6em;
+    width: 15em;
+    height: 11em;
+    border-radius: 50%;
     background: var(--tinta);
+    box-shadow:
+      inset 0 -3.4em 0 #2c3d82,
+      0 1.2em 1.6em rgb(0 0 0 / 0.25);
   }
   .robo-perna-esq {
-    left: 24em;
+    left: 21em;
+    rotate: 14deg;
   }
   .robo-perna-dir {
     left: 60em;
+    rotate: -14deg;
   }
   .robo-chao {
     left: -12em;
@@ -888,6 +908,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
       scrub: true,
       onUpdate: ({ progress: p }) => {
         robo.style.setProperty('--acordar', faixa(p, 0, 0.12).toFixed(3));
+        robo.style.setProperty('--rosto', (1 - faixa(p, 0.12, 0.2)).toFixed(3));
         const q = faixa(p, 0.18, 1) * n;
         const i = Math.min(n - 1, Math.floor(q));
         const local = q - i;
