@@ -18,6 +18,7 @@ import Portfolio from '../layouts/Portfolio.astro';
 import Loader from '../components/sites/Loader.astro';
 import Hero from '../components/sites/Hero.astro';
 import Mergulho from '../components/comum/Mergulho.astro';
+import CaixaBoneco from '../components/comum/CaixaBoneco.astro';
 import PaginaManga from '../components/comum/PaginaManga.astro';
 import Trajetoria from '../components/sites/Trajetoria.astro';
 import Aparelho from '../components/sites/Aparelho.astro';
@@ -57,6 +58,7 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
 
   <!-- 03 · SOBRE MIM: a gravura é o "quadro pintado"; no painel, eu de costas olhando as luzes da cidade -->
   <Mergulho id="sobre" titulo={['About', 'me']} rotulo="Behind the lens" foto={fotoDe('pedras/12-wonder-why')} lente="ambos">
+    <CaixaBoneco slot="cartao" />
     <PaginaManga
       slot="fundo"
       fotos={[

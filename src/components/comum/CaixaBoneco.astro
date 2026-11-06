@@ -1,0 +1,248 @@
+---
+// O "boneco na caixa" (o Francis de brinquedo, com a Nikon e o notebook de acessórios), o cartãozinho
+// animado da 1ª versão do site. Aqui ele é o cartão fechado do "About me" (Mergulho, slot "cartao"):
+// cai do gancho balançando quando a seção aparece, fica flutuando com um brilho passando no plástico e,
+// no computador, inclina seguindo o mouse. O Mergulho tira ele da frente quando o painel abre.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { site } from '../../data/site';
+
+const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu.{jpg,jpeg,png,webp}', { eager: true }))[0]?.default;
+const [nome, sobrenome] = site.nome.split(' ');
+---
+
+<div class="cb" aria-hidden="true">
+  <div class="cb-caixa">
+    <span class="cb-furo"></span>
+    <div class="cb-topo">
+      <b class="titulo-cartaz">{nome}<br />{sobrenome}</b>
+      <span class="cb-selo">photographer<br />+ dev</span>
+    </div>
+    <div class="cb-bolha">
+      {eu && <Image src={eu} alt="" widths={[360, 640]} sizes="300px" format="webp" loading="lazy" />}
+      <span class="cb-brilho"></span>
+    </div>
+    <div class="cb-acessorios">
+      <span>
+        <svg viewBox="0 0 32 24"><rect x="2" y="6" width="28" height="16" rx="3" /><rect x="10" y="2" width="12" height="6" rx="1.5" /><circle cx="16" cy="14" r="5.5" fill="#f1e6cc" /><circle cx="16" cy="14" r="3" /></svg>
+        Nikon D3200
+      </span>
+      <span>
+        <svg viewBox="0 0 32 24"><rect x="5" y="3" width="22" height="14" rx="2" /><rect x="8" y="6" width="16" height="8" fill="#f1e6cc" /><path d="M1 19h30l-2 3H3z" /></svg>
+        notebook
+      </span>
+    </div>
+    <span class="cb-novo titulo-cartaz">About<br />me!</span>
+    <span class="cb-preco voz-codigo">scroll<br />to open</span>
+  </div>
+</div>
+
+<style>
+  .cb {
+    width: 100%;
+    height: 100%;
+    perspective: 900px;
+  }
+  .cb-caixa {
+    --cor: #f05a28;
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    padding: 34px 14px 14px;
+    border-radius: 14px;
+    background:
+      radial-gradient(circle at 50% 55%, rgb(255 255 255 / 0.18), transparent 60%),
+      repeating-conic-gradient(from 0deg at 50% 55%, rgb(255 255 255 / 0.07) 0 6deg, transparent 6deg 12deg),
+      var(--cor);
+    box-shadow:
+      0 30px 60px -25px rgb(0 0 0 / 0.6),
+      inset 0 0 0 3px rgb(0 0 0 / 0.15);
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .cb-furo {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 46px;
+    height: 12px;
+    margin-left: -23px;
+    border-radius: 999px;
+    background: #0c1530;
+    box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.5);
+  }
+  .cb-topo {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .cb-topo b {
+    font-size: 40px;
+    line-height: 0.82;
+    color: #fff;
+    -webkit-text-stroke: 1.5px #111;
+    text-shadow: 3px 3px 0 #111;
+  }
+  .cb-selo {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 74px;
+    height: 74px;
+    padding: 12px;
+    border-radius: 50%;
+    background: #3fd598;
+    color: #111;
+    font: 800 8px/1.05 var(--fonte);
+    text-align: center;
+    text-transform: uppercase;
+    transform: rotate(12deg);
+    box-shadow: 0 0 0 3px #111;
+    clip-path: polygon(50% 0, 61% 12%, 77% 6%, 80% 22%, 96% 26%, 88% 41%, 100% 54%, 85% 63%, 90% 80%, 73% 80%, 66% 96%, 52% 86%, 38% 98%, 31% 82%, 14% 86%, 16% 69%, 1% 60%, 12% 46%, 3% 30%, 20% 26%, 21% 9%, 37% 14%);
+  }
+  /* a bolha de plástico com o boneco dentro */
+  .cb-bolha {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px 22px 40px 40px;
+    background: rgb(255 255 255 / 0.25);
+    box-shadow:
+      inset 0 0 0 2px rgb(255 255 255 / 0.7),
+      inset 0 0 30px rgb(255 255 255 / 0.4);
+  }
+  .cb-bolha img {
+    position: absolute;
+    inset: 8px;
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+    object-fit: cover;
+    object-position: 50% 40%;
+    border-radius: 16px 16px 34px 34px;
+  }
+  .cb-brilho {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.55) 45%, transparent 55%);
+    transform: translateX(-120%);
+    animation: cb-brilho 3.6s ease-in-out 1.4s infinite;
+  }
+  @keyframes cb-brilho {
+    0%,
+    55% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(120%);
+    }
+  }
+  .cb-acessorios {
+    display: flex;
+    gap: 8px;
+  }
+  .cb-acessorios span {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: rgb(255 255 255 / 0.85);
+    color: #111;
+    font: 700 11px/1.1 var(--fonte);
+  }
+  .cb-acessorios svg {
+    flex: none;
+    width: 24px;
+    fill: #0c1530;
+  }
+  .cb-novo {
+    position: absolute;
+    left: -18px;
+    bottom: 64px;
+    padding: 10px 14px;
+    background: #ffe14d;
+    color: #e0201b;
+    font-size: 24px;
+    line-height: 0.85;
+    transform: rotate(-12deg);
+    box-shadow: 0 0 0 3px #111;
+  }
+  .cb-preco {
+    position: absolute;
+    right: -10px;
+    top: 38%;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: #fff;
+    color: #111;
+    font-size: 10px;
+    line-height: 1.2;
+    text-align: center;
+    transform: rotate(9deg);
+    box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.5);
+  }
+  @media (max-width: 760px) {
+    .cb-topo b {
+      font-size: 34px;
+    }
+    .cb-selo {
+      width: 62px;
+      height: 62px;
+      padding: 10px;
+      font-size: 7px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cb-brilho {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, semMovimento, temMouse } from '../../lib/movimento';
+
+  document.querySelectorAll<HTMLElement>('.cb').forEach((cb) => {
+    if (semMovimento) return;
+    const caixa = cb.querySelector<HTMLElement>('.cb-caixa')!;
+    let flutuar: gsap.core.Tween | null = null;
+
+    // cai do gancho balançando na 1ª vez que aparece, depois fica flutuando de leve
+    const cair = () => {
+      gsap.timeline()
+        .fromTo(caixa, { y: '-120%', rotate: 0, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'bounce.out' })
+        .to(caixa, { keyframes: { rotate: [6, -4, 2.5, -1.2, 0] }, duration: 1.6, ease: 'sine.inOut' }, 0.55)
+        .from(cb.querySelectorAll('.cb-novo, .cb-selo, .cb-preco'), { scale: 0, rotate: '-=40', duration: 0.6, stagger: 0.12, ease: 'back.out(3)' }, 0.6)
+        .call(() => {
+          flutuar = gsap.to(caixa, { y: -10, rotate: 1.5, duration: 2.4, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+        });
+    };
+    gsap.set(caixa, { opacity: 0 });
+    const olho = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      olho.disconnect();
+      cair();
+    }, { threshold: 0.4 });
+    olho.observe(cb);
+
+    // longe da tela, a flutuação pausa (não gasta quadro à toa)
+    new IntersectionObserver(([e]) => (e.isIntersecting ? flutuar?.resume() : flutuar?.pause())).observe(cb);
+
+    // no computador a caixa inclina seguindo o mouse (como pegar o brinquedo na mão)
+    if (temMouse) {
+      const girarX = gsap.quickTo(caixa, 'rotationX', { duration: 0.8, ease: 'power3.out' });
+      const girarY = gsap.quickTo(caixa, 'rotationY', { duration: 0.8, ease: 'power3.out' });
+      addEventListener('pointermove', (e) => {
+        const r = caixa.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight) return;
+        girarY(((e.clientX - (r.left + r.width / 2)) / innerWidth) * 30);
+        girarX((-(e.clientY - (r.top + r.height / 2)) / innerHeight) * 20);
+      }, { passive: true });
+    }
+  });
+</script>

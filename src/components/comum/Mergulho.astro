@@ -60,7 +60,15 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
       </div>
     </div>
 
-    <div class="m-titulo" aria-hidden="true">
+    {
+      Astro.slots.has('cartao') && (
+        <div class="m-cartao">
+          <slot name="cartao" />
+        </div>
+      )
+    }
+
+    <div class="m-titulo" aria-hidden="true" data-com-cartao={Astro.slots.has('cartao') ? '' : undefined}>
       {rotulo && <p class="m-rotulo rotulo">{rotulo}</p>}
       <b class="m-parte m-parte-1 titulo-cartaz">{titulo[0]}</b>
       <b class="m-parte m-parte-2 titulo-cartaz">{titulo[1]}</b>
@@ -160,6 +168,29 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
   }
 
   /* o título em duas partes, em cima do cartão fechado */
+  /* o cartão fechado próprio (slot "cartao"): no tamanho do cartão inicial, por cima dele */
+  .m-cartao {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    width: 300px;
+    height: 400px;
+    translate: -50% -50%;
+    will-change: transform, opacity;
+  }
+  /* com o cartão próprio, o título gigante não aparece (o cartão já tem o nome) */
+  .m-titulo[data-com-cartao] .m-parte,
+  .m-titulo[data-com-cartao] .m-rotulo,
+  .m-titulo[data-com-cartao] .m-role {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .m-cartao {
+      width: 270px;
+      height: 360px;
+    }
+  }
   .m-titulo {
     position: absolute;
     inset: 0;
@@ -205,6 +236,7 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
     const parte1 = $('.m-parte-1')!;
     const parte2 = $('.m-parte-2')!;
     const extras = [$('.m-rotulo'), $('.m-role')].filter(Boolean) as HTMLElement[];
+    const cartao = $('.m-cartao');
     const proporcao = Number(raiz.dataset.proporcao) || 1.875;
 
     // o cartão não muda de tamanho (layout): fica sempre no tamanho aberto e o clip-path recorta;
@@ -260,6 +292,13 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
       parte1.style.transform = `translateX(-${sai}vw)`;
       parte2.style.transform = `translateX(${sai}vw)`;
       parte1.style.opacity = parte2.style.opacity = opTitulo;
+      // o cartão próprio sai da frente logo no começo: sobe, cresce um pouco e some
+      if (cartao) {
+        const c0 = gsap.utils.clamp(0, 1, p / 0.32);
+        cartao.style.opacity = (1 - c0).toFixed(3);
+        cartao.style.transform = `translateY(${(-c0 * 18).toFixed(1)}vh) scale(${(1 + c0 * 0.15).toFixed(3)})`;
+        cartao.style.visibility = c0 >= 1 ? 'hidden' : 'visible';
+      }
       const opExtra = Math.max(0, 1 - p * 2.8).toFixed(3);
       extras.forEach((el, i) => {
         el.style.transform = `translateX(${i === 0 ? '-' : ''}${sai}vw)`;
