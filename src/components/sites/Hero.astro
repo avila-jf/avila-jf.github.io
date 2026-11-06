@@ -30,7 +30,7 @@ const corCelular = cor ? (await getImage({ src: cor, width: 640, format: 'webp',
     pb && (
       <div class="hero-eu">
         <div class="hero-quadro" data-cor={corGrande} data-cor-celular={corCelular}>
-          <Image src={pb} alt={`Portrait of ${site.nome}`} widths={[480, 800, 1183]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
+          <Image src={pb} alt={`Portrait of ${site.nome}`} widths={[360, 560, 800, 1183]} sizes="(max-width: 760px) 66vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
         </div>
       </div>
     )

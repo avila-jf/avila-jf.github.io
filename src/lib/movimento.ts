@@ -29,9 +29,15 @@ export function prioridade(el: Element): number {
 }
 
 // Depois que uma trava é criada fora de ordem (o notebook 3D monta mais tarde), reordena e remede.
+// Várias seções pedem isso quase juntas ao carregar (a faixa, o notebook...): cada refresh remede a
+// página inteira (o Lighthouse marcou ~2 s de layout no celular). Aqui os pedidos de 250 ms viram um só.
+let remedirPendente = 0;
 export function remedir() {
-  ScrollTrigger.sort();
-  ScrollTrigger.refresh();
+  clearTimeout(remedirPendente);
+  remedirPendente = window.setTimeout(() => {
+    ScrollTrigger.sort();
+    ScrollTrigger.refresh();
+  }, 250);
 }
 
 type Rolagem = { stop(): void; start(): void; scrollTo(alvo: number | string | HTMLElement, o?: object): void };

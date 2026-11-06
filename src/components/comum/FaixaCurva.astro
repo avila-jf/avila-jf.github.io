@@ -42,8 +42,9 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', fecha = f
               <Image
                 src={it.imagem}
                 alt={it.titulo}
-                widths={[480, 900, 1400]}
-                sizes="(max-width: 760px) 80vw, 56vw"
+                widths={[360, 640, 960]}
+                sizes="(max-width: 760px) 70vw, 40vw"
+                loading="lazy"
                 format="webp"
                 style={it.posicao ? `object-position:${it.posicao}` : undefined}
               />

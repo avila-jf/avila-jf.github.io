@@ -37,10 +37,17 @@ const { titulo, descricao, loader = false } = Astro.props;
     <title>{titulo}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- fontes sem bloquear a 1ª pintura: o CSS do Google chega em paralelo e só então vira stylesheet
+         (antes travava ~1 s no celular). display=swap: o texto aparece na fonte do sistema e troca depois -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap" />
+    </noscript>
     <script is:inline define:vars={{ loader }}>
       // Antes da primeira pintura: chegou pelo flash da câmera? começa branco (lib/flash.ts).
       // Senão, a home liga o loader. Nada disso com "reduzir movimento" ou abrindo num #link.
