@@ -5,8 +5,8 @@
 //
 // Ordem da página:
 //  01 Entrada: o mural inteiro em gravura, tela cheia       foto/Mural
-//  02 Rolando 1: o mural encolhe e as fotos ganham cor      (camada 3, dentro do Mural)
-//  03 Rolando 2: as fotos se juntam e formam o hexágono     (camada 3; caixa por enquanto)
+//  02 Rolando 1: o mural encolhe e as fotos ganham cor      (dentro do Mural, tela travada)
+//  03 Rolando 2: as fotos se juntam e formam o hexágono     (dentro do Mural, tela travada)
 //  04 Ensaios                                               comum/FaixaCurva (formato retrato)
 //  05 O olhar                                               comum/Mergulho
 //  06 Contato                                               comum/RodapeAzul
@@ -40,17 +40,8 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
 ---
 
 <Portfolio titulo={`${site.nome} · fotografia`} descricao={`Fotografia de ${site.nome} em ${site.cidade.split(',')[0]}: ${categorias.map((c) => c.titulo).join(', ')}.`}>
-  <!-- 01–02 · ENTRADA: o mural em gravura (encolher + ganhar cor entram na camada 3) -->
+  <!-- 01–03 · ENTRADA: o mural em gravura; rolando, ele encolhe, ganha cor e as fotos formam o hexágono -->
   <Mural fotos={selecionadas(fotos.length)} totalFotos={totalFotos} />
-
-  <!-- 03 · AS FOTOS SE JUNTAM NO HEXÁGONO (camada 3) -->
-  <section class="ato" data-lente="foto" data-tema="claro">
-    <div class="caixa">
-      <b>Hexágono de fotos</b>
-      <span>As fotos do mural voam cada uma para uma face do hexágono "FOTOS '26"; o anel gira com o scroll.</span>
-      <span class="rotulo">camada 3</span>
-    </div>
-  </section>
 
   <!-- 04 · ENSAIOS -->
   <FaixaCurva id="ensaios" rotulo={`Ensaios · ${ensaios.length} lugares, ${totalFotos} fotos`} itens={cartoesEnsaios} formato="retrato" tema="azul" lente="foto" />

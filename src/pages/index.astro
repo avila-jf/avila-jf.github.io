@@ -11,7 +11,7 @@
 //  04 Onde eu já estive             sites/Trajetoria (FaixaLateral + letreiro vazado)
 //  05 Sites no ar                   sites/Aparelho (notebook 3D)
 //  06 Protótipos e landing pages    comum/FaixaCurva
-//  07 Projetos                      sites/Pilha (o hexágono que vira pilha entra na camada 3)
+//  07 Projetos                      sites/HexPilha (o hexágono gira, fecha e vira a pilha)
 //  08 Rodapé + câmera               comum/RodapeAzul + sites/CameraFoto → /fotografia
 import type { ImageMetadata } from 'astro';
 import Portfolio from '../layouts/Portfolio.astro';
@@ -21,7 +21,7 @@ import Mergulho from '../components/comum/Mergulho.astro';
 import Trajetoria from '../components/sites/Trajetoria.astro';
 import Aparelho from '../components/sites/Aparelho.astro';
 import FaixaCurva from '../components/comum/FaixaCurva.astro';
-import Pilha from '../components/sites/Pilha.astro';
+import HexPilha from '../components/sites/HexPilha.astro';
 import RodapeAzul from '../components/comum/RodapeAzul.astro';
 import CameraFoto from '../components/sites/CameraFoto.astro';
 import { url } from '../lib/url';
@@ -82,7 +82,7 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
   <!-- 07 · PROJETOS -->
   <section class="ato" id="projetos" data-trava data-lente="codigo" data-tema="claro">
     <p class="ato-id rotulo">05 · Todos os projetos</p>
-    <Pilha itens={todos} />
+    <HexPilha itens={todos} />
     <ul class="outros">
       {
         todos.map((p) => (

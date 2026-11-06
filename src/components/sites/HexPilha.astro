@@ -1,0 +1,382 @@
+---
+// Projetos: o hexágono que vira pilha (pegada do "WORKS '26" → "Aether" do @echo_builds), um
+// efeito só, numa tela travada:
+//  1. os cartões dos projetos formam um anel em volta do hexágono "PROJETOS '26", cada um deitado
+//     na face dele; rolando, o anel gira e o projeto que passa no topo acende;
+//  2. o anel se fecha: cada cartão vai da face dele para o meio da tela e cresce, o hexágono some
+//     e o nome (esquerda) e os detalhes (direita) aparecem;
+//  3. a pilha: os cartões sobem num cilindro deitado, um por um; o do meio de frente, os de cima
+//     tombando para trás.
+// Sem JS ou com "reduzir movimento": a lista enxuta (o <ul class="outros"> que vem depois).
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  itens: {
+    nome: string;
+    tipo: string;
+    descricao: string;
+    tecnologias: string[];
+    link?: string;
+    print?: ImageMetadata;
+    cor?: string;
+  }[];
+}
+
+const { itens } = Astro.props;
+const dois = (v: number) => String(v).padStart(2, '0');
+---
+
+<div class="hexpilha">
+  <div class="hp-palco">
+    <div class="hp-centro" aria-hidden="true">
+      <span class="rotulo">Projetos</span>
+      <b class="titulo-cartaz">'26</b>
+      <span class="hp-centro-nome voz-codigo">{itens[0]?.nome}</span>
+    </div>
+
+    <div class="hp-nome">
+      <span class="rotulo hp-conta">01 / {dois(itens.length)}</span>
+      <b class="titulo-cartaz">{itens[0]?.nome}</b>
+    </div>
+
+    <div class="hp-cena">
+      {
+        itens.map((p) => (
+          <a class="hp-card" href={p.link} target="_blank" rel="noopener" style={`--cor:${p.cor ?? 'var(--azul)'}`} data-nome={p.nome} aria-label={`${p.nome} — ${p.tipo}`}>
+            {p.print ? (
+              <Image src={p.print} alt="" widths={[360, 640, 900]} sizes="(max-width: 760px) 80vw, 36vw" format="webp" />
+            ) : (
+              <span class="hp-codigo">
+                <span class="voz-codigo">~/{p.nome.toLowerCase().replace(/\s+/g, '-')}</span>
+                <b class="titulo-cartaz">{p.nome}</b>
+                <span class="voz-codigo">{p.tecnologias.join(' · ')}</span>
+              </span>
+            )}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="hp-detalhes">
+      {
+        itens.map((p) => (
+          <div class="hp-detalhe">
+            <span class="rotulo">{p.tipo}</span>
+            <p>{p.descricao}</p>
+            <span class="voz-codigo">{p.tecnologias.join(' · ')}</span>
+            {p.link && (
+              <a class="rotulo" href={p.link} target="_blank" rel="noopener">
+                Abrir ↗
+              </a>
+            )}
+          </div>
+        ))
+      }
+    </div>
+
+    <span class="hp-dica rotulo" aria-hidden="true">role para ver mais ↓</span>
+  </div>
+</div>
+
+<style>
+  .hexpilha {
+    display: none;
+  }
+  :global(.hp-ativa) .hexpilha {
+    display: block;
+  }
+  :global(.hp-ativa) .hexpilha ~ :global(.outros) {
+    display: none;
+  }
+
+  .hp-palco {
+    --lado: min(86vw, 80svh, 820px); /* diâmetro do anel */
+    --largura: min(36vw, 560px); /* largura do cartão na pilha */
+    position: relative;
+    height: 100svh;
+    perspective: 1300px;
+  }
+  .hp-cena {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    pointer-events: none;
+  }
+  .hp-card {
+    position: absolute;
+    left: calc(50% - var(--largura) / 2);
+    top: calc(50% - var(--largura) * 0.3125);
+    width: var(--largura);
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--fundo-2);
+    box-shadow:
+      0 0 0 1px var(--linha),
+      0 30px 60px -30px rgb(12 21 48 / 0.35);
+    color: var(--texto);
+    text-decoration: none;
+    backface-visibility: hidden;
+    pointer-events: auto;
+    will-change: transform, opacity;
+    transition: box-shadow 0.4s;
+  }
+  .hp-card:global(.ativa) {
+    box-shadow:
+      0 0 0 1px var(--cor),
+      0 30px 80px -30px var(--cor);
+  }
+  .hp-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  .hp-codigo {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 18px 22px;
+    background:
+      radial-gradient(circle at 85% 0%, rgb(35 70 168 / 0.22), transparent 60%),
+      linear-gradient(160deg, #101a3a, #0c1530);
+    color: #f7f5f0;
+  }
+  .hp-codigo b {
+    font-size: calc(var(--largura) * 0.1);
+  }
+  .hp-codigo .voz-codigo {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  /* hexágono do meio (some quando o anel fecha) */
+  .hp-centro {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: calc(var(--lado) * 0.34);
+    aspect-ratio: 1 / 0.866;
+    translate: -50% -50%;
+    text-align: center;
+    clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+    background: var(--linha);
+  }
+  .hp-centro::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: inherit;
+    background: var(--fundo);
+  }
+  .hp-centro b {
+    font-size: calc(var(--lado) * 0.1);
+    line-height: 0.9;
+  }
+  .hp-centro-nome {
+    font-size: clamp(11px, 1vw, 14px);
+  }
+
+  /* nome à esquerda e detalhes à direita (aparecem na pilha) */
+  .hp-nome,
+  .hp-detalhes {
+    position: absolute;
+    top: 50%;
+    width: calc((100% - var(--largura)) / 2 - 48px);
+    translate: 0 -50%;
+    opacity: 0;
+  }
+  .hp-nome {
+    left: 0;
+  }
+  .hp-detalhes {
+    right: 0;
+    min-height: 220px;
+  }
+  .hp-nome b {
+    display: block;
+    margin-top: 10px;
+    font-size: clamp(36px, 4.6vw, 84px);
+  }
+  .hp-detalhe {
+    position: absolute;
+    inset: 0 0 auto;
+    display: grid;
+    gap: 10px;
+    opacity: 0;
+    translate: 0 12px;
+    pointer-events: none;
+    transition:
+      opacity 0.4s,
+      translate 0.4s;
+  }
+  .hp-detalhe:global(.ativa) {
+    opacity: 1;
+    translate: 0 0;
+    pointer-events: auto;
+  }
+  .hp-detalhe p {
+    max-width: 34ch;
+    margin: 0;
+    font-size: clamp(14px, 1.1vw, 16px);
+    color: var(--texto-suave);
+  }
+  .hp-detalhe .voz-codigo {
+    color: var(--azul);
+  }
+  .hp-detalhe a {
+    width: fit-content;
+    color: var(--texto);
+  }
+  .hp-dica {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    translate: -50% 0;
+  }
+
+  @media (max-width: 760px) {
+    .hp-palco {
+      --largura: 80vw;
+    }
+    .hp-nome {
+      top: 96px;
+      width: auto;
+      translate: none;
+    }
+    .hp-nome b {
+      font-size: 36px;
+    }
+    .hp-detalhes {
+      top: auto;
+      bottom: 56px;
+      left: var(--margem);
+      width: auto;
+      min-height: 130px;
+      translate: none;
+    }
+    .hp-detalhe p {
+      font-size: 13px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, semMovimento, prioridade } from '../../lib/movimento';
+
+  const raiz = document.querySelector<HTMLElement>('.hexpilha');
+  const secao = raiz?.closest<HTMLElement>('.ato');
+  if (raiz && secao && !semMovimento) {
+    secao.classList.add('hp-ativa');
+    const $ = (s: string) => raiz.querySelector<HTMLElement>(s)!;
+    const cards = [...raiz.querySelectorAll<HTMLElement>('.hp-card')];
+    const detalhes = [...raiz.querySelectorAll<HTMLElement>('.hp-detalhe')];
+    const centro = $('.hp-centro');
+    const centroNome = $('.hp-centro-nome');
+    const lados = [$('.hp-nome'), $('.hp-detalhes')];
+    const nome = $('.hp-nome b');
+    const conta = $('.hp-conta');
+    const n = cards.length;
+    const passo = 360 / n;
+    const dois = (v: number) => String(v).padStart(2, '0');
+    const faixa = (t: number, de: number, ate: number) => gsap.utils.clamp(0, 1, (t - de) / (ate - de));
+    const suave = gsap.parseEase('power2.inOut');
+
+    // medidas (recalculadas no resize): diâmetro do anel, largura do cartão na pilha e no anel
+    let lado = 0;
+    let largura = 0;
+    let escalaAnel = 0;
+    const medir = () => {
+      lado = $('.hp-centro').offsetWidth / 0.34;
+      largura = cards[0].offsetWidth;
+      escalaAnel = (lado * 0.24) / largura;
+    };
+    medir();
+    addEventListener('resize', medir);
+
+    let ativo = -1;
+    const marcar = (i: number) => {
+      if (i === ativo) return;
+      ativo = i;
+      cards.forEach((el, k) => el.classList.toggle('ativa', k === i));
+      detalhes.forEach((el, k) => el.classList.toggle('ativa', k === i));
+      const qual = cards[i].dataset.nome ?? '';
+      nome.textContent = qual;
+      centroNome.textContent = qual;
+      conta.textContent = `${dois(i + 1)} / ${dois(n)}`;
+    };
+
+    // t = 0..1 da tela travada: 0–0,4 o anel gira · 0,4–0,55 fecha · 0,55–1 a pilha sobe
+    const desenhar = (t: number) => {
+      const giro = -faixa(t, 0, 0.55) * passo * 3;
+      const m = suave(faixa(t, 0.4, 0.55)); // 0 = anel, 1 = pilha
+      const p = faixa(t, 0.55, 1) * (n - 1); // posição na pilha
+      const raio = lado * 0.4;
+      const raioPilha = largura * 1.75; // um cartão não invade o próximo (altura = 0,625 × largura)
+
+      let doTopo = 0;
+      let menor = Infinity;
+      cards.forEach((el, i) => {
+        // no anel
+        const a = i * passo + giro;
+        const rad = (a * Math.PI) / 180;
+        const xa = Math.sin(rad) * raio;
+        const ya = -Math.cos(rad) * raio;
+        const inclinacao = ((((a + 90) % 180) + 180) % 180) - 90; // a face do hexágono, sem ficar de cabeça para baixo
+        const longe = Math.abs(((((a % 360) + 540) % 360) - 180));
+        if (longe < menor) {
+          menor = longe;
+          doTopo = i;
+        }
+        // na pilha
+        const d = i - p;
+        const ang = gsap.utils.clamp(-80, 80, d * 24);
+        const rp = (ang * Math.PI) / 180;
+        const yp = Math.sin(rp) * raioPilha;
+        const zp = (Math.cos(rp) - 1) * raioPilha;
+        const opPilha = gsap.utils.clamp(0, 1, 1.6 - Math.abs(d) * 0.55);
+
+        const x = xa * (1 - m);
+        const y = ya * (1 - m) + yp * m;
+        const z = zp * m;
+        const escala = escalaAnel * (1 - m) + m;
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateZ(${(inclinacao * (1 - m)).toFixed(2)}deg) rotateX(${(-ang * m).toFixed(2)}deg) scale(${escala.toFixed(3)})`;
+        el.style.opacity = String(1 - m + m * opPilha);
+      });
+
+      centro.style.opacity = String(1 - m);
+      centro.style.scale = String(1 - m * 0.4);
+      lados.forEach((el) => (el.style.opacity = String(m)));
+      marcar(m < 0.5 ? doTopo : gsap.utils.clamp(0, n - 1, Math.round(p)));
+    };
+
+    const estado = { t: 0 };
+    desenhar(0);
+    gsap.to(estado, {
+      t: 1,
+      ease: 'none',
+      onUpdate: () => desenhar(estado.t),
+      scrollTrigger: {
+        trigger: raiz,
+        start: 'top top',
+        end: () => `+=${n * 55 + 250}%`,
+        pin: $('.hp-palco'),
+        scrub: 0.7,
+        invalidateOnRefresh: true,
+        refreshPriority: prioridade(secao),
+        onRefresh: () => {
+          medir();
+          desenhar(estado.t);
+        },
+      },
+    });
+  }
+</script>

@@ -49,7 +49,7 @@ const CORES: Record<string, string> = {
 };
 ---
 
-<section class="mural" data-lente="foto" data-tema="claro" aria-label="Mural de fotos">
+<section class="mural" data-trava data-lente="foto" data-tema="claro" aria-label="Mural de fotos">
   <div class="mural-palco">
     <div class="mural-centro">
       <div class="mural-grade">
@@ -74,6 +74,12 @@ const CORES: Record<string, string> = {
           ))
         }
       </div>
+    </div>
+    <!-- o hexágono que as fotos formam no fim da tela travada (só no computador) -->
+    <div class="mural-hex" aria-hidden="true">
+      <span class="rotulo">Fotos</span>
+      <b class="titulo-cartaz">'26</b>
+      <span class="mural-hex-nome voz-codigo"></span>
     </div>
   </div>
   <p class="mural-legenda" aria-live="polite"><b></b><span class="rotulo"></span></p>
@@ -191,8 +197,59 @@ const CORES: Record<string, string> = {
       opacity: 0;
     }
   }
+  /* rolando: a onda de cor sai do meio (o JS marca cada foto quando a onda passa por ela) */
+  .mural-foto:global(.colorida) img {
+    filter: none;
+  }
+  .mural-foto:global(.colorida)::before,
+  .mural-foto:global(.colorida)::after {
+    opacity: 0;
+  }
+  /* no anel do hexágono, a foto que passa no topo ganha uma borda */
+  .mural-foto:global(.no-topo) {
+    box-shadow:
+      0 0 0 2px var(--creme),
+      0 20px 50px -20px rgb(12 21 48 / 0.6);
+  }
   .mural-foto:focus-visible img {
     filter: none;
+  }
+
+  /* ---------- hexágono do fim (aparece quando as fotos se juntam) ---------- */
+  .mural-hex {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: min(30vw, 300px);
+    aspect-ratio: 1 / 0.866;
+    translate: -50% -50%;
+    text-align: center;
+    clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+    background: var(--linha);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mural-hex::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    clip-path: inherit;
+    background: var(--fundo);
+  }
+  .mural-hex b {
+    font-size: min(8vw, 80px);
+    line-height: 0.9;
+  }
+  .mural-hex-nome {
+    max-width: 80%;
+    font-size: 12px;
   }
   .mural-foto:focus-visible::before,
   .mural-foto:focus-visible::after {
@@ -597,6 +654,7 @@ const CORES: Record<string, string> = {
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import { Flip } from 'gsap/Flip';
+  import { prioridade } from '../../lib/movimento';
 
   gsap.registerPlugin(ScrollTrigger, Flip);
 
@@ -641,6 +699,18 @@ const CORES: Record<string, string> = {
       legenda.classList.add('ativa');
     };
 
+    // estado do hexágono (a tela travada escreve aqui; o relógio da parede lê)
+    const hex = {
+      m: 0, // 0 = parede, 1 = as fotos no anel
+      escala: 1, // o palco encolhendo
+      giro: 0, // o anel girando no fim
+      raio: 0, // raio do anel, em px da tela
+      tamanho: 0, // lado de cada foto no anel, em px da tela
+      vagas: 12,
+      ladoCasa: 1, // lado de uma casa do mural, em px de dentro
+      vaga: new Map<number, number>(), // índice da casa → face do anel
+    };
+
     let pausar = false; // o Flip do embaralhar também mexe no transform das casas
     const poses: string[] = []; // a última pose escrita em cada casa (computador)
 
@@ -679,6 +749,8 @@ const CORES: Record<string, string> = {
           const gy = Number(gsap.getProperty(grade, 'y'));
           const meiaL = palcoL / 2;
           const meiaA = palcoA / 2;
+          const m = hex.m; // 0 = parede, 1 = hexágono
+          const escala = hex.escala; // quanto o palco já encolheu (as contas do anel são no tamanho de dentro)
           casas.forEach((c, i) => {
             const nx = limite((centros[i].x + gx) / meiaL);
             const ny = limite((centros[i].y + gy) / meiaA);
@@ -688,8 +760,23 @@ const CORES: Record<string, string> = {
             if (Math.abs(alvo - p) < 0.001) p = alvo;
             perto.set(c, p);
             const z = -(nx * nx + ny * ny) * 170 + p * 70;
-            const tf = `translateZ(${z.toFixed(1)}px) rotateY(${(nx * 16).toFixed(2)}deg) rotateX(${(-ny * 14).toFixed(2)}deg)`;
+            let tf = `translateZ(${z.toFixed(1)}px) rotateY(${(nx * 16).toFixed(2)}deg) rotateX(${(-ny * 14).toFixed(2)}deg)`;
+            const k = hex.vaga.get(i);
+            if (m > 0 && k !== undefined) {
+              // a foto vai da casa dela até a face k do hexágono (e o anel gira no fim)
+              const a = k * (360 / hex.vagas) + hex.giro;
+              const rad = (a * Math.PI) / 180;
+              const raio = hex.raio / escala;
+              const dx = Math.sin(rad) * raio - (centros[i].x + gx);
+              const dy = -Math.cos(rad) * raio - (centros[i].y + gy);
+              const inclinacao = ((((a + 90) % 180) + 180) % 180) - 90;
+              const tamanho = 1 + (hex.tamanho / (hex.ladoCasa * escala) - 1) * m;
+              tf = `translate3d(${(dx * m).toFixed(1)}px, ${(dy * m).toFixed(1)}px, ${(z * (1 - m) + p * 40).toFixed(1)}px) rotateZ(${(inclinacao * m).toFixed(2)}deg) rotateY(${(nx * 16 * (1 - m)).toFixed(2)}deg) rotateX(${(-ny * 14 * (1 - m)).toFixed(2)}deg) scale(${tamanho.toFixed(3)})`;
+            }
             if (tf !== poses[i]) c.style.transform = poses[i] = tf;
+            // quem não entra no anel (e o cartão) some depressa: some antes de o quadro soltar a borda
+            const op = m > 0 && k === undefined ? String(Math.max(0, 1 - m * 4)) : '';
+            if (c.style.opacity !== op) c.style.opacity = op;
           });
         });
       }
@@ -972,13 +1059,83 @@ const CORES: Record<string, string> = {
       gsap.from(mural.querySelector('.mural-dica'), { opacity: 0, y: 10, delay: 1.2, duration: 0.6 });
     });
 
-    // ---------- rolando para os sites (computador): o mural recua e vira um quadro ----------
+    // ---------- rolando (computador), com a tela travada ----------
+    //  0 → 0,45: o mural encolhe até virar um quadro e as fotos ganham cor numa onda do meio pra fora
+    //  0,5 → 0,8: as 12 fotos mais perto do meio voam cada uma para uma face do hexágono "FOTOS '26"
+    //  0,8 → 1: o anel gira; a foto que passa no topo acende e o nome dela aparece no meio
     if (!semMovimento && comMouse) {
-      gsap.to(palco, {
-        scale: 0.9,
-        borderRadius: 28,
-        ease: 'none',
-        scrollTrigger: { trigger: mural, start: 'top top', end: 'bottom top', scrub: true },
+      const faixa = (t: number, de: number, ate: number) => gsap.utils.clamp(0, 1, (t - de) / (ate - de));
+      const suave = gsap.parseEase('power2.inOut');
+      const hexagono = mural.querySelector<HTMLElement>('.mural-hex')!;
+      const hexNome = mural.querySelector<HTMLElement>('.mural-hex-nome')!;
+
+      // quem entra no anel: as 12 fotos mais perto do meio, na ordem do ângulo (sem se cruzarem no voo)
+      const escolher = () => {
+        hex.vaga.clear();
+        const perto = fotos
+          .map((f) => casas.indexOf(f))
+          .map((i) => ({ i, d: Math.hypot(centros[i].x, centros[i].y), a: Math.atan2(centros[i].x, -centros[i].y) }))
+          .sort((p, q) => p.d - q.d)
+          .slice(0, hex.vagas)
+          .sort((p, q) => ((p.a + Math.PI * 2) % (Math.PI * 2)) - ((q.a + Math.PI * 2) % (Math.PI * 2)));
+        perto.forEach((p, k) => hex.vaga.set(p.i, k));
+      };
+      // a onda de cor: cada foto acende quando a onda passa pela distância dela até o meio
+      let distMax = 1;
+      const medirHex = () => {
+        escolher();
+        distMax = Math.max(...centros.map((c) => Math.hypot(c.x, c.y)));
+        hex.raio = Math.min(innerHeight * 0.36, 320);
+        hex.tamanho = Math.min(innerHeight * 0.17, 150);
+        hex.ladoCasa = fotos[0]?.offsetWidth || 1;
+      };
+      medirHex();
+      addEventListener('resize', medirHex);
+
+      let topo = -1;
+      ScrollTrigger.create({
+        trigger: mural,
+        start: 'top top',
+        end: '+=260%',
+        pin: true,
+        scrub: 0.8,
+        refreshPriority: prioridade(mural),
+        onUpdate: ({ progress: t }) => {
+          const encolher = suave(faixa(t, 0, 0.45));
+          hex.escala = 1 - encolher * 0.38;
+          gsap.set(palco, { scale: hex.escala, borderRadius: 28 * encolher });
+          const onda = faixa(t, 0.04, 0.42);
+          casas.forEach((c, i) => c.classList.toggle('colorida', Math.hypot(centros[i].x, centros[i].y) / distMax < onda));
+
+          hex.m = suave(faixa(t, 0.5, 0.8));
+          hex.giro = -faixa(t, 0.8, 1) * (360 / hex.vagas) * 4;
+          hexagono.style.opacity = String(hex.m);
+          // o anel é maior que o quadro: quando as fotos de fora já sumiram, o quadro solta a borda
+          palco.style.overflow = hex.m > 0.25 ? 'visible' : '';
+          palco.style.background = hex.m > 0 ? `rgb(247 245 240 / ${(1 - hex.m).toFixed(2)})` : '';
+
+          // a foto do topo do anel
+          let qual = -1;
+          if (hex.m > 0.9) {
+            let menor = Infinity;
+            hex.vaga.forEach((k, i) => {
+              const a = k * (360 / hex.vagas) + hex.giro;
+              const longe = Math.abs(((((a % 360) + 540) % 360) - 180));
+              if (longe < menor) {
+                menor = longe;
+                qual = i;
+              }
+            });
+          }
+          if (qual !== topo) {
+            if (topo >= 0) casas[topo].classList.remove('no-topo');
+            topo = qual;
+            if (topo >= 0) {
+              casas[topo].classList.add('no-topo');
+              hexNome.textContent = `${casas[topo].querySelector('img')?.alt ?? ''} · ${casas[topo].dataset.ensaio ?? ''}`;
+            } else hexNome.textContent = '';
+          }
+        },
       });
     }
   }
