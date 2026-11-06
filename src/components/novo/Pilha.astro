@@ -1,0 +1,284 @@
+---
+// Pilha de projetos (pegada do "Aether" do portfólio do @echo_builds): os cartões dos projetos ficam
+// num cilindro deitado no meio da tela. Ao rolar, a tela trava e eles sobem um por um: o do meio
+// fica de frente, os de cima tombam para trás e os de baixo vêm chegando. O nome do projeto da vez
+// fica à esquerda e os detalhes à direita.
+// Sem JS ou com "reduzir movimento" fica a lista enxuta de antes (o <ul class="outros"> da página).
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  itens: {
+    nome: string;
+    tipo: string;
+    descricao: string;
+    tecnologias: string[];
+    link?: string;
+    print?: ImageMetadata;
+    cor?: string;
+  }[];
+}
+
+const { itens } = Astro.props;
+---
+
+<div class="pilha">
+  <div class="pl-palco">
+    <div class="pl-nome">
+      <span class="rotulo pl-conta">01 / 0{itens.length}</span>
+      <b class="titulo-cartaz">{itens[0]?.nome}</b>
+    </div>
+
+    <div class="pl-coluna">
+      {
+        itens.map((p, i) => (
+          <a
+            class="pl-card"
+            href={p.link}
+            target="_blank"
+            rel="noopener"
+            style={`--cor:${p.cor ?? 'var(--azul)'}`}
+            data-i={i}
+            aria-label={`${p.nome} — ${p.tipo}`}
+          >
+            {p.print ? (
+              <Image src={p.print} alt="" widths={[480, 900]} sizes="(max-width: 760px) 80vw, 36vw" format="webp" />
+            ) : (
+              <span class="pl-codigo">
+                <span class="voz-codigo">~/{p.nome.toLowerCase().replace(/\s+/g, '-')}</span>
+                <b class="titulo-cartaz">{p.nome}</b>
+                <span class="voz-codigo">{p.tecnologias.join(' · ')}</span>
+              </span>
+            )}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="pl-detalhes">
+      {
+        itens.map((p, i) => (
+          <div class="pl-detalhe" data-i={i}>
+            <span class="rotulo">{p.tipo}</span>
+            <p>{p.descricao}</p>
+            <span class="voz-codigo">{p.tecnologias.join(' · ')}</span>
+            {p.link && (
+              <a class="rotulo" href={p.link} target="_blank" rel="noopener">
+                Abrir ↗
+              </a>
+            )}
+          </div>
+        ))
+      }
+    </div>
+
+    <span class="pl-dica rotulo" aria-hidden="true">role para ver mais ↓</span>
+  </div>
+</div>
+
+<style>
+  .pilha {
+    display: none;
+  }
+  :global(.pilha-ativa) .pilha {
+    display: block;
+  }
+  :global(.pilha-ativa) .pilha ~ :global(.outros) {
+    display: none;
+  }
+
+  .pl-palco {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 1.5fr) 1fr;
+    align-items: center;
+    gap: clamp(16px, 3vw, 48px);
+    height: 100svh;
+    perspective: 1300px;
+  }
+
+  .pl-nome b {
+    display: block;
+    margin-top: 10px;
+    font-size: clamp(40px, 5vw, 88px);
+    transition: opacity 0.35s;
+  }
+
+  .pl-coluna {
+    --largura: min(36vw, 560px);
+    position: relative;
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+  .pl-card {
+    position: absolute;
+    left: calc(50% - var(--largura) / 2);
+    top: calc(50% - var(--largura) * 0.3125);
+    width: var(--largura);
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--fundo-2);
+    box-shadow:
+      0 0 0 1px var(--linha),
+      0 30px 60px -30px rgb(12 21 48 / 0.35);
+    color: var(--texto);
+    text-decoration: none;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+  .pl-card.ativa {
+    box-shadow:
+      0 0 0 1px var(--cor),
+      0 30px 80px -30px var(--cor);
+  }
+  .pl-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+  /* projeto sem print: um "terminal" com o nome em cartaz */
+  .pl-codigo {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 18px 22px;
+    background:
+      radial-gradient(circle at 85% 0%, rgb(35 70 168 / 0.22), transparent 60%),
+      linear-gradient(160deg, #101a3a, #0c1530);
+    color: #f7f5f0;
+  }
+  .pl-codigo b {
+    font-size: calc(var(--largura) * 0.11);
+  }
+  .pl-codigo .voz-codigo {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  .pl-detalhes {
+    position: relative;
+    align-self: center;
+    min-height: 220px;
+  }
+  .pl-detalhe {
+    position: absolute;
+    inset: 0 0 auto;
+    display: grid;
+    gap: 10px;
+    opacity: 0;
+    translate: 0 12px;
+    pointer-events: none;
+    transition:
+      opacity 0.4s,
+      translate 0.4s;
+  }
+  .pl-detalhe.ativa {
+    opacity: 1;
+    translate: 0 0;
+    pointer-events: auto;
+  }
+  .pl-detalhe p {
+    max-width: 34ch;
+    margin: 0;
+    font-size: clamp(14px, 1.1vw, 16px);
+    color: var(--texto-suave);
+  }
+  .pl-detalhe .voz-codigo {
+    color: var(--azul);
+  }
+  .pl-detalhe a {
+    width: fit-content;
+    color: var(--texto);
+  }
+
+  .pl-dica {
+    position: absolute;
+    left: 50%;
+    bottom: 22px;
+    translate: -50% 0;
+  }
+
+  @media (max-width: 760px) {
+    .pl-palco {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: 8px;
+      padding: 84px 0 56px;
+    }
+    .pl-coluna {
+      --largura: 80vw;
+    }
+    .pl-nome b {
+      font-size: 40px;
+    }
+    .pl-detalhes {
+      min-height: 150px;
+    }
+    .pl-detalhe p {
+      font-size: 13px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const raiz = document.querySelector<HTMLElement>('.pilha');
+  const secao = raiz?.closest<HTMLElement>('.ato');
+  if (raiz && secao && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    secao.classList.add('pilha-ativa');
+    const cards = [...raiz.querySelectorAll<HTMLElement>('.pl-card')];
+    const detalhes = [...raiz.querySelectorAll<HTMLElement>('.pl-detalhe')];
+    const nome = raiz.querySelector<HTMLElement>('.pl-nome b')!;
+    const conta = raiz.querySelector<HTMLElement>('.pl-conta')!;
+    const n = cards.length;
+    const PASSO = 24; // graus entre um cartão e o próximo no cilindro
+    let ativo = -1;
+
+    const posicionar = (p: number) => {
+      const largura = cards[0].offsetWidth;
+      // raio do cilindro: grande o bastante para um cartão não invadir o próximo (altura = 0,625 × largura)
+      const raio = largura * 1.75;
+      cards.forEach((el, i) => {
+        const d = i - p; // 0 = de frente, negativo = já passou (em cima), positivo = vem vindo
+        const ang = gsap.utils.clamp(-80, 80, d * PASSO);
+        const rad = (ang * Math.PI) / 180;
+        const y = Math.sin(rad) * raio;
+        const z = (Math.cos(rad) - 1) * raio;
+        el.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${-ang}deg)`;
+        el.style.opacity = String(gsap.utils.clamp(0, 1, 1.6 - Math.abs(d) * 0.55));
+        el.style.zIndex = String(100 - Math.round(Math.abs(d) * 10));
+      });
+      const agora = gsap.utils.clamp(0, n - 1, Math.round(p));
+      if (agora !== ativo) {
+        ativo = agora;
+        cards.forEach((el, i) => el.classList.toggle('ativa', i === ativo));
+        detalhes.forEach((el, i) => el.classList.toggle('ativa', i === ativo));
+        nome.textContent = cards[ativo].getAttribute('aria-label')?.split(' — ')[0] ?? '';
+        conta.textContent = `0${ativo + 1} / 0${n}`;
+      }
+    };
+
+    const estado = { p: 0 };
+    posicionar(0);
+    gsap.to(estado, {
+      p: n - 1,
+      ease: 'none',
+      onUpdate: () => posicionar(estado.p),
+      scrollTrigger: {
+        trigger: raiz,
+        start: 'top top',
+        end: () => `+=${(n - 1) * 70}%`,
+        pin: raiz.querySelector('.pl-palco'),
+        scrub: 0.7,
+        refreshPriority: -5, // depois das seções de cima que travam a tela
+      },
+    });
+  }
+</script>

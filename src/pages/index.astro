@@ -3,7 +3,10 @@
 //  CAMADA 1 — wireframe: as caixas marcam onde cada coisa vai entrar
 //  CAMADA 2 — fundo e barra: branco com luzes suaves que mudam de lente (foto/código), fontes e barra
 //  CAMADA 3 — fotos e prints: fotos com as cores delas, prints dos sites, gravura só como cenário
-//  CAMADA 4 — 3D: intro com a câmera que fotografa e revela o mural de fotos, notebook que abre nos sites
+//  CAMADA 4 — 3D: notebook que abre nos sites e a câmera que fotografa (no Sobre)
+//  CAMADA 5 — pegada do @echo_builds (nov/2026): abertura com mergulho no cartão, letreiro vazado,
+//             ensaios que dobram como fita e a pilha de projetos. A intro da câmera (Intro.astro)
+//             saiu da abertura; a câmera foi para o Sobre (SobreCamera.astro).
 // O foco é vender sites: eles vêm logo depois da abertura e ganham mais espaço; as fotos
 // aparecem como o "olhar" por trás dos sites.
 import type { ImageMetadata } from 'astro';
@@ -12,14 +15,14 @@ import Fundo from '../components/novo/Fundo.astro';
 import Barra from '../components/novo/Barra.astro';
 import Gravura from '../components/novo/Gravura.astro';
 import Cenario from '../components/novo/Cenario.astro';
-import Intro from '../components/novo/Intro.astro';
 import Mural from '../components/novo/Mural.astro';
 import Cortina from '../components/novo/Cortina.astro';
 import Sobre from '../components/novo/Sobre.astro';
 import { url } from '../lib/url';
 import Aparelho from '../components/novo/Aparelho.astro';
 import Mergulho from '../components/novo/Mergulho.astro';
-import Hexagono from '../components/novo/Hexagono.astro';
+import SobreCamera from '../components/novo/SobreCamera.astro';
+import Pilha from '../components/novo/Pilha.astro';
 import { site, categorias, projetos, destaques, criacaoDeSites, github } from '../data/site';
 import { fotos, fotosDa, fotosEmDestaque, selecionadas } from '../lib/fotos';
 import '../styles/novo.css';
@@ -35,10 +38,10 @@ const printDe = (nome?: string) =>
   nome ? Object.entries(prints).find(([caminho]) => caminho.includes(`/${nome}.`))?.[1].default : undefined;
 
 const sitesComPrint = sites.map((p) => ({ ...p, print: printDe(p.imagem) }));
-// 04 · o anel do hexágono leva todos os projetos (os com print mostram o print)
-const todosNoAnel = projetos.map((p) => ({ ...p, link: p.site ?? p.codigo, print: printDe(p.imagem) }));
+// 04 · a pilha leva todos os projetos (os com print mostram o print)
+const todosNaPilha = projetos.map((p) => ({ ...p, link: p.site ?? p.codigo, print: printDe(p.imagem) }));
 
-// Foto do display da câmera da intro: a 2ª dos destaques
+// Foto do display da câmera do Sobre: a 2ª dos destaques
 const fotosDestaque = fotosEmDestaque(destaques);
 const fotoCamera = fotosDestaque[1] ?? fotosDestaque[0];
 
@@ -90,11 +93,11 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
       href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap"
     />
     <script is:inline>
-      // Liga a intro (câmera que fotografa e revela o mural) antes da primeira pintura. Não toca com
-      // "reduzir movimento" nem quando a página abre direto num #link.
+      // Liga o loader da abertura ("FRANCIS." no anel de tinta) antes da primeira pintura. Não toca
+      // com "reduzir movimento" nem quando a página abre direto num #link.
       if (!location.hash && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
         history.scrollRestoration = 'manual';
-        document.documentElement.classList.add('intro-on');
+        document.documentElement.classList.add('carregando');
       }
     </script>
   </head>
@@ -104,20 +107,12 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
     <Sobre />
     <Barra />
     <Gravura />
-    <Intro
-      nome={site.nome}
-      foto={fotoCamera}
-      info={{
-        nome: site.nome,
-        cidade: site.cidade.split(',')[0],
-        ensaios: ensaios.map((e) => ({ titulo: e.titulo, total: e.total })),
-        totalFotos,
-        sitesNoAr: sites.length,
-      }}
-    />
 
     <main>
-      <!-- 00 · ABERTURA: a câmera da intro dispara e revela o mural de fotos -->
+      <!-- 00 · ABERTURA: paisagem em gravura com o cartão no meio; ao rolar, a gente entra nele -->
+      <Mergulho fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('estudio/01-luz-do-estudio')} />
+
+      <!-- o mural de fotos "explode" do meio quando a abertura termina -->
       <Mural fotos={selecionadas(fotos.length)} totalFotos={totalFotos} sitesNoAr={sites.length} projetos={projetos.length} />
 
       <!-- 01 · SITES (o foco) -->
@@ -126,8 +121,17 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
         <Aparelho sites={sitesComPrint} />
       </section>
 
-      <!-- SOBRE MIM: o cartão no meio da gravura cresce até a tela inteira (mergulho) -->
-      <Mergulho fundo={fotoDe('pedras/09-silhueta-e-nuvem')} />
+      <!-- SOBRE MIM: texto + a Nikon 3D (a antiga intro), que vira, foca e dispara -->
+      <SobreCamera
+        foto={fotoCamera}
+        info={{
+          nome: site.nome,
+          cidade: site.cidade.split(',')[0],
+          ensaios: ensaios.map((e) => ({ titulo: e.titulo, total: e.total })),
+          totalFotos,
+          sitesNoAr: sites.length,
+        }}
+      />
 
       <!-- 02 · O OLHAR POR TRÁS DO CÓDIGO: a tela trava e as três lições passam de lado -->
       <section class="ato horizontal" data-lente="ambos" data-tema="tinta">
@@ -188,10 +192,10 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
         </div>
       </section>
 
-      <!-- 04 · PROJETOS: no computador, o anel do hexágono gira com a rolagem; no celular, a lista enxuta -->
+      <!-- 04 · PROJETOS: a pilha sobe um por um com a rolagem (sem JS: a lista enxuta) -->
       <section class="ato" data-lente="codigo" data-tema="claro">
         <p class="ato-id rotulo">04 · Projetos</p>
-        <Hexagono itens={todosNoAnel} />
+        <Pilha itens={todosNaPilha} />
         <ul class="outros">
           {
             outros.map((p) => (
@@ -257,20 +261,50 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
           trilho.style.overflow = 'visible';
           const distancia = () => Math.max(0, trilho.scrollWidth - trilho.clientWidth);
 
-          // Ensaios: os painéis curvam como uma fita (pegada do "Landing pages" do @echo_builds).
-          // Cada um gira no eixo Y conforme se afasta do meio da tela e afunda um pouco; a velocidade
-          // da rolagem entorta de leve. As posições são calculadas, sem medir a página a cada quadro.
+          // Ensaios: os painéis DOBRAM como uma fita (pegada do "Landing pages" do @echo_builds).
+          // Cada painel vira 14 tiras finas, cada uma com uma cópia do painel inteiro deslocada; a
+          // tela tem uma onda fixa (em S) e cada tira se inclina na direção da onda onde ela está.
+          // Os painéis atravessam a onda e entortam. Correndo, a onda fica mais funda.
+          // As posições são calculadas, sem medir a página a cada quadro.
+          const FATIAS = 14;
           const paineis = secao.id === 'ensaios' ? [...trilho.querySelectorAll<HTMLElement>('.painel')] : [];
-          let medidas: { centro: number }[] = [];
-          const medir = () => (medidas = paineis.map((p) => ({ centro: p.offsetLeft + p.offsetWidth / 2 })));
-          let torcao = 0;
+          const fatiasDe = paineis.map((p) => {
+            const conteudo = p.innerHTML;
+            p.setAttribute('aria-label', p.querySelector('strong')?.textContent ?? '');
+            p.classList.add('dobravel');
+            p.innerHTML = '';
+            return Array.from({ length: FATIAS }, (_, k) => {
+              const f = document.createElement('span');
+              f.className = 'fatia';
+              f.setAttribute('aria-hidden', 'true');
+              f.style.left = `${(k / FATIAS) * 100}%`;
+              f.style.width = `calc(${100 / FATIAS}% + 2px)`; // 2px a mais: sem fresta entre as tiras
+              f.innerHTML = `<span class="fatia-conteudo" style="left:${-k * 100}%;width:${FATIAS * 100}%">${conteudo}</span>`;
+              p.append(f);
+              return f;
+            });
+          });
+          let medidas: { esquerda: number; largura: number }[] = [];
+          const medir = () => (medidas = paineis.map((p) => ({ esquerda: p.offsetLeft, largura: p.offsetWidth })));
+          let fundura = 0;
           const curvar = (velocidade: number) => {
             const x = gsap.getProperty(trilho, 'x') as number;
-            const meio = innerWidth / 2;
-            torcao += (gsap.utils.clamp(-10, 10, velocidade / 250) - torcao) * 0.2;
+            const L = innerWidth;
+            fundura += (gsap.utils.clamp(0, 140, Math.abs(velocidade) / 18) - fundura) * 0.15;
+            const A = 150 + fundura; // altura da onda, em px
+            const k = (Math.PI * 2) / (L * 1.1); // uma onda e pouco por tela
             paineis.forEach((p, i) => {
-              const d = gsap.utils.clamp(-1.4, 1.4, (medidas[i].centro + x - meio) / innerWidth);
-              p.style.transform = `perspective(1600px) translateZ(${-Math.abs(d) * 260}px) rotateY(${-d * 38}deg) skewX(${torcao}deg)`;
+              const { esquerda, largura } = medidas[i];
+              const lf = largura / FATIAS;
+              fatiasDe[i].forEach((f, j) => {
+                // a borda esquerda da tira fica em cima da onda e ela gira até a borda direita cair
+                // na onda também: as tiras vizinhas se encostam em 3D, sem fresta
+                const x0 = esquerda + x + j * lf - L / 2; // borda esquerda, a partir do meio da tela
+                const z0 = A * Math.sin(k * x0);
+                const dz = A * Math.sin(k * (x0 + lf)) - z0;
+                const ang = (Math.atan2(dz, lf) * 180) / Math.PI;
+                f.style.transform = `translateZ(${z0.toFixed(1)}px) rotateY(${(-ang).toFixed(2)}deg) scaleX(${(Math.hypot(lf, dz) / lf).toFixed(3)})`;
+              });
             });
           };
 
@@ -511,10 +545,50 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
     position: relative;
     z-index: 1;
   }
-  /* os painéis dos ensaios curvam com a rolagem (o JS escreve o transform) */
-  #ensaios .painel {
+  /* os painéis dos ensaios dobram com a rolagem: o JS corta cada um em tiras (.fatia) e escreve
+     o transform de cada tira. A cena 3D precisa de perspectiva no palco e preserve-3d no caminho. */
+  #ensaios .h-palco {
+    perspective: 1400px;
+  }
+  #ensaios .h-trilho,
+  .painel.dobravel {
+    transform-style: preserve-3d;
+  }
+  .painel.dobravel {
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+  }
+  .fatia {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+    transform-origin: 0 50%; /* gira pela borda esquerda (o JS encosta as bordas na onda) */
+    backface-visibility: hidden;
     will-change: transform;
-    transform-origin: center;
+  }
+  .fatia:first-child {
+    border-radius: 18px 0 0 18px;
+  }
+  .fatia:last-child {
+    border-radius: 0 18px 18px 0;
+  }
+  .fatia-conteudo {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+  }
+  .fatia-conteudo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .painel.dobravel:hover .fatia-conteudo img {
+    transform: scale(1.04);
   }
   @media (max-width: 760px) {
     .h-letreiro {

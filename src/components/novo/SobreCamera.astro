@@ -1,0 +1,237 @@
+---
+// "Sobre mim" com a Nikon 3D (a câmera que antes era a intro do site; src/lib/camera3d.ts).
+// Texto de um lado, câmera do outro. Conforme a seção sobe na tela, a câmera vira de frente, dá
+// zoom e foca, narrada no cartão de código (como na intro). De frente, ela mira no mouse.
+// Clicar na câmera (ou no botão) dispara: flash na seção e o display mostra a foto.
+// A câmera só monta quando a seção chega perto da tela. Sem WebGL: fica o texto e o código.
+import { getImage } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+import type { InfoDisplay } from '../../lib/camera3d';
+import { site } from '../../data/site';
+
+interface Props {
+  foto?: Foto; // aparece no display da câmera
+  info: InfoDisplay;
+}
+
+const { foto, info } = Astro.props;
+const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format: 'webp', quality: 70 })).src : undefined;
+---
+
+<section class="ato sobre-cam" id="sobre" data-lente="foto" data-tema="claro" data-foto={fotoDisplay} data-info={JSON.stringify(info)}>
+  <div class="sc-texto">
+    <p class="ato-id rotulo">Sobre mim</p>
+    <h2 class="titulo-cartaz">{site.nome}</h2>
+    {site.bio.slice(0, 2).map((p) => <p class="sc-bio">{p}</p>)}
+    <div class="sc-codigo voz-codigo" aria-hidden="true">
+      <div><b>const</b> camera = <b>new</b> Nikon(<i>'D3200'</i>);</div>
+      <div>camera.virar(<em data-v="virar">0.00</em>);</div>
+      <div>camera.zoom(<em data-v="zoom">18</em>mm);</div>
+      <div>camera.foco(<em data-v="foco">0.00</em>); <span class="c" data-v="estado"></span></div>
+      <div>camera.disparar(); <span class="c" data-v="clique">// clique na câmera</span></div>
+    </div>
+    <div class="sc-botoes">
+      <button class="sc-disparar" type="button">Disparar ●</button>
+      <button class="sc-mais rotulo" type="button" data-abrir-sobre>Ler mais ↗</button>
+    </div>
+  </div>
+  <div class="sc-cena">
+    <canvas aria-hidden="true"></canvas>
+  </div>
+  <div class="sc-flash" aria-hidden="true"></div>
+</section>
+
+<style>
+  .sobre-cam {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    align-items: center;
+    gap: clamp(20px, 4vw, 64px);
+    min-height: 90svh;
+  }
+  .sc-texto h2 {
+    margin: 0 0 18px;
+    font-size: clamp(56px, 9vw, 150px);
+  }
+  .sc-bio {
+    max-width: 44ch;
+    margin: 0 0 14px;
+    font-size: clamp(16px, 1.3vw, 19px);
+    color: var(--texto-suave);
+  }
+  .sc-codigo {
+    width: fit-content;
+    max-width: 100%;
+    margin: 22px 0;
+    padding: 16px 20px;
+    border: 1px solid var(--linha);
+    border-radius: 16px;
+    background: var(--vidro);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: clamp(11px, 0.95vw, 13px);
+    line-height: 1.9;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+  .sc-codigo b {
+    color: var(--azul);
+    font-weight: 500;
+  }
+  .sc-codigo i {
+    color: #b0532f;
+    font-style: normal;
+  }
+  .sc-codigo em {
+    display: inline-block;
+    min-width: 3.4ch;
+    color: var(--azul);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+  }
+  .sc-codigo .c {
+    color: var(--texto-suave);
+  }
+  .sc-codigo .focando {
+    color: var(--azul);
+  }
+  .sc-codigo .ok {
+    color: #1f8f5a;
+  }
+  .sc-botoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .sc-disparar,
+  .sc-mais {
+    padding: 12px 22px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
+  }
+  .sc-disparar {
+    border: 0;
+    background: var(--texto);
+    color: var(--fundo);
+    font: 600 14px var(--fonte);
+  }
+  .sc-disparar:hover {
+    background: var(--azul);
+    color: #fff;
+  }
+  .sc-mais {
+    border: 1px solid var(--linha);
+    background: none;
+    color: var(--texto);
+  }
+  .sc-mais:hover {
+    background: var(--vidro);
+  }
+  .sc-cena {
+    position: relative;
+    height: min(70svh, 640px);
+    cursor: pointer;
+  }
+  .sc-cena canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .sc-cena.pronta canvas {
+    opacity: 1;
+  }
+  .sc-flash {
+    position: absolute;
+    inset: -40px calc(var(--margem) * -1);
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (max-width: 760px) {
+    .sobre-cam {
+      grid-template-columns: 1fr;
+    }
+    .sc-cena {
+      order: -1;
+      height: 52svh;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import type { Camera3D } from '../../lib/camera3d';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const secao = document.querySelector<HTMLElement>('.sobre-cam');
+  if (secao) {
+    const cena = secao.querySelector<HTMLElement>('.sc-cena')!;
+    const flash = secao.querySelector<HTMLElement>('.sc-flash')!;
+    const valor = (nome: string) => secao.querySelector<HTMLElement>(`[data-v="${nome}"]`)!;
+    const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pose = { virar: semMovimento ? 1 : 0, zoom: semMovimento ? 1 : 0, foco: semMovimento ? 1 : 0 };
+    let camera: Camera3D | null = null;
+    let estado = '';
+
+    const aplicar = () => {
+      camera?.definir(pose);
+      valor('virar').textContent = pose.virar.toFixed(2);
+      valor('zoom').textContent = String(Math.round(18 + pose.zoom * 37));
+      valor('foco').textContent = pose.foco.toFixed(2);
+      const novo = pose.foco >= 0.99 ? 'ok' : pose.foco > 0.02 ? 'focando' : '';
+      if (novo !== estado) {
+        estado = novo;
+        const el = valor('estado');
+        el.textContent = novo === 'ok' ? '// ✓ em foco' : novo === 'focando' ? '// focando…' : '';
+        el.className = `c ${novo}`;
+      }
+    };
+
+    // a pose acompanha a rolagem: vira, dá zoom e foca enquanto a seção sobe até o meio da tela
+    if (!semMovimento) {
+      const tl = gsap.timeline({
+        defaults: { ease: 'none', onUpdate: aplicar },
+        scrollTrigger: { trigger: secao, start: 'top 85%', end: 'center 55%', scrub: 0.8 },
+      });
+      tl.to(pose, { virar: 1, duration: 0.5 }).to(pose, { zoom: 1, duration: 0.25 }).to(pose, { foco: 1, duration: 0.25 });
+    }
+    aplicar();
+
+    const disparar = () => {
+      camera?.disparar();
+      const el = valor('clique');
+      el.textContent = '// ✓ click!';
+      el.className = 'c ok';
+      flash.animate([{ opacity: 0 }, { opacity: 0.9, offset: 0.15 }, { opacity: 0 }], { duration: 700, easing: 'ease-out' });
+    };
+    cena.addEventListener('click', disparar);
+    secao.querySelector('.sc-disparar')!.addEventListener('click', disparar);
+
+    // monta a câmera só quando a seção chega perto
+    new IntersectionObserver(
+      ([e], olho) => {
+        if (!e.isIntersecting) return;
+        olho.disconnect();
+        import('../../lib/camera3d')
+          .then(({ montarCamera }) => montarCamera(cena.querySelector('canvas')!, secao.dataset.foto, JSON.parse(secao.dataset.info!)))
+          .then((c) => {
+            camera = c;
+            aplicar();
+            cena.classList.add('pronta');
+          })
+          .catch(() => cena.remove()); // sem WebGL: fica o texto e o código
+      },
+      { rootMargin: '600px 0px' },
+    ).observe(secao);
+  }
+</script>
