@@ -8,13 +8,16 @@
 //    abrindo na borda. Sem mouse, a lente fica parada no rosto;
 //  - textinhos nos cantos: assinatura à esquerda, o que eu faço à direita.
 // Ao rolar, o título sobe mais rápido que a foto (profundidade). Com o mouse, cada camada anda um tanto.
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import { site } from '../../data/site';
 
 const retratos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu-retrato-*.png', { eager: true });
 const pb = retratos['/src/assets/eu-retrato-pb.png']?.default;
 const cor = retratos['/src/assets/eu-retrato-cor.png']?.default;
+// a lente lê a versão em cor como textura: WebP no tamanho certo (o PNG original tinha 1,9 MB)
+const corGrande = cor ? (await getImage({ src: cor, width: 1183, format: 'webp', quality: 80 })).src : undefined;
+const corCelular = cor ? (await getImage({ src: cor, width: 640, format: 'webp', quality: 78 })).src : undefined;
 ---
 
 <section class="hero" data-lente="codigo" data-tema="claro" aria-label="Home">
@@ -26,7 +29,7 @@ const cor = retratos['/src/assets/eu-retrato-cor.png']?.default;
   {
     pb && (
       <div class="hero-eu">
-        <div class="hero-quadro" data-cor={cor?.src}>
+        <div class="hero-quadro" data-cor={corGrande} data-cor-celular={corCelular}>
           <Image src={pb} alt={`Portrait of ${site.nome}`} widths={[480, 800, 1183]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
         </div>
       </div>
@@ -202,7 +205,8 @@ const cor = retratos['/src/assets/eu-retrato-cor.png']?.default;
     // a lente em WebGL: o foco acerta logo depois que a foto aparece.
     // alvo = onde a lente descansa sem mouse: no rosto (0..1 da foto, de cima para baixo)
     const quadro = hero.querySelector<HTMLElement>('.hero-quadro');
-    if (quadro?.dataset.cor) lenteDoTopo(quadro, { atraso: atraso + 0.2, temMouse, alvo: [0.47, 0.24], cor: quadro.dataset.cor });
+    const corDaLente = (!temMouse && quadro?.dataset.corCelular) || quadro?.dataset.cor;
+    if (quadro && corDaLente) lenteDoTopo(quadro, { atraso: atraso + 0.2, temMouse, alvo: [0.47, 0.24], cor: corDaLente });
 
     // rolando: o título sobe mais rápido que a foto (três profundidades)
     const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
