@@ -237,7 +237,7 @@ uniform float uTopo;        // topo dos cartões no palco (css px)
 uniform float uInicio;      // x do 1º cartão no palco (css px)
 uniform float uPasso;       // largura + espaço
 uniform float uN, uCols, uRaioCanto, uCurva, uDisp;
-uniform float uFecha;       // 0..1: no fim da faixa ela gira, encolhe pro centro e some (vira o hexágono)
+uniform float uFecha;       // 0..1: no fim da faixa ela recua pro centro e some (dá lugar à grade de todos os projetos)
 uniform vec2 uCel;          // tamanho de uma célula do atlas, em 0..1
 
 vec4 cartao(vec2 p){
@@ -269,11 +269,11 @@ void main(){
   float cresce = 1. - lado * lado * .2;              // nas pontas o cartão fica mais alto (vem pra frente)
   vec2 p = vec2(px.x, (px.y - meioY) * cresce + meioY + sobe * (1. + uFecha * 2.));
 
-  // fechando: a faixa gira em volta do centro e encolhe, como se enrolasse num anel
+  // fechando: a faixa recua pro centro, como uma câmera abrindo o zoom
   if (uFecha > 0.) {
     vec2 c0 = vec2(meio, meioY);
-    float ang = uFecha * uFecha * 1.1;
-    vec2 d = (p - c0) * (1. + uFecha * uFecha * 3.2);
+    float ang = 0.;
+    vec2 d = (p - c0) * (1. + uFecha * uFecha * 2.2);
     p = c0 + vec2(cos(ang) * d.x - sin(ang) * d.y, sin(ang) * d.x + cos(ang) * d.y);
   }
 

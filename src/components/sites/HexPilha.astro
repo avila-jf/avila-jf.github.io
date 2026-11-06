@@ -1,6 +1,8 @@
 ---
 // Projetos: o hexágono que vira pilha (pegada do "WORKS '26" → "Aether" do @echo_builds), um
 // efeito só, numa tela travada:
+//  0. logo depois da faixa de protótipos, TODOS os projetos aparecem juntos numa grade, e a
+//     grade vira o anel;
 //  1. os cartões dos projetos formam um anel em volta do hexágono "PROJETOS '26", cada um deitado
 //     na face dele; rolando, o anel gira e o projeto que passa no topo acende;
 //  2. o anel se fecha: cada cartão vai da face dele para o meio da tela e cresce, o hexágono some
@@ -316,14 +318,25 @@ const dois = (v: number) => String(v).padStart(2, '0');
       conta.textContent = `${dois(i + 1)} / ${dois(n)}`;
     };
 
-    // t = 0..1 da tela travada: 0–0,08 o anel ABRE do centro (continua a faixa que se enrolou
-    // antes dele) · 0–0,4 o anel gira · 0,4–0,55 fecha · 0,55–1 a pilha sobe
+    // t = 0..1 da tela travada:
+    //  0–0,06  TODOS os projetos aparecem juntos, numa grade (logo depois da faixa de protótipos)
+    //  0,06–0,2 a grade vira o anel do hexágono · até 0,4 o anel gira
+    //  0,4–0,55 o anel fecha · 0,55–1 a pilha sobe (o efeito do final)
+    const grade = (i: number) => {
+      const cols = Math.ceil(n / 2);
+      const lin = Math.ceil(n / cols);
+      const celW = Math.min((innerWidth * 0.86) / cols, ((innerHeight * 0.62) / lin) * 1.6);
+      const celH = celW / 1.6;
+      const c = i % cols, l = Math.floor(i / cols);
+      return { x: (c - (cols - 1) / 2) * celW, y: (l - (lin - 1) / 2) * celH + innerHeight * 0.03, e: (celW * 0.9) / largura };
+    };
     const desenhar = (t: number) => {
-      const abre = gsap.parseEase('power3.out')(faixa(t, 0, 0.08));
-      const giro = -faixa(t, 0, 0.55) * passo * 3;
+      const entra = gsap.parseEase('power2.out')(faixa(t, 0, 0.06)); // a grade aparece
+      const vira = suave(faixa(t, 0.06, 0.2)); // 0 = grade, 1 = anel
+      const giro = -faixa(t, 0.2, 0.55) * passo * 3;
       const m = suave(faixa(t, 0.4, 0.55)); // 0 = anel, 1 = pilha
       const p = faixa(t, 0.55, 1) * (n - 1); // posição na pilha
-      const raio = lado * 0.4 * (0.15 + 0.85 * abre);
+      const raio = lado * 0.4;
       const raioPilha = largura * 1.75; // um cartão não invade o próximo (altura = 0,625 × largura)
 
       let doTopo = 0;
@@ -348,18 +361,25 @@ const dois = (v: number) => String(v).padStart(2, '0');
         const zp = (Math.cos(rp) - 1) * raioPilha;
         const opPilha = gsap.utils.clamp(0, 1, 1.6 - Math.abs(d) * 0.55);
 
-        const x = xa * (1 - m);
-        const y = ya * (1 - m) + yp * m;
+        // na grade (o começo): todos lado a lado, retos
+        const g = grade(i);
+        const xr = g.x + (xa - g.x) * vira;
+        const yr = g.y + (ya - g.y) * vira;
+        const er = g.e + (escalaAnel - g.e) * vira;
+        const incl = inclinacao * vira;
+
+        const x = xr * (1 - m);
+        const y = yr * (1 - m) + yp * m;
         const z = zp * m;
-        const escala = escalaAnel * (1 - m) * (0.4 + 0.6 * abre) + m;
-        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateZ(${(inclinacao * (1 - m)).toFixed(2)}deg) rotateX(${(-ang * m).toFixed(2)}deg) scale(${escala.toFixed(3)})`;
-        el.style.opacity = String((1 - m) * abre + m * opPilha);
+        const escala = er * (1 - m) * (0.85 + 0.15 * entra) + m;
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateZ(${(incl * (1 - m)).toFixed(2)}deg) rotateX(${(-ang * m).toFixed(2)}deg) scale(${escala.toFixed(3)})`;
+        el.style.opacity = String((1 - m) * entra + m * opPilha);
       });
 
-      centro.style.opacity = String(1 - m);
-      centro.style.scale = String((1 - m * 0.4) * (0.6 + 0.4 * abre));
+      centro.style.opacity = String((1 - m) * vira);
+      centro.style.scale = String((1 - m * 0.4) * (0.6 + 0.4 * vira));
       lados.forEach((el) => (el.style.opacity = String(m)));
-      marcar(m < 0.5 ? doTopo : gsap.utils.clamp(0, n - 1, Math.round(p)));
+      if (vira > 0.5) marcar(m < 0.5 ? doTopo : gsap.utils.clamp(0, n - 1, Math.round(p)));
     };
 
     const estado = { t: 0 };
@@ -371,7 +391,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
       scrollTrigger: {
         trigger: raiz,
         start: 'top top',
-        end: () => `+=${n * 55 + 250}%`,
+        end: () => `+=${n * 55 + 330}%`, // + a grade do começo
         pin: $('.hp-palco'),
         scrub: 0.7,
         invalidateOnRefresh: true,
