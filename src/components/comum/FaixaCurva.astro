@@ -162,6 +162,17 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
   .fc-legenda b {
     font-size: clamp(28px, 3vw, 48px);
   }
+  @media (max-width: 760px) {
+    .fc-trilho {
+      --largura: 80vw;
+    }
+    [data-formato='retrato'] .fc-trilho {
+      --largura: 64vw;
+    }
+    .fc-legenda {
+      padding: 0 var(--margem);
+    }
+  }
 </style>
 
 <script>

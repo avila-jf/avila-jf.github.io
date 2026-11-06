@@ -70,6 +70,8 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    padding-top: 0.12em; /* o acento do "Ó" fica dentro da área pintada */
+    margin-top: -0.12em;
   }
 
   .hero-eu {
@@ -78,6 +80,9 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     bottom: 0;
     height: min(68svh, 800px);
     translate: -50% 0;
+    /* a foto original acaba reta do lado direito: some em degradê como embaixo */
+    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 16%);
+    mask-image: linear-gradient(to left, transparent 0, #000 16%);
     will-change: transform;
   }
   .hero-eu img {
@@ -124,6 +129,14 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
   }
 
   @media (max-width: 760px) {
+    .hero-titulo {
+      font-size: 21vw;
+      padding-bottom: 30svh;
+    }
+    /* "meu portfólio" numa linha só */
+    .hero-desbota {
+      font-size: 0.58em;
+    }
     .hero-eu {
       height: 58svh;
     }
