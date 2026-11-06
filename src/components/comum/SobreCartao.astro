@@ -1,0 +1,410 @@
+---
+// "About me" da home (06/11): a página de mangá ao fundo e UM cartão no meio com tudo dentro (sem o
+// painel que crescia). O cartão é o "boneco na caixa" da 1ª versão, agora em preto e branco de mangá:
+// espiral de tinta girando no fundo (desenhada aqui, no clima do Uzumaki, sem copiar arte de ninguém),
+// retícula, borda grossa de quadrinho e um toque do azul do site. Dentro: nome, selo, a foto na bolha
+// de plástico, o resumo, as tags, os botões e o mascote (um bichinho-câmera original, o "Lentinho").
+// Animação: cai do gancho balançando quando aparece, flutua, a espiral gira e no computador inclina com o mouse.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { site } from '../../data/site';
+import type { Foto } from '../../lib/fotos';
+import PaginaManga from './PaginaManga.astro';
+
+interface Props {
+  id?: string;
+  fundo: Foto[]; // as 5 fotos da página de mangá
+}
+const { id, fundo } = Astro.props;
+
+const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu.{jpg,jpeg,png,webp}', { eager: true }))[0]?.default;
+const [nome, sobrenome] = site.nome.split(' ');
+
+// a espiral: uma espiral de Arquimedes de 13 voltas, como linha de tinta (gerada aqui, no build)
+const voltas = 13;
+const pontos: string[] = [];
+for (let i = 0; i <= voltas * 72; i++) {
+  const a = (i / 72) * Math.PI * 2;
+  const r = 2 + (i / (voltas * 72)) * 148;
+  pontos.push(`${(150 + Math.cos(a) * r).toFixed(1)},${(150 + Math.sin(a) * r).toFixed(1)}`);
+}
+const espiral = `M${pontos.join(' L')}`;
+---
+
+<section class="sc ato" id={id} data-lente="ambos" data-tema="tinta" aria-label="About me">
+  <div class="sc-fundo"><PaginaManga fotos={fundo} /></div>
+
+  <article class="sc-cartao">
+    <div class="sc-caixa">
+      <svg class="sc-espiral" viewBox="0 0 300 300" aria-hidden="true"><path d={espiral} /></svg>
+      <span class="sc-reticula" aria-hidden="true"></span>
+      <span class="sc-furo" aria-hidden="true"></span>
+
+      <header class="sc-topo">
+        <p class="sc-rotulo">Behind the lens · Vol. 01</p>
+        <h2 class="titulo-cartaz">{nome}<br />{sobrenome}</h2>
+        <span class="sc-selo" aria-hidden="true">photographer<br />+ dev</span>
+      </header>
+
+      <div class="sc-bolha">
+        {eu && <Image src={eu} alt={`${site.nome} with his camera, in the mirror`} widths={[360, 640]} sizes="(max-width: 760px) 70vw, 300px" format="webp" loading="lazy" />}
+        <span class="sc-brilho" aria-hidden="true"></span>
+        <!-- o mascote: um bichinho-câmera original -->
+        <svg class="sc-mascote" viewBox="0 0 80 80" aria-hidden="true">
+          <rect x="10" y="22" width="60" height="44" rx="12" fill="#fff" stroke="#111" stroke-width="3" />
+          <rect x="26" y="12" width="22" height="14" rx="4" fill="#fff" stroke="#111" stroke-width="3" />
+          <circle cx="40" cy="44" r="15" fill="#111" />
+          <circle cx="40" cy="44" r="9" fill="#2346a8" />
+          <circle cx="44" cy="40" r="3.5" fill="#fff" />
+          <circle class="sc-flash" cx="60" cy="30" r="3.5" fill="#ffe14d" stroke="#111" stroke-width="2" />
+          <path d="M22 66 l-3 9 M58 66 l3 9" stroke="#111" stroke-width="3" stroke-linecap="round" />
+          <path d="M18 50 q-8 -2 -10 -10 M62 50 q8 -2 10 -10" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" />
+        </svg>
+        <span class="sc-fala" aria-hidden="true">click!</span>
+      </div>
+
+      <p class="sc-bio">{site.bio[1]}</p>
+      <p class="sc-tags">Software Engineering · Photography · Websites</p>
+
+      <div class="sc-acoes">
+        <a href="#sites">See the websites</a>
+        <button type="button" data-abrir-sobre>Read more</button>
+      </div>
+
+      <span class="sc-novo titulo-cartaz" aria-hidden="true">About<br />me!</span>
+    </div>
+  </article>
+</section>
+
+<style>
+  .sc {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    margin: 0 calc(var(--margem) * -1) 120px;
+    padding: 110px var(--margem) 70px;
+    overflow: hidden;
+    background: #0c1530;
+  }
+  .sc-fundo {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
+  }
+  .sc-fundo :global(.manga) {
+    position: absolute;
+    inset: 0;
+  }
+
+  .sc-cartao {
+    position: relative;
+    z-index: 2;
+    width: min(440px, 100%);
+    perspective: 1000px;
+  }
+  .sc-caixa {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    padding: 40px 22px 22px;
+    overflow: hidden;
+    border: 4px solid #111;
+    border-radius: 14px;
+    background: #f4f1ea;
+    color: #111;
+    box-shadow:
+      10px 10px 0 #111,
+      0 40px 80px -30px rgb(0 0 0 / 0.7);
+    transform-origin: 50% 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  /* a espiral de tinta girando atrás de tudo */
+  .sc-espiral {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 170%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    opacity: 0.16;
+    animation: sc-girar 60s linear infinite;
+    will-change: transform;
+    pointer-events: none;
+  }
+  .sc-espiral path {
+    fill: none;
+    stroke: #111;
+    stroke-width: 1.6;
+  }
+  @keyframes sc-girar {
+    to {
+      rotate: -360deg;
+    }
+  }
+  /* retícula de mangá nas bordas */
+  .sc-reticula {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, #111 1px, transparent 1.4px) 0 0 / 6px 6px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 45%, transparent 55%, #000 100%);
+    mask-image: radial-gradient(ellipse at 50% 45%, transparent 55%, #000 100%);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .sc-furo {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    width: 50px;
+    height: 13px;
+    margin-left: -25px;
+    border-radius: 999px;
+    background: #111;
+  }
+  .sc-caixa > :not(.sc-espiral, .sc-reticula, .sc-furo, .sc-novo) {
+    position: relative;
+  }
+
+  .sc-topo {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+  .sc-rotulo {
+    grid-column: 1 / -1;
+    margin: 0 0 6px;
+    font: 700 10px var(--fonte);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #2346a8;
+  }
+  .sc-topo h2 {
+    margin: 0;
+    font-size: clamp(38px, 9vw, 54px);
+    line-height: 0.82;
+    color: #fff;
+    -webkit-text-stroke: 2px #111;
+    text-shadow: 4px 4px 0 #111;
+  }
+  .sc-selo {
+    display: grid;
+    place-items: center;
+    width: 78px;
+    height: 78px;
+    padding: 12px;
+    background: #111;
+    color: #fff;
+    font: 800 8px/1.05 var(--fonte);
+    text-align: center;
+    text-transform: uppercase;
+    transform: rotate(12deg);
+    clip-path: polygon(50% 0, 61% 12%, 77% 6%, 80% 22%, 96% 26%, 88% 41%, 100% 54%, 85% 63%, 90% 80%, 73% 80%, 66% 96%, 52% 86%, 38% 98%, 31% 82%, 14% 86%, 16% 69%, 1% 60%, 12% 46%, 3% 30%, 20% 26%, 21% 9%, 37% 14%);
+  }
+
+  /* a bolha de plástico com a foto (em P&B de mangá) */
+  .sc-bolha {
+    aspect-ratio: 4 / 3;
+    max-height: 32svh; /* o cartão inteiro cabe numa tela, até nas baixas */
+    width: 100%;
+    border: 3px solid #111;
+    border-radius: 22px 22px 44px 44px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .sc-bolha img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 38%;
+    filter: grayscale(1) contrast(1.25);
+  }
+  .sc-brilho {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.6) 45%, transparent 55%);
+    transform: translateX(-120%);
+    animation: sc-brilho 3.6s ease-in-out 1.4s infinite;
+  }
+  @keyframes sc-brilho {
+    0%,
+    55% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(120%);
+    }
+  }
+  .sc-mascote {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    width: 76px;
+    transform-origin: 50% 100%;
+    animation: sc-pula 2.8s ease-in-out infinite;
+  }
+  @keyframes sc-pula {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-8px) rotate(4deg);
+    }
+  }
+  .sc-flash {
+    animation: sc-pisca 2.8s steps(1) infinite;
+  }
+  @keyframes sc-pisca {
+    0%,
+    90% {
+      fill: #ffe14d;
+    }
+    92% {
+      fill: #fff;
+    }
+  }
+  .sc-fala {
+    position: absolute;
+    right: 70px;
+    bottom: 66px;
+    padding: 6px 10px;
+    border: 2.5px solid #111;
+    border-radius: 50%;
+    background: #fff;
+    font: 800 12px var(--fonte);
+  }
+
+  .sc-bio {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .sc-tags {
+    margin: 0;
+    font: 700 10px var(--fonte);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #2346a8;
+  }
+  .sc-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .sc-acoes a,
+  .sc-acoes button {
+    padding: 11px 18px;
+    border: 2.5px solid #111;
+    border-radius: 999px;
+    background: #fff;
+    color: #111;
+    font: 800 12px var(--fonte);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #111;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  .sc-acoes a {
+    background: #2346a8;
+    color: #fff;
+  }
+  .sc-acoes a:hover,
+  .sc-acoes button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 #111;
+  }
+  .sc-novo {
+    position: absolute;
+    right: -6px;
+    top: 34%;
+    z-index: 3;
+    padding: 10px 14px;
+    border: 3px solid #111;
+    background: #ffe14d;
+    color: #111;
+    font-size: 22px;
+    line-height: 0.85;
+    transform: rotate(10deg);
+  }
+
+  @media (max-width: 760px) {
+    .sc {
+      padding: 96px 18px 80px;
+    }
+    .sc-caixa {
+      padding: 36px 16px 18px;
+      gap: 12px;
+    }
+    .sc-selo {
+      width: 64px;
+      height: 64px;
+      font-size: 7px;
+    }
+    .sc-bio {
+      font-size: 13px;
+    }
+    .sc-mascote {
+      width: 62px;
+    }
+    .sc-novo {
+      font-size: 18px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sc-espiral,
+    .sc-brilho,
+    .sc-mascote,
+    .sc-flash {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, semMovimento, temMouse } from '../../lib/movimento';
+
+  document.querySelectorAll<HTMLElement>('.sc').forEach((sc) => {
+    if (semMovimento) return;
+    const caixa = sc.querySelector<HTMLElement>('.sc-caixa')!;
+    let flutuar: gsap.core.Tween | null = null;
+
+    // cai do gancho balançando na 1ª vez que aparece, depois flutua de leve
+    gsap.set(caixa, { opacity: 0 });
+    const olho = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      olho.disconnect();
+      gsap.timeline()
+        .fromTo(caixa, { y: -160, rotate: 0, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: 'bounce.out' })
+        .to(caixa, { keyframes: { rotate: [5, -3.5, 2, -1, 0] }, duration: 1.5, ease: 'sine.inOut' }, 0.6)
+        .from(sc.querySelectorAll('.sc-novo, .sc-selo, .sc-fala'), { scale: 0, rotate: '-=40', duration: 0.55, stagger: 0.12, ease: 'back.out(3)' }, 0.65)
+        .from(sc.querySelectorAll('.sc-bio, .sc-tags, .sc-acoes'), { y: 14, opacity: 0, duration: 0.5, stagger: 0.08, ease: 'power3.out' }, 0.8)
+        .call(() => {
+          flutuar = gsap.to(caixa, { y: -8, rotate: 0.8, duration: 2.6, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+        });
+    }, { threshold: 0.25 });
+    olho.observe(sc);
+
+    // longe da tela, a flutuação pausa
+    new IntersectionObserver(([e]) => (e.isIntersecting ? flutuar?.resume() : flutuar?.pause())).observe(sc);
+
+    // computador: o cartão inclina seguindo o mouse (como pegar o brinquedo na mão)
+    if (temMouse) {
+      const gx = gsap.quickTo(caixa, 'rotationX', { duration: 0.8, ease: 'power3.out' });
+      const gy = gsap.quickTo(caixa, 'rotationY', { duration: 0.8, ease: 'power3.out' });
+      sc.addEventListener('pointermove', (e) => {
+        const r = caixa.getBoundingClientRect();
+        gy(((e.clientX - (r.left + r.width / 2)) / innerWidth) * 18);
+        gx((-(e.clientY - (r.top + r.height / 2)) / innerHeight) * 12);
+      });
+      sc.addEventListener('pointerleave', () => { gx(0); gy(0); });
+    }
+  });
+</script>

@@ -7,7 +7,7 @@
 // Ordem da página:
 //  01 Loader "FRANCIS."            sites/Loader
 //  02 Hero "Explore meu portfólio"  sites/Hero (foto recortada na frente do título)
-//  03 Sobre mim                     comum/Mergulho (o cartão cresce até virar painel)
+//  03 Sobre mim                     comum/SobreCartao (um cartão só, com tudo dentro)
 //  04 Onde eu já estive             sites/Trajetoria (FaixaLateral + letreiro vazado)
 //  05 Sites no ar                   sites/Aparelho (notebook 3D)
 //  06 Protótipos e landing pages    comum/FaixaCurva
@@ -17,9 +17,7 @@ import type { ImageMetadata } from 'astro';
 import Portfolio from '../layouts/Portfolio.astro';
 import Loader from '../components/sites/Loader.astro';
 import Hero from '../components/sites/Hero.astro';
-import Mergulho from '../components/comum/Mergulho.astro';
-import CaixaBoneco from '../components/comum/CaixaBoneco.astro';
-import PaginaManga from '../components/comum/PaginaManga.astro';
+import SobreCartao from '../components/comum/SobreCartao.astro';
 import Trajetoria from '../components/sites/Trajetoria.astro';
 import Aparelho from '../components/sites/Aparelho.astro';
 import FaixaCurva from '../components/comum/FaixaCurva.astro';
@@ -56,34 +54,17 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
   <!-- 02 · HERO -->
   <Hero />
 
-  <!-- 03 · SOBRE MIM: a gravura é o "quadro pintado"; no painel, eu de costas olhando as luzes da cidade -->
-  <Mergulho id="sobre" titulo={['About', 'me']} rotulo="Behind the lens" foto={fotoDe('pedras/12-wonder-why')} lente="ambos">
-    <CaixaBoneco slot="cartao" />
-    <PaginaManga
-      slot="fundo"
-      fotos={[
-        fotoDe('pedras/13-perfil-na-noite'),
-        fotoDe('jaragua/05-escadaria-a-noite'),
-        fotoDe('carneiros/10-camera-na-praia'),
-        fotoDe('pedras/16-camisa-10'),
-        fotoDe('estudio/03-flash-na-tela'),
-      ].filter((f) => f !== undefined)}
-    />
-    <div slot="topo" class="painel-linha">
-      <h3 class="painel-frase">Websites that feel like photos: well framed, with light and rhythm</h3>
-      <span class="rotulo">Maceió · Brazil and Portugal</span>
-    </div>
-    <div class="painel-linha painel-fim">
-      <div class="painel-resumo">
-        <p class="rotulo">Software Engineering · Photography · Websites</p>
-        <p>{site.bio[1]}</p>
-      </div>
-      <div class="painel-acoes">
-        <a href="#sites">See the websites</a>
-        <button type="button" data-abrir-sobre>Read more</button>
-      </div>
-    </div>
-  </Mergulho>
+  <!-- 03 · SOBRE MIM: um cartão só, com tudo dentro (o boneco na caixa em mangá), na página de mangá -->
+  <SobreCartao
+    id="sobre"
+    fundo={[
+      fotoDe('pedras/13-perfil-na-noite'),
+      fotoDe('jaragua/05-escadaria-a-noite'),
+      fotoDe('carneiros/10-camera-na-praia'),
+      fotoDe('pedras/16-camisa-10'),
+      fotoDe('estudio/03-flash-na-tela'),
+    ].filter((f) => f !== undefined)}
+  />
 
   <!-- 04 · ONDE EU JÁ ESTIVE -->
   <Trajetoria />
