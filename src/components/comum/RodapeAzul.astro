@@ -1,0 +1,155 @@
+---
+// Rodapé azul das duas páginas: bloco azul royal com a paisagem em gravura embaixo (pegada
+// "sequel"), o título gigante, os botões e os links. Na home, a câmera 3D entra no slot "lado"
+// (sites/CameraFoto.astro): "Quer tirar uma fotografia?" leva para /fotografia.
+import Cenario from './Cenario.astro';
+import type { Foto } from '../../lib/fotos';
+import { site, github } from '../../data/site';
+
+interface Props {
+  foto?: Foto; // a paisagem em gravura
+  rotulo: string;
+  titulo: string;
+  texto: string;
+  botoes: { texto: string; href: string; principal?: boolean; fora?: boolean; lente?: 'foto' | 'codigo' }[];
+}
+
+const { foto, rotulo, titulo, texto, botoes } = Astro.props;
+const dominio = Astro.site?.toString().replace(/^https?:\/\//, '').replace(/\/$/, '');
+---
+
+<footer data-lente="ambos" data-tema="azul">
+  <Cenario foto={foto} class="contato">
+    <div class="contato-grade">
+      <div class="contato-topo">
+        <p class="rotulo contato-rotulo">{rotulo}</p>
+        <h2 class="titulo-cartaz">{titulo}</h2>
+        <p class="contato-texto voz-foto">{texto}</p>
+        <div class="botoes">
+          {
+            botoes.map((b) => (
+              <a
+                class={b.principal ? 'botao-principal' : 'botao-secundario'}
+                href={b.href}
+                target={b.fora ? '_blank' : undefined}
+                rel={b.fora ? 'noopener' : undefined}
+                data-lente-hover={b.lente}
+                data-flash={b.fora ? undefined : ''}
+              >
+                {b.texto}
+              </a>
+            ))
+          }
+        </div>
+      </div>
+      <div class="contato-lado">
+        <slot name="lado" />
+      </div>
+    </div>
+    <nav class="contato-links rotulo" aria-label="Redes">
+      <a href={`https://instagram.com/${site.contato.instagram}`} target="_blank" rel="noopener">Instagram</a>
+      <a href={`https://wa.me/${site.contato.whatsapp}`} target="_blank" rel="noopener">WhatsApp</a>
+      <a href={github} target="_blank" rel="noopener">GitHub</a>
+      <span>© {new Date().getFullYear()} {site.nome} · {dominio}</span>
+    </nav>
+  </Cenario>
+</footer>
+
+<style>
+  footer :global(.contato) {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    padding: calc(clamp(60px, 10vw, 140px) + 120px) var(--margem) 28px;
+    /* o topo do bloco azul some em degradê na cor de cima: sem linha seca entre as seções */
+    -webkit-mask-image: linear-gradient(transparent, #000 220px);
+    mask-image: linear-gradient(transparent, #000 220px);
+  }
+  footer :global(.contato .cenario-conteudo) {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    gap: 48px;
+  }
+  .contato-grade {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 0.9fr);
+    align-items: center;
+    gap: clamp(24px, 4vw, 64px);
+  }
+  .contato-lado:empty {
+    display: none;
+  }
+  .contato-rotulo {
+    color: var(--creme);
+    opacity: 0.8;
+  }
+  .contato-topo h2 {
+    margin: 12px 0 16px;
+    font-size: clamp(64px, 12vw, 220px);
+  }
+  .contato-texto {
+    max-width: 30ch;
+    margin: 0 0 28px;
+    font-size: clamp(22px, 2.4vw, 32px);
+    line-height: 1.2;
+  }
+  .botoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .botao-principal,
+  .botao-secundario {
+    padding: 14px 26px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background-color 0.3s,
+      color 0.3s;
+  }
+  .botao-principal {
+    background: var(--creme);
+    color: var(--gravura);
+  }
+  .botao-principal:hover {
+    background: #fff;
+  }
+  .botao-secundario {
+    border: 1px solid rgb(241 230 204 / 0.5);
+    background: rgb(31 63 153 / 0.75);
+    color: var(--creme);
+  }
+  .botao-secundario:hover {
+    background: rgb(241 230 204 / 0.12);
+  }
+  .contato-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    color: var(--creme);
+  }
+  .contato-links a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .contato-links a:hover {
+    text-decoration: underline;
+  }
+  .contato-links span {
+    margin-left: auto;
+    opacity: 0.8;
+  }
+  @media (max-width: 760px) {
+    .contato-grade {
+      grid-template-columns: 1fr;
+    }
+    .contato-links span {
+      margin-left: 0;
+    }
+  }
+</style>

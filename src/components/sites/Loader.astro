@@ -1,0 +1,93 @@
+---
+// Loader da home (pegada do "ECHO." do @echo_builds): "FRANCIS." brilhando dentro de um anel de
+// tinta que ondula, por ~1,5 s. Quem liga é o script inline do layout (classe "carregando" no
+// <html>); quem chega pelo flash da câmera não vê o loader.
+import { site } from '../../data/site';
+
+const [primeiro] = site.nome.split(' ');
+---
+
+<div class="loader" aria-hidden="true">
+  <svg class="loader-anel" viewBox="0 0 200 200">
+    <filter id="tinta-anel">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="7">
+        <animate attributeName="baseFrequency" dur="6s" values="0.02;0.035;0.02" repeatCount="indefinite" />
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="14" />
+    </filter>
+    <circle cx="100" cy="100" r="78" filter="url(#tinta-anel)" />
+    <circle cx="100" cy="100" r="70" filter="url(#tinta-anel)" />
+  </svg>
+  <b class="loader-nome titulo-cartaz">{primeiro}<i>.</i></b>
+</div>
+
+<style>
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: none;
+    place-items: center;
+    background: var(--gravura);
+    color: var(--creme);
+    transition: opacity 0.7s ease;
+  }
+  :global(html.carregando) .loader {
+    display: grid;
+  }
+  :global(html.carregando.saindo) .loader {
+    opacity: 0;
+  }
+  .loader-anel {
+    position: absolute;
+    width: min(70vw, 420px);
+    fill: none;
+    stroke: rgb(241 230 204 / 0.35);
+    stroke-width: 1;
+    animation: anel-girar 9s linear infinite;
+  }
+  .loader-anel circle + circle {
+    stroke: rgb(241 230 204 / 0.18);
+  }
+  @keyframes anel-girar {
+    to {
+      rotate: 360deg;
+    }
+  }
+  .loader-nome {
+    font-size: clamp(48px, 9vw, 110px);
+    letter-spacing: 0.08em;
+    text-shadow:
+      0 0 18px rgb(255 244 220 / 0.7),
+      0 0 60px rgb(255 244 220 / 0.35);
+    animation: acender 1.2s ease-out both;
+  }
+  .loader-nome i {
+    font-style: normal;
+    color: var(--azul-claro);
+  }
+  @keyframes acender {
+    from {
+      opacity: 0;
+      filter: blur(12px);
+      letter-spacing: 0.4em;
+    }
+  }
+</style>
+
+<script>
+  // some depois que a página carregou (no mínimo 1,4 s, no máximo 4 s)
+  const html = document.documentElement;
+  if (html.classList.contains('carregando')) {
+    const inicio = performance.now();
+    const sair = () => {
+      if (!html.classList.contains('carregando')) return;
+      html.classList.add('saindo');
+      setTimeout(() => html.classList.remove('carregando', 'saindo'), 700);
+    };
+    const quandoCarregar = () => setTimeout(sair, Math.max(0, 1400 - (performance.now() - inicio)));
+    if (document.readyState === 'complete') quandoCarregar();
+    else addEventListener('load', quandoCarregar, { once: true });
+    setTimeout(sair, 4000);
+  }
+</script>

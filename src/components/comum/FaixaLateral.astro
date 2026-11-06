@@ -1,0 +1,176 @@
+---
+// Faixa que passa de lado (pegada do "Where I've been" do @echo_builds): a tela trava e os itens
+// (o slot) andam para a esquerda junto com a rolagem. Atrás, um letreiro gigante vazado anda mais
+// devagar e no sentido contrário (profundidade) e dá um glitch em vermelho e ciano de vez em quando.
+// A barrinha embaixo mostra quanto falta. Sem JS ou com "reduzir movimento": arrasta com o dedo.
+interface Props {
+  id?: string;
+  rotulo: string;
+  letreiro: string;
+  tema?: 'claro' | 'tinta' | 'azul';
+  lente?: 'foto' | 'codigo' | 'ambos';
+}
+
+const { id, rotulo, letreiro, tema = 'tinta', lente = 'ambos' } = Astro.props;
+---
+
+<section class="ato faixa-lateral" id={id} data-trava data-lente={lente} data-tema={tema}>
+  <div class="fl-palco">
+    <span class="fl-letreiro titulo-cartaz" data-texto={letreiro} aria-hidden="true">{letreiro}</span>
+    <p class="ato-id rotulo">{rotulo}</p>
+    <div class="fl-trilho">
+      <slot />
+    </div>
+    <div class="fl-progresso" aria-hidden="true"><i></i></div>
+  </div>
+</section>
+
+<style>
+  .faixa-lateral {
+    margin-left: calc(var(--margem) * -1);
+    margin-right: calc(var(--margem) * -1);
+  }
+  .fl-palco {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    min-height: 100svh;
+    padding: 96px 0 34px;
+    overflow: hidden;
+  }
+  .fl-palco > .ato-id {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 0 var(--margem);
+  }
+  .fl-trilho {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: clamp(14px, 2vw, 28px);
+    padding: 0 var(--margem);
+    overflow-x: auto; /* sem JS: arrasta com o dedo */
+    scrollbar-width: none;
+    will-change: transform;
+  }
+  .fl-trilho::-webkit-scrollbar {
+    display: none;
+  }
+  .fl-trilho > :global(*) {
+    flex: none;
+  }
+  .fl-progresso {
+    position: relative;
+    z-index: 1;
+    height: 2px;
+    margin: 0 var(--margem);
+    background: var(--linha);
+  }
+  .fl-progresso i {
+    display: block;
+    height: 100%;
+    background: var(--texto);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* letreiro gigante vazado + glitch (duas cópias deslocadas em fatias, de vez em quando) */
+  .fl-letreiro {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    font-size: clamp(120px, 34svh, 380px);
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--texto);
+    opacity: 0.2;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .fl-letreiro::before,
+  .fl-letreiro::after {
+    content: attr(data-texto);
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    animation: glitch 5s steps(1) infinite;
+  }
+  .fl-letreiro::before {
+    -webkit-text-stroke-color: #ff2e5b;
+  }
+  .fl-letreiro::after {
+    -webkit-text-stroke-color: #2ee6ff;
+    animation-delay: 0.08s;
+  }
+  @keyframes glitch {
+    0%,
+    86%,
+    100% {
+      opacity: 0;
+      translate: 0 0;
+      clip-path: inset(0 0 0 0);
+    }
+    88% {
+      opacity: 1;
+      translate: -14px 0;
+      clip-path: inset(10% 0 62% 0);
+    }
+    90% {
+      opacity: 1;
+      translate: 12px 0;
+      clip-path: inset(48% 0 22% 0);
+    }
+    92% {
+      opacity: 1;
+      translate: -8px 0;
+      clip-path: inset(70% 0 6% 0);
+    }
+    94% {
+      opacity: 1;
+      translate: 6px 0;
+      clip-path: inset(28% 0 50% 0);
+    }
+  }
+  @media (max-width: 760px) {
+    .fl-letreiro {
+      font-size: 120px;
+    }
+  }
+</style>
+
+<script>
+  import { gsap, semMovimento, prioridade } from '../../lib/movimento';
+
+  document.querySelectorAll<HTMLElement>('.faixa-lateral').forEach((secao) => {
+    if (semMovimento) return;
+    const trilho = secao.querySelector<HTMLElement>('.fl-trilho')!;
+    const barra = secao.querySelector<HTMLElement>('.fl-progresso i')!;
+    const letreiro = secao.querySelector<HTMLElement>('.fl-letreiro')!;
+    trilho.style.overflow = 'visible';
+    const distancia = () => Math.max(0, trilho.scrollWidth - trilho.clientWidth);
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: secao,
+        start: 'top top',
+        end: () => `+=${distancia()}`,
+        pin: secao.querySelector('.fl-palco'),
+        scrub: 0.6,
+        invalidateOnRefresh: true,
+        refreshPriority: prioridade(secao),
+        onUpdate: (s) => (barra.style.transform = `scaleX(${s.progress})`),
+      },
+    });
+    tl.to(trilho, { x: () => -distancia() }, 0).fromTo(
+      letreiro,
+      { x: () => innerWidth * 0.1 },
+      { x: () => -(letreiro.offsetWidth - innerWidth * 0.6) },
+      0,
+    );
+  });
+</script>

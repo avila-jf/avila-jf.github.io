@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 5360" width="1440" height="5360" font-family="monospace">
+<rect x="0" y="0" width="1440" height="5360" fill="#fafafa"/>
+<text x="40" y="50" font-size="26" fill="#333">HOME = PORTFOLIO DE SITES  (camada 1: wireframe)</text>
+<rect x="20" y="80" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="104" font-size="16" fill="#555">01 loader</text>
+<text x="1400" y="104" font-size="13" fill="#888" text-anchor="end">aparece 1,4 s e some</text>
+<rect x="540" y="280" width="360" height="220" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="548" y="298" font-size="12" fill="#777">media</text>
+<text x="552" y="322" font-size="14" fill="#333">[img: anel de tinta que ondula]</text>
+<text x="552" y="344" font-size="14" fill="#333">[h1: FRANCIS.]</text>
+<text x="552" y="366" font-size="14" fill="#333">[t3: brilho acendendo]</text>
+<rect x="20" y="740" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="764" font-size="16" fill="#555">02 hero</text>
+<text x="1400" y="764" font-size="13" fill="#888" text-anchor="end">fundo em gravura azul (o que voce curtiu) + sua foto recortada em preto</text>
+<rect x="60" y="780" width="1320" height="50" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="798" font-size="12" fill="#777">nav</text>
+<text x="72" y="822" font-size="14" fill="#333">[t1: FRANCIS AVILA]   [btn: Sites]  [lnk: Fotografia]  [lnk: Sobre]  [t3: agenda aberta]  [btn2: Quero meu site]</text>
+<rect x="100" y="870" width="1240" height="150" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="108" y="888" font-size="12" fill="#777">hero</text>
+<text x="112" y="912" font-size="14" fill="#333">[h1: EXPLORE]</text>
+<text x="112" y="934" font-size="14" fill="#333">[h1: MEU PORTFOLIO]  (letra gigante, atras da foto)</text>
+<rect x="540" y="950" width="380" height="400" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="548" y="968" font-size="12" fill="#777">media</text>
+<text x="552" y="992" font-size="14" fill="#333">[img: sua foto sem fundo, preto e branco escuro]</text>
+<text x="552" y="1014" font-size="14" fill="#333">(fica NA FRENTE da linha de baixo do titulo)</text>
+<text x="552" y="1036" font-size="14" fill="#333">(parallax leve com o mouse)</text>
+<rect x="1020" y="1160" width="330" height="120" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="1028" y="1178" font-size="12" fill="#777">section</text>
+<text x="1032" y="1202" font-size="14" fill="#333">[t3: Francis Avila . Maceio]</text>
+<text x="1032" y="1224" font-size="14" fill="#333">[t2: Sites com olhar de fotografo]</text>
+<text x="1032" y="1246" font-size="14" fill="#333">[t3: role para entrar]</text>
+<rect x="20" y="1400" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="1424" font-size="16" fill="#555">03 sobre mim (mergulho)</text>
+<text x="1400" y="1424" font-size="13" fill="#888" text-anchor="end">quadro pintado em gravura; card "SOBRE MIM" no meio</text>
+<rect x="60" y="1450" width="1320" height="540" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="1468" font-size="12" fill="#777">media</text>
+<text x="72" y="1492" font-size="14" fill="#333">[img: paisagem em gravura (fundo)]</text>
+<rect x="620" y="1570" width="240" height="300" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="628" y="1588" font-size="12" fill="#777">card</text>
+<text x="632" y="1612" font-size="14" fill="#333">[h2: SOBRE]</text>
+<text x="632" y="1634" font-size="14" fill="#333">[h2: MIM]</text>
+<text x="632" y="1656" font-size="14" fill="#333">(ao rolar: o card cresce)</text>
+<rect x="1020" y="1560" width="330" height="330" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="1028" y="1578" font-size="12" fill="#777">card2</text>
+<text x="1032" y="1602" font-size="14" fill="#333">ESTADO 2 (depois de crescer):</text>
+<text x="1032" y="1624" font-size="14" fill="#333">painel grande com borda</text>
+<text x="1032" y="1646" font-size="14" fill="#333">[img: foto com luz (estudio)]</text>
+<text x="1032" y="1668" font-size="14" fill="#333">[h2: Francis Avila]</text>
+<text x="1032" y="1690" font-size="14" fill="#333">[t2: bio curta]</text>
+<text x="1032" y="1712" font-size="14" fill="#333">[btn: Ver projetos] [btn3: Ler mais]</text>
+<text x="1032" y="1734" font-size="14" fill="#333">(fundo escurece ate o preto)</text>
+<rect x="20" y="2060" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="2084" font-size="16" fill="#555">04 trajetoria (onde eu ja estive)</text>
+<text x="1400" y="2084" font-size="13" fill="#888" text-anchor="end">tela trava e passa de lado; letreiro vazado gigante atras + glitch</text>
+<rect x="60" y="2120" width="1320" height="120" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="2138" font-size="12" fill="#777">rail</text>
+<text x="72" y="2162" font-size="14" fill="#333">[h1: ONDE EU JA ESTIVE]  (contorno, gigante, anda devagar)</text>
+<rect x="100" y="2280" width="380" height="300" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="108" y="2298" font-size="12" fill="#777">card</text>
+<text x="112" y="2322" font-size="14" fill="#333">[t3: 2025]</text>
+<text x="112" y="2344" font-size="14" fill="#333">[h2: ENGENHARIA DE SOFTWARE]</text>
+<text x="112" y="2366" font-size="14" fill="#333">[t2: Estacio . faculdade]</text>
+<text x="112" y="2388" font-size="14" fill="#333">[t3: Java . MySQL . web]</text>
+<rect x="540" y="2280" width="380" height="300" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="548" y="2298" font-size="12" fill="#777">card</text>
+<text x="552" y="2322" font-size="14" fill="#333">[t3: 2026]</text>
+<text x="552" y="2344" font-size="14" fill="#333">[h2: FOTOGRAFO]</text>
+<text x="552" y="2366" font-size="14" fill="#333">[t2: Nikon D3200 . ensaios em Maceio]</text>
+<rect x="980" y="2280" width="380" height="300" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="988" y="2298" font-size="12" fill="#777">card</text>
+<text x="992" y="2322" font-size="14" fill="#333">[t3: 2026]</text>
+<text x="992" y="2344" font-size="14" fill="#333">[h2: DEV DE SITES]</text>
+<text x="992" y="2366" font-size="14" fill="#333">[t2: sites para clientes . freela]</text>
+<text x="992" y="2388" font-size="14" fill="#333">[t3: Astro . GSAP . Three.js . Supabase]</text>
+<rect x="20" y="2720" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="2744" font-size="16" fill="#555">05 sites no ar (destaque)</text>
+<text x="1400" y="2744" font-size="13" fill="#888" text-anchor="end">o notebook 3D que voce ja tem (fica)</text>
+<rect x="60" y="2780" width="860" height="520" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="2798" font-size="12" fill="#777">media</text>
+<text x="72" y="2822" font-size="14" fill="#333">[img: notebook 3D abrindo nos sites]</text>
+<text x="72" y="2844" font-size="14" fill="#333">(tela trava, troca de site rolando)</text>
+<rect x="960" y="2780" width="400" height="520" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="968" y="2798" font-size="12" fill="#777">section</text>
+<text x="972" y="2822" font-size="14" fill="#333">[t3: 01 / 04]</text>
+<text x="972" y="2844" font-size="14" fill="#333">[h2: Manoel.ink]</text>
+<text x="972" y="2866" font-size="14" fill="#333">[t2: descricao]</text>
+<text x="972" y="2888" font-size="14" fill="#333">[t3: tecnologias]</text>
+<text x="972" y="2910" font-size="14" fill="#333">[lnk: Abrir site]</text>
+<text x="972" y="2932" font-size="14" fill="#333"></text>
+<text x="972" y="2954" font-size="14" fill="#333">Manoel.ink, Manoel (demo), Otica Beco,</text>
+<text x="972" y="2976" font-size="14" fill="#333">Magnobag</text>
+<rect x="20" y="3380" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="3404" font-size="16" fill="#555">06 prototipos e landing pages</text>
+<text x="1400" y="3404" font-size="13" fill="#888" text-anchor="end">faixa curva: o do meio reto, os das pontas dobram (fita)</text>
+<rect x="60" y="3450" width="280" height="260" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="3468" font-size="12" fill="#777">card</text>
+<text x="72" y="3492" font-size="14" fill="#333">[img: print]</text>
+<text x="72" y="3514" font-size="14" fill="#333">(dobrando para tras)</text>
+<rect x="380" y="3430" width="720" height="300" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="388" y="3448" font-size="12" fill="#777">card2</text>
+<text x="392" y="3472" font-size="14" fill="#333">[img: print do site do meio]</text>
+<text x="392" y="3494" font-size="14" fill="#333">(reto, de frente)</text>
+<rect x="1140" y="3450" width="280" height="260" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="1148" y="3468" font-size="12" fill="#777">card</text>
+<text x="1152" y="3492" font-size="14" fill="#333">[img: print]</text>
+<text x="1152" y="3514" font-size="14" fill="#333">(dobrando para tras)</text>
+<rect x="380" y="3750" width="720" height="80" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="388" y="3768" font-size="12" fill="#777">section</text>
+<text x="392" y="3792" font-size="14" fill="#333">[t2: nome do projeto]</text>
+<text x="392" y="3814" font-size="14" fill="#333">[t3: tipo . ano]</text>
+<rect x="60" y="3860" width="1320" height="100" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="3878" font-size="12" fill="#777">section</text>
+<text x="72" y="3902" font-size="14" fill="#333">[t2: Raiz e Orgulho . Zeroalta . La Gringa . Liv Sa . Sofiarte]</text>
+<text x="72" y="3924" font-size="14" fill="#333">[t3: arraste ou role]</text>
+<rect x="20" y="4040" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="4064" font-size="16" fill="#555">07 hexagono -&gt; pilha</text>
+<text x="1400" y="4064" font-size="13" fill="#888" text-anchor="end">um efeito so: o anel gira, fecha no meio e vira a pilha</text>
+<rect x="80" y="4100" width="600" height="520" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="88" y="4118" font-size="12" fill="#777">media</text>
+<text x="92" y="4142" font-size="14" fill="#333">ESTADO 1</text>
+<text x="92" y="4164" font-size="14" fill="#333">6+ cards em anel nas faces</text>
+<text x="92" y="4186" font-size="14" fill="#333">[h2: PROJETOS 26]  (hexagono no meio)</text>
+<rect x="740" y="4100" width="660" height="520" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="748" y="4118" font-size="12" fill="#777">section</text>
+<text x="752" y="4142" font-size="14" fill="#333">ESTADO 2 (pilha)</text>
+<text x="752" y="4164" font-size="14" fill="#333">[h2: nome]        [card: print]      [t2: detalhes]</text>
+<text x="752" y="4186" font-size="14" fill="#333"></text>
+<text x="752" y="4208" font-size="14" fill="#333">                  (cards sobem num cilindro)</text>
+<text x="752" y="4230" font-size="14" fill="#333"></text>
+<text x="752" y="4252" font-size="14" fill="#333">[t3: role para ver mais]</text>
+<text x="752" y="4274" font-size="14" fill="#333"></text>
+<text x="752" y="4296" font-size="14" fill="#333">todos os projetos: sites + faculdade (Java)</text>
+<rect x="20" y="4700" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="4724" font-size="16" fill="#555">08 rodape + camera (o rodape azul de agora, com a camera dentro)</text>
+<text x="1400" y="4724" font-size="13" fill="#888" text-anchor="end">a Nikon 3D (sua antiga intro) mora no rodape</text>
+<rect x="60" y="4740" width="1320" height="540" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="4758" font-size="12" fill="#777">section</text>
+<text x="72" y="4782" font-size="14" fill="#333">[t3: 06 . contato]</text>
+<text x="72" y="4804" font-size="14" fill="#333">[h1: BORA CRIAR?]</text>
+<text x="72" y="4826" font-size="14" fill="#333">[btn: Quero meu site] [btn3: Quero um ensaio]</text>
+<rect x="800" y="4770" width="560" height="330" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="808" y="4788" font-size="12" fill="#777">media</text>
+<text x="812" y="4812" font-size="14" fill="#333">[img: Nikon 3D mirando no mouse]</text>
+<text x="812" y="4834" font-size="14" fill="#333">(vira, da zoom e foca quando o rodape sobe)</text>
+<text x="812" y="4856" font-size="14" fill="#333">(clique na camera = disparar)</text>
+<rect x="800" y="5110" width="560" height="70" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="808" y="5128" font-size="12" fill="#777">card</text>
+<text x="812" y="5152" font-size="14" fill="#333">[h3: Quer tirar uma fotografia?]  [btn: [ico:obturador] Disparar]</text>
+<rect x="60" y="5120" width="700" height="110" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="5138" font-size="12" fill="#777">media</text>
+<text x="72" y="5162" font-size="14" fill="#333">[img: paisagem em gravura embaixo (a de agora)]</text>
+<text x="72" y="5184" font-size="14" fill="#333">[lnk: Instagram] [lnk: WhatsApp] [lnk: GitHub]</text>
+<rect x="60" y="5245" width="1320" height="30" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="5263" font-size="12" fill="#777">section</text>
+<text x="72" y="5287" font-size="14" fill="#333">disparar -&gt; flash branco na tela toda -&gt; abre /fotografia saindo do mesmo branco</text>
+</svg>

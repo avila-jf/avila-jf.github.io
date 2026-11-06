@@ -1,0 +1,27 @@
+---
+// A tela branca do flash da câmera (lib/flash.ts). Fica por cima de tudo e não pega clique.
+---
+
+<div class="flash-tela" aria-hidden="true"></div>
+
+<style>
+  .flash-tela {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* chegou pelo flash: começa branco (antes da primeira pintura) e o script apaga */
+  :global(html.do-flash) .flash-tela {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  import { ligarLinksComFlash, chegarDoFlash } from '../../lib/flash';
+
+  ligarLinksComFlash();
+  chegarDoFlash();
+</script>

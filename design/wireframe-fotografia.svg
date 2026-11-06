@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 4040" width="1440" height="4040" font-family="monospace">
+<rect x="0" y="0" width="1440" height="4040" fill="#fafafa"/>
+<text x="40" y="50" font-size="26" fill="#333">/FOTOGRAFIA = PORTFOLIO DE FOTOS  (camada 1: wireframe)</text>
+<rect x="20" y="80" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="104" font-size="16" fill="#555">01 entrada zika (sai do branco do flash)</text>
+<text x="1400" y="104" font-size="13" fill="#888" text-anchor="end">tela cheia: o mural inteiro em gravura, com o titulo no meio</text>
+<rect x="60" y="120" width="1320" height="50" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="138" font-size="12" fill="#777">nav</text>
+<text x="72" y="162" font-size="14" fill="#333">[t1: FRANCIS AVILA]   [btn: Sites]  [lnk: Fotografia]  [lnk: Sobre]  [t3: agenda aberta]  [btn2: Quero meu site]</text>
+<rect x="60" y="190" width="1320" height="480" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="208" font-size="12" fill="#777">media</text>
+<text x="72" y="232" font-size="14" fill="#333">[img: parede de fotos em gravura azul, curva, tela toda]</text>
+<rect x="540" y="310" width="400" height="230" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="548" y="328" font-size="12" fill="#777">card</text>
+<text x="552" y="352" font-size="14" fill="#333">[t3: Francis Avila . Maceio]</text>
+<text x="552" y="374" font-size="14" fill="#333">[h1: PELA MINHA]</text>
+<text x="552" y="396" font-size="14" fill="#333">[h1: LENTE.]</text>
+<text x="552" y="418" font-size="14" fill="#333">[t3: 5 ensaios . 62 fotos]</text>
+<rect x="580" y="620" width="320" height="40" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="588" y="638" font-size="12" fill="#777">section</text>
+<text x="592" y="662" font-size="14" fill="#333">[t3: role para ver]</text>
+<rect x="20" y="740" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="764" font-size="16" fill="#555">02 rolando 1: o layout encolhe e as fotos ganham cor</text>
+<text x="1400" y="764" font-size="13" fill="#888" text-anchor="end">tela travada; tudo continua com hover como hoje</text>
+<rect x="260" y="800" width="960" height="470" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="268" y="818" font-size="12" fill="#777">media</text>
+<text x="272" y="842" font-size="14" fill="#333">[img: o mural inteiro, MENOR (vira um quadro com borda arredondada)]</text>
+<text x="272" y="864" font-size="14" fill="#333">(as fotos vao ganhando cor numa onda do meio pra fora)</text>
+<text x="272" y="886" font-size="14" fill="#333">(passar o mouse: a foto chega pra frente, nome + ensaio embaixo)</text>
+<text x="272" y="908" font-size="14" fill="#333">(clicar: abre o detalhe, como hoje)</text>
+<rect x="60" y="1285" width="1320" height="40" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="1303" font-size="12" fill="#777">section</text>
+<text x="72" y="1327" font-size="14" fill="#333">scroll 0% -&gt; 50%: escala 1 -&gt; 0,6 . gravura -&gt; cor</text>
+<rect x="20" y="1400" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="1424" font-size="16" fill="#555">03 rolando 2: as fotos se juntam e formam o hexagono</text>
+<text x="1400" y="1424" font-size="13" fill="#888" text-anchor="end">mesma tela travada; as fotos voam do mural pro anel</text>
+<rect x="100" y="1470" width="520" height="460" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="108" y="1488" font-size="12" fill="#777">media</text>
+<text x="112" y="1512" font-size="14" fill="#333">ANTES</text>
+<text x="112" y="1534" font-size="14" fill="#333">[img: mural pequeno e colorido]</text>
+<text x="112" y="1556" font-size="14" fill="#333">(as fotos que nao entram no anel somem)</text>
+<rect x="720" y="1460" width="660" height="480" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="728" y="1478" font-size="12" fill="#777">media</text>
+<text x="732" y="1502" font-size="14" fill="#333">DEPOIS</text>
+<text x="732" y="1524" font-size="14" fill="#333">[img: 6 a 12 fotos em anel nas faces]</text>
+<text x="732" y="1546" font-size="14" fill="#333">[h2: FOTOS 26]  (hexagono no meio)</text>
+<text x="732" y="1568" font-size="14" fill="#333">(o anel gira com o scroll; a foto do topo acende)</text>
+<text x="732" y="1590" font-size="14" fill="#333">[t2: nome da foto . ensaio]</text>
+<rect x="60" y="1945" width="1320" height="40" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="1963" font-size="12" fill="#777">section</text>
+<text x="72" y="1987" font-size="14" fill="#333">scroll 50% -&gt; 100%: cada foto vai da casa dela no mural pra sua face no hexagono</text>
+<rect x="20" y="2060" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="2084" font-size="16" fill="#555">04 ensaios (faixa curva)</text>
+<text x="1400" y="2084" font-size="13" fill="#888" text-anchor="end">depois do hexagono vem o resto do site; um ensaio por card, dobrando como fita</text>
+<rect x="60" y="2130" width="280" height="400" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="2148" font-size="12" fill="#777">card</text>
+<text x="72" y="2172" font-size="14" fill="#333">[img: Pedras]</text>
+<text x="72" y="2194" font-size="14" fill="#333">(dobra)</text>
+<rect x="380" y="2110" width="720" height="440" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="388" y="2128" font-size="12" fill="#777">card2</text>
+<text x="392" y="2152" font-size="14" fill="#333">[img: Jaragua]</text>
+<text x="392" y="2174" font-size="14" fill="#333">[h2: JARAGUA]</text>
+<text x="392" y="2196" font-size="14" fill="#333">[t3: 11 fotos]</text>
+<text x="392" y="2218" font-size="14" fill="#333">[lnk: Ver ensaio]</text>
+<rect x="1140" y="2130" width="280" height="400" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="1148" y="2148" font-size="12" fill="#777">card</text>
+<text x="1152" y="2172" font-size="14" fill="#333">[img: Carneiros]</text>
+<text x="1152" y="2194" font-size="14" fill="#333">(dobra)</text>
+<rect x="20" y="2720" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="2744" font-size="16" fill="#555">05 o olhar (mergulho)</text>
+<text x="1400" y="2744" font-size="13" fill="#888" text-anchor="end">quadro pintado + card que cresce, igual ao da home</text>
+<rect x="60" y="2770" width="1320" height="540" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="2788" font-size="12" fill="#777">media</text>
+<text x="72" y="2812" font-size="14" fill="#333">[img: paisagem em gravura]</text>
+<rect x="620" y="2890" width="240" height="300" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="628" y="2908" font-size="12" fill="#777">card</text>
+<text x="632" y="2932" font-size="14" fill="#333">[h2: O OLHAR]</text>
+<text x="632" y="2954" font-size="14" fill="#333">(cresce ate virar painel)</text>
+<rect x="1020" y="2880" width="330" height="330" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="1028" y="2898" font-size="12" fill="#777">card2</text>
+<text x="1032" y="2922" font-size="14" fill="#333">ESTADO 2:</text>
+<text x="1032" y="2944" font-size="14" fill="#333">[h2: Enquadramento . Luz . Ritmo]</text>
+<text x="1032" y="2966" font-size="14" fill="#333">[t2: as 3 perguntas de uma foto]</text>
+<rect x="20" y="3380" width="1400" height="620" fill="none" stroke="#999" stroke-width="2"/>
+<text x="34" y="3404" font-size="16" fill="#555">06 contato</text>
+<text x="1400" y="3404" font-size="13" fill="#888" text-anchor="end">mesmo rodape azul, com o ensaio na frente</text>
+<rect x="60" y="3440" width="1320" height="500" fill="#fff" stroke="#aaa" stroke-width="1.5"/>
+<text x="68" y="3458" font-size="12" fill="#777">section</text>
+<text x="72" y="3482" font-size="14" fill="#333">[h1: BORA FOTOGRAFAR?]</text>
+<text x="72" y="3504" font-size="14" fill="#333">[btn: Quero um ensaio] [btn3: Ver os sites]</text>
+<text x="72" y="3526" font-size="14" fill="#333">[img: paisagem em gravura]</text>
+<text x="72" y="3548" font-size="14" fill="#333">[lnk: Instagram] [lnk: WhatsApp]</text>
+</svg>

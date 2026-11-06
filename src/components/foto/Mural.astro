@@ -23,11 +23,9 @@ import { url } from '../../lib/url';
 interface Props {
   fotos: Foto[];
   totalFotos: number;
-  sitesNoAr: number;
-  projetos: number;
 }
 
-const { fotos, totalFotos, sitesNoAr, projetos } = Astro.props;
+const { fotos, totalFotos } = Astro.props;
 
 // 12 x 6 casas, 4 delas são do cartão do meio: 68 fotos (repete se faltar)
 const CASAS = 68;
@@ -57,8 +55,8 @@ const CORES: Record<string, string> = {
       <div class="mural-grade">
         <div class="mural-cartao">
           <span class="rotulo">Francis Avila · Maceió</span>
-          <h1 class="mural-titulo">Eu crio <span class="voz-codigo">sites</span> com olhar de <span class="voz-foto">fotógrafo</span>.</h1>
-          <span class="rotulo">{sitesNoAr} sites no ar · {projetos} projetos · {totalFotos} fotos</span>
+          <h1 class="mural-titulo">Pela minha <span class="voz-foto">lente.</span></h1>
+          <span class="rotulo">{categorias.length} ensaios · {totalFotos} fotos</span>
         </div>
         {
           lista.map((f, i) => (

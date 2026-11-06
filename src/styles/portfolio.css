@@ -1,0 +1,148 @@
+/* Peças de layout comuns às duas páginas do site novo (home de sites e /fotografia).
+   Cores, fontes e vozes tipográficas ficam em novo.css; o visual de cada seção fica no componente. */
+
+/* troca de página sem piscar: o navegador funde a página velha com a nova (o flash da câmera
+   já deixa as duas brancas no momento da troca) */
+@view-transition {
+  navigation: auto;
+}
+
+main {
+  padding: 110px var(--margem) 40px;
+}
+
+/* cada seção da página */
+.ato {
+  margin-bottom: 120px;
+}
+.ato-id {
+  margin: 0 0 16px;
+  color: var(--texto);
+}
+
+/* Caixa de wireframe: marca onde uma peça ainda vai entrar (camada 1) */
+.caixa {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed rgb(35 70 168 / 0.4);
+  border-radius: 18px;
+  background: var(--vidro);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--texto-suave);
+  font-size: 14px;
+  text-align: center;
+}
+.caixa b {
+  color: var(--texto);
+}
+
+/* Fotos: com as cores delas, cantos arredondados e um zoom lento no hover */
+.foto {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--fundo-2);
+}
+.foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.foto:hover img {
+  transform: scale(1.04);
+}
+
+/* Lista enxuta de projetos (sem JS ou "reduzir movimento", no lugar da pilha) */
+.outros {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--linha);
+}
+.outros a {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr auto auto;
+  align-items: baseline;
+  gap: 24px;
+  padding: 22px 4px;
+  border-bottom: 1px solid var(--linha);
+  color: var(--texto-suave);
+  text-decoration: none;
+  transition:
+    padding 0.4s,
+    color 0.4s;
+}
+.outros a:hover {
+  padding-left: 16px;
+  color: var(--texto);
+}
+.outros b {
+  font-size: clamp(26px, 3vw, 40px);
+  color: var(--texto);
+}
+.outros-seta {
+  color: var(--azul);
+}
+
+/* texto dentro do painel do Mergulho */
+.painel-sobre .rotulo {
+  margin: 0;
+  color: var(--creme);
+  opacity: 0.8;
+}
+.painel-sobre h2 {
+  margin: 8px 0 14px;
+  font-size: clamp(48px, 7vw, 110px);
+}
+.painel-sobre p {
+  max-width: 44ch;
+  margin: 0 0 18px;
+  font-size: clamp(16px, 1.4vw, 21px);
+  line-height: 1.4;
+}
+.painel-sobre .acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.painel-sobre .acoes a,
+.painel-sobre .acoes button {
+  padding: 12px 22px;
+  border: 1px solid rgb(241 230 204 / 0.5);
+  border-radius: 999px;
+  background: none;
+  color: var(--creme);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.painel-sobre .acoes :first-child {
+  background: var(--creme);
+  color: var(--gravura);
+}
+.painel-sobre .acoes a:hover,
+.painel-sobre .acoes button:hover {
+  background: rgb(241 230 204 / 0.18);
+}
+
+@media (max-width: 760px) {
+  .outros a {
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+  }
+  .outros-descricao,
+  .outros .voz-codigo {
+    grid-column: 1 / -1;
+  }
+}

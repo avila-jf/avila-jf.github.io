@@ -1,0 +1,189 @@
+---
+// A Nikon 3D no rodapé da home (a câmera que antes era a intro; src/lib/camera3d.ts), com a
+// pergunta "Quer tirar uma fotografia?". Quando o rodapé sobe, a câmera vira de frente, dá zoom e
+// foca, narrada no cartão de código. De frente, ela mira no mouse. Disparar (no botão ou clicando
+// na câmera): clique da câmera, flash na tela toda e a página de fotografia abre saindo do branco
+// (lib/flash.ts). A câmera só monta quando o rodapé chega perto. Sem WebGL: o código e o botão.
+import { getImage } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+import type { InfoDisplay } from '../../lib/camera3d';
+import { url } from '../../lib/url';
+
+interface Props {
+  foto?: Foto; // aparece no display da câmera
+  info: InfoDisplay;
+}
+
+const { foto, info } = Astro.props;
+const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format: 'webp', quality: 70 })).src : undefined;
+---
+
+<div class="camfoto" data-foto={fotoDisplay} data-info={JSON.stringify(info)} data-destino={url('/fotografia')}>
+  <div class="cf-cena">
+    <canvas aria-hidden="true"></canvas>
+  </div>
+  <div class="cf-cartao">
+    <div class="cf-codigo voz-codigo" aria-hidden="true">
+      <div>camera.virar(<em data-v="virar">0.00</em>); camera.zoom(<em data-v="zoom">18</em>mm);</div>
+      <div>camera.foco(<em data-v="foco">0.00</em>); <span class="c" data-v="estado"></span></div>
+    </div>
+    <p class="cf-pergunta titulo-cartaz">Quer tirar uma fotografia?</p>
+    <button class="cf-disparar" type="button">
+      <span class="cf-obturador" aria-hidden="true"></span>
+      Disparar
+    </button>
+  </div>
+</div>
+
+<style>
+  .camfoto {
+    display: grid;
+    gap: 14px;
+  }
+  .cf-cena {
+    position: relative;
+    height: min(46svh, 440px);
+    cursor: pointer;
+  }
+  .cf-cena canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .cf-cena:global(.pronta) canvas {
+    opacity: 1;
+  }
+  .cf-cartao {
+    display: grid;
+    gap: 14px;
+    padding: 18px 20px;
+    border: 1px solid rgb(241 230 204 / 0.22);
+    border-radius: 18px;
+    background: rgb(12 21 48 / 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .cf-codigo {
+    font-size: 12px;
+    line-height: 1.8;
+    color: rgb(241 230 204 / 0.75);
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+  .cf-codigo em {
+    display: inline-block;
+    min-width: 3.4ch;
+    color: var(--creme);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+  }
+  .cf-codigo :global(.ok) {
+    color: #7be3ad;
+  }
+  .cf-pergunta {
+    margin: 0;
+    font-size: clamp(30px, 3.2vw, 52px);
+    color: var(--creme);
+  }
+  .cf-disparar {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    width: fit-content;
+    padding: 10px 22px 10px 10px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--creme);
+    color: var(--gravura);
+    font: 600 15px var(--fonte);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .cf-disparar:hover {
+    background: #fff;
+  }
+  /* o botão do obturador: aro + miolo vermelho que pulsa */
+  .cf-obturador {
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--gravura);
+    border-radius: 50%;
+    background: radial-gradient(circle, #e0413a 0 42%, transparent 46%);
+    animation: pulso 1.8s ease-in-out infinite;
+  }
+  @keyframes pulso {
+    50% {
+      box-shadow: 0 0 0 6px rgb(224 65 58 / 0.18);
+    }
+  }
+</style>
+
+<script>
+  import { gsap, semMovimento } from '../../lib/movimento';
+  import { dispararPara } from '../../lib/flash';
+  import type { Camera3D } from '../../lib/camera3d';
+
+  const raiz = document.querySelector<HTMLElement>('.camfoto');
+  if (raiz) {
+    const cena = raiz.querySelector<HTMLElement>('.cf-cena')!;
+    const valor = (nome: string) => raiz.querySelector<HTMLElement>(`[data-v="${nome}"]`)!;
+    const pose = { virar: semMovimento ? 1 : 0, zoom: semMovimento ? 1 : 0, foco: semMovimento ? 1 : 0 };
+    let camera: Camera3D | null = null;
+    let emFoco = false;
+
+    const aplicar = () => {
+      camera?.definir(pose);
+      valor('virar').textContent = pose.virar.toFixed(2);
+      valor('zoom').textContent = String(Math.round(18 + pose.zoom * 37));
+      valor('foco').textContent = pose.foco.toFixed(2);
+      const agora = pose.foco >= 0.99;
+      if (agora !== emFoco) {
+        emFoco = agora;
+        const el = valor('estado');
+        el.textContent = agora ? '// ✓ em foco' : '';
+        el.className = `c ${agora ? 'ok' : ''}`;
+      }
+    };
+
+    // o rodapé subindo: vira, dá zoom e foca
+    if (!semMovimento) {
+      const tl = gsap.timeline({
+        defaults: { ease: 'none', onUpdate: aplicar },
+        scrollTrigger: { trigger: raiz, start: 'top 95%', end: 'center 55%', scrub: 0.8 },
+      });
+      tl.to(pose, { virar: 1, duration: 0.5 }).to(pose, { zoom: 1, duration: 0.25 }).to(pose, { foco: 1, duration: 0.25 });
+    }
+    aplicar();
+
+    // disparar: o clique da câmera e, logo depois, o flash que leva para /fotografia
+    let saindo = false;
+    const disparar = () => {
+      if (saindo) return;
+      saindo = true;
+      camera?.disparar();
+      setTimeout(() => dispararPara(raiz.dataset.destino!), camera ? 260 : 0);
+    };
+    cena.addEventListener('click', disparar);
+    raiz.querySelector('.cf-disparar')!.addEventListener('click', disparar);
+
+    // monta a câmera só quando o rodapé chega perto (o three.js é pesado)
+    new IntersectionObserver(
+      ([e], olho) => {
+        if (!e.isIntersecting) return;
+        olho.disconnect();
+        import('../../lib/camera3d')
+          .then(({ montarCamera }) => montarCamera(cena.querySelector('canvas')!, raiz.dataset.foto, JSON.parse(raiz.dataset.info!)))
+          .then((c) => {
+            camera = c;
+            aplicar();
+            cena.classList.add('pronta');
+          })
+          .catch(() => cena.remove()); // sem WebGL: fica o código e o botão
+      },
+      { rootMargin: '600px 0px' },
+    ).observe(raiz);
+  }
+</script>

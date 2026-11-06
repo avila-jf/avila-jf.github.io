@@ -25,7 +25,7 @@ const { itens } = Astro.props;
 <div class="pilha">
   <div class="pl-palco">
     <div class="pl-nome">
-      <span class="rotulo pl-conta">01 / 0{itens.length}</span>
+      <span class="rotulo pl-conta">01 / {String(itens.length).padStart(2, '0')}</span>
       <b class="titulo-cartaz">{itens[0]?.nome}</b>
     </div>
 
@@ -224,14 +224,11 @@ const { itens } = Astro.props;
 </style>
 
 <script>
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-  gsap.registerPlugin(ScrollTrigger);
+  import { gsap, semMovimento, prioridade } from '../../lib/movimento';
 
   const raiz = document.querySelector<HTMLElement>('.pilha');
   const secao = raiz?.closest<HTMLElement>('.ato');
-  if (raiz && secao && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (raiz && secao && !semMovimento) {
     secao.classList.add('pilha-ativa');
     const cards = [...raiz.querySelectorAll<HTMLElement>('.pl-card')];
     const detalhes = [...raiz.querySelectorAll<HTMLElement>('.pl-detalhe')];
@@ -261,7 +258,8 @@ const { itens } = Astro.props;
         cards.forEach((el, i) => el.classList.toggle('ativa', i === ativo));
         detalhes.forEach((el, i) => el.classList.toggle('ativa', i === ativo));
         nome.textContent = cards[ativo].getAttribute('aria-label')?.split(' — ')[0] ?? '';
-        conta.textContent = `0${ativo + 1} / 0${n}`;
+        const dois = (v: number) => String(v).padStart(2, '0');
+        conta.textContent = `${dois(ativo + 1)} / ${dois(n)}`;
       }
     };
 
@@ -277,7 +275,7 @@ const { itens } = Astro.props;
         end: () => `+=${(n - 1) * 70}%`,
         pin: raiz.querySelector('.pl-palco'),
         scrub: 0.7,
-        refreshPriority: -5, // depois das seções de cima que travam a tela
+        refreshPriority: prioridade(secao),
       },
     });
   }

@@ -247,10 +247,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
 </style>
 
 <script>
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-  gsap.registerPlugin(ScrollTrigger);
+  import { ScrollTrigger, prioridade, remedir } from '../../lib/movimento';
 
   const raiz = document.querySelector<HTMLElement>('.aparelho');
   const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -301,6 +298,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
           start: 'top top',
           end: `+=${(n + 1) * 90}%`,
           pin: raiz.querySelector('.aparelho-palco'),
+          refreshPriority: prioridade(raiz),
           scrub: true,
           onUpdate: ({ progress: p }) => {
             const abrir = faixa(p, 0, 0.18);
@@ -324,8 +322,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
             }
           },
         });
-        ScrollTrigger.sort(); // criado depois das seções de baixo: volta para a ordem da página
-        ScrollTrigger.refresh();
+        remedir(); // criado depois das seções de baixo: volta para a ordem da página
       })
       .catch(() => raiz.classList.remove('ativo')); // sem WebGL: cartões normais
   }

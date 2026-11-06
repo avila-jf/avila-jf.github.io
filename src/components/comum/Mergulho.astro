@@ -1,0 +1,181 @@
+---
+// Mergulho no cartão (pegada do "About me" do portfólio do @echo_builds), usado nas duas páginas:
+// uma paisagem em gravura (o "Noite Estrelada" dele, na nossa tinta) com um cartão pequeno no meio,
+// escrito em letra gigante. Ao rolar, a tela trava, o cartão cresce até virar um painel grande com
+// borda (não a tela toda), a paisagem chega mais perto e escurece até o azul-tinta, e o conteúdo
+// do painel (o slot) sobe. Sem JS ou com "reduzir movimento": o painel aberto, parado.
+// Precisa do Gravura.astro na página (o filtro da paisagem).
+import { Image } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+
+interface Props {
+  fundo?: Foto; // a paisagem em gravura
+  foto?: Foto; // a foto do cartão / painel
+  titulo: string[]; // o texto gigante do cartão, uma linha por item ("Sobre", "mim")
+  id?: string;
+  lente?: 'foto' | 'codigo' | 'ambos';
+}
+
+const { fundo, foto, titulo, id, lente = 'ambos' } = Astro.props;
+---
+
+<section class="mergulho" id={id} data-trava data-lente={lente} data-tema="tinta" aria-label={titulo.join(' ')}>
+  <div class="m-palco">
+    {
+      fundo && (
+        <div class="m-fundo" aria-hidden="true">
+          <Image src={fundo.src} alt="" widths={[800, 1400, 2000]} sizes="100vw" format="webp" quality={70} loading="lazy" />
+        </div>
+      )
+    }
+    <span class="m-escuro" aria-hidden="true"></span>
+
+    <div class="m-card">
+      {foto && <Image class="m-foto" src={foto.src} alt={foto.alt} widths={[480, 900, 1600, 2200]} sizes="90vw" format="webp" loading="lazy" />}
+      <span class="m-veu" aria-hidden="true"></span>
+      <div class="m-conteudo">
+        <slot />
+      </div>
+    </div>
+
+    <b class="m-titulo titulo-cartaz" aria-hidden="true">{titulo.map((t) => <span>{t}</span>)}</b>
+  </div>
+</section>
+
+<style>
+  .mergulho {
+    margin: 0 calc(var(--margem) * -1) 120px;
+  }
+  .m-palco {
+    position: relative;
+    height: 100svh;
+    overflow: hidden;
+    background: var(--gravura);
+    color: var(--creme);
+  }
+  .m-fundo {
+    position: absolute;
+    inset: 0;
+    contain: paint; /* o filtro de gravura é pesado: desenha uma vez e só escala a camada */
+    will-change: transform;
+  }
+  .m-fundo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: contrast(1.25) url(#gravura-novo);
+  }
+  .m-fundo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(118deg, rgb(20 45 120 / 0.3) 0 1px, transparent 1px 3.5px),
+      repeating-linear-gradient(28deg, rgb(20 45 120 / 0.12) 0 1px, transparent 1px 5px),
+      radial-gradient(ellipse at center, transparent 30%, rgb(12 21 48 / 0.55));
+    mix-blend-mode: multiply;
+  }
+  /* a paisagem vai apagando até o azul-tinta enquanto o painel abre */
+  .m-escuro {
+    position: absolute;
+    inset: 0;
+    background: #0c1530;
+    opacity: 0;
+  }
+
+  /* o cartão é a tela inteira recortada (clip-path); sem JS fica no tamanho do painel aberto */
+  .m-card {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #0c1530;
+    clip-path: inset(8svh 6vw round 24px);
+    will-change: clip-path;
+  }
+  .m-foto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+  .m-veu {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgb(12 21 48 / 0.88) 0%, rgb(12 21 48 / 0.35) 55%, transparent 80%);
+  }
+  .m-conteudo {
+    position: absolute;
+    left: calc(6vw + clamp(20px, 3vw, 48px));
+    right: calc(6vw + clamp(20px, 3vw, 48px));
+    bottom: calc(8svh + clamp(24px, 5svh, 56px));
+    max-width: 620px;
+  }
+  .m-titulo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: none;
+    translate: -50% -50%;
+    font-size: clamp(54px, 9vw, 130px);
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 6px 40px rgb(0 0 0 / 0.5);
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+  .m-titulo span {
+    display: block;
+  }
+  :global(.mergulho.ativo) .m-titulo {
+    display: block;
+  }
+</style>
+
+<script>
+  import { gsap, semMovimento, prioridade } from '../../lib/movimento';
+
+  document.querySelectorAll<HTMLElement>('.mergulho').forEach((raiz) => {
+    if (semMovimento) return;
+    raiz.classList.add('ativo');
+    const $ = (s: string) => raiz.querySelector<HTMLElement>(s);
+    const card = $('.m-card')!;
+
+    // o cartão começa pequeno no meio da tela e abre até o painel (8svh em cima e embaixo, 6vw dos lados)
+    const tamanhoCard = () => {
+      const w = Math.min(innerWidth * 0.46, 300);
+      return { w, h: Math.min(w * 1.3, innerHeight * 0.6) };
+    };
+    const recorteInicial = () => {
+      const { w, h } = tamanhoCard();
+      return `inset(${(innerHeight - h) / 2}px ${(innerWidth - w) / 2}px ${(innerHeight - h) / 2}px ${(innerWidth - w) / 2}px round 18px)`;
+    };
+    const recorteFinal = () => `inset(${innerHeight * 0.08}px ${innerWidth * 0.06}px ${innerHeight * 0.08}px ${innerWidth * 0.06}px round 24px)`;
+    // a foto começa encolhida até a cena inteira caber no cartão
+    const escalaInicial = () => {
+      const { w, h } = tamanhoCard();
+      return Math.max(w / innerWidth, h / innerHeight);
+    };
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: {
+        trigger: raiz,
+        start: 'top top',
+        end: '+=180%',
+        pin: $('.m-palco'),
+        scrub: 0.6,
+        invalidateOnRefresh: true,
+        refreshPriority: prioridade(raiz),
+      },
+    });
+
+    tl.fromTo(card, { clipPath: recorteInicial }, { clipPath: recorteFinal, ease: 'power2.inOut', duration: 1 }, 0)
+      .fromTo($('.m-foto'), { scale: escalaInicial }, { scale: 1, ease: 'power2.inOut', duration: 1 }, 0)
+      .fromTo($('.m-fundo'), { scale: 1 }, { scale: 1.3, ease: 'power1.in', duration: 1 }, 0)
+      .fromTo($('.m-escuro'), { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0.35)
+      .fromTo($('.m-titulo'), { scale: 1, opacity: 1 }, { scale: 2.6, opacity: 0, ease: 'power2.in', duration: 0.5 }, 0.05)
+      .fromTo($('.m-veu'), { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.7)
+      .fromTo($('.m-conteudo'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, ease: 'power2.out', duration: 0.3 }, 0.78)
+      .to({}, { duration: 0.25 }); // um respiro com o painel aberto antes de soltar a tela
+  });
+</script>

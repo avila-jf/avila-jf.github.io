@@ -69,26 +69,14 @@
 <script>
   // A luz é WebGL puro (sem three.js): é um quadro só com um shader, e assim o three.js (pesado)
   // não segura o resto da página; ele só carrega quando a câmera e o notebook 3D precisam.
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-  import Lenis from 'lenis';
+  import { gsap, ScrollTrigger, semMovimento, temMouse, iniciarRolagem } from '../../lib/movimento';
 
-  gsap.registerPlugin(ScrollTrigger);
-
-  const semMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const temMouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const raiz = document.documentElement;
   const VALOR = { foto: 0, ambos: 0.65, codigo: 1 } as const;
   type Lente = keyof typeof VALOR;
 
-  // ---------- rolagem suave (só no computador, como no site atual) ----------
-  if (temMouse && !semMovimento) {
-    const lenis = new Lenis({ lerp: 0.09, anchors: true });
-    (window as unknown as { lenis: Lenis }).lenis = lenis; // a Intro trava e solta a rolagem
-    lenis.on('scroll', ScrollTrigger.update);
-    gsap.ticker.add((tempo) => lenis.raf(tempo * 1000));
-    gsap.ticker.lagSmoothing(0);
-  }
+  // ---------- rolagem suave (lib/movimento.ts: só no computador, no relógio do GSAP) ----------
+  iniciarRolagem();
 
   // ---------- luz (shader) ----------
   const fragmento = /* glsl */ `
@@ -239,6 +227,11 @@
     });
   }
 
+  // começa na lente da 1ª seção da página (a fotografia abre em "foto"); os gatilhos abaixo
+  // corrigem na hora se a página abrir no meio
+  daSecao = (document.querySelector<HTMLElement>('main [data-lente]')?.dataset.lente as Lente) ?? 'ambos';
+  irPara(daSecao);
+
   document.querySelectorAll<HTMLElement>('[data-lente]').forEach((secao) => {
     ScrollTrigger.create({
       trigger: secao,
@@ -257,6 +250,4 @@
     el.addEventListener('pointerenter', () => irPara(el.dataset.lenteHover as Lente));
     el.addEventListener('pointerleave', () => irPara(daSecao));
   });
-
-  irPara('ambos');
 </script>

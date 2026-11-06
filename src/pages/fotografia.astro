@@ -1,0 +1,83 @@
+---
+// /FOTOGRAFIA = PORTFÓLIO DE FOTOS (nov/2026). Chega-se aqui pela câmera do rodapé da home
+// ("Quer tirar uma fotografia?"): a página abre saindo do branco do flash (lib/flash.ts).
+// Planta: design/wireframe-fotografia.svg. Mesmas camadas da home.
+//
+// Ordem da página:
+//  01 Entrada: o mural inteiro em gravura, tela cheia       foto/Mural
+//  02 Rolando 1: o mural encolhe e as fotos ganham cor      (camada 3, dentro do Mural)
+//  03 Rolando 2: as fotos se juntam e formam o hexágono     (camada 3; caixa por enquanto)
+//  04 Ensaios                                               comum/FaixaCurva (formato retrato)
+//  05 O olhar                                               comum/Mergulho
+//  06 Contato                                               comum/RodapeAzul
+import Portfolio from '../layouts/Portfolio.astro';
+import Mural from '../components/foto/Mural.astro';
+import FaixaCurva from '../components/comum/FaixaCurva.astro';
+import Mergulho from '../components/comum/Mergulho.astro';
+import RodapeAzul from '../components/comum/RodapeAzul.astro';
+import { url } from '../lib/url';
+import { site, categorias, projetos } from '../data/site';
+import { fotos, fotosDa, selecionadas } from '../lib/fotos';
+
+const fotoDe = (chave: string) => fotos.find((f) => `${f.categoria}/${f.nome}` === chave);
+const ensaios = categorias.map((c) => ({ ...c, fotos: fotosDa(c.slug) }));
+const totalFotos = ensaios.reduce((s, e) => s + e.fotos.length, 0);
+
+const cartoesEnsaios = ensaios.map((e) => ({
+  titulo: e.titulo,
+  subtitulo: `${e.fotos.length} fotos · ${e.descricao}`,
+  href: url(`/${e.slug}`),
+  imagem: e.fotos[0]?.src,
+}));
+
+const licoes = [
+  { titulo: 'Enquadramento', texto: 'Onde o olho entra primeiro: o que fica grande, o que respira, o que corta a borda.' },
+  { titulo: 'Luz', texto: 'A luz escolhe o que importa: o rosto que acende e o fundo que se apaga.' },
+  { titulo: 'Ritmo', texto: 'Numa série, é o tempo entre um clique e outro: nada chega tudo de uma vez.' },
+];
+
+const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Olá! Vi seu portfólio e quero marcar um ensaio.')}`;
+---
+
+<Portfolio titulo={`${site.nome} · fotografia`} descricao={`Fotografia de ${site.nome} em ${site.cidade.split(',')[0]}: ${categorias.map((c) => c.titulo).join(', ')}.`}>
+  <!-- 01–02 · ENTRADA: o mural em gravura (encolher + ganhar cor entram na camada 3) -->
+  <Mural fotos={selecionadas(fotos.length)} totalFotos={totalFotos} />
+
+  <!-- 03 · AS FOTOS SE JUNTAM NO HEXÁGONO (camada 3) -->
+  <section class="ato" data-lente="foto" data-tema="claro">
+    <div class="caixa">
+      <b>Hexágono de fotos</b>
+      <span>As fotos do mural voam cada uma para uma face do hexágono "FOTOS '26"; o anel gira com o scroll.</span>
+      <span class="rotulo">camada 3</span>
+    </div>
+  </section>
+
+  <!-- 04 · ENSAIOS -->
+  <FaixaCurva id="ensaios" rotulo={`Ensaios · ${ensaios.length} lugares, ${totalFotos} fotos`} itens={cartoesEnsaios} formato="retrato" tema="azul" lente="foto" />
+
+  <!-- 05 · O OLHAR -->
+  <Mergulho id="olhar" titulo={['O', 'olhar']} fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('pedras/12-wonder-why')} lente="foto">
+    <div class="painel-sobre">
+      <p class="rotulo">O olhar</p>
+      <h2 class="titulo-cartaz">As três perguntas de uma foto</h2>
+      {licoes.map((l, i) => <p><b>0{i + 1} · {l.titulo}.</b> {l.texto}</p>)}
+      <div class="acoes">
+        <a href={linkEnsaio} target="_blank" rel="noopener">Quero um ensaio</a>
+        <a href={url('/')} data-flash>Ver os sites</a>
+      </div>
+    </div>
+  </Mergulho>
+
+  <!-- 06 · CONTATO -->
+  <RodapeAzul
+    slot="rodape"
+    foto={fotoDe('pedras/02-barcos-na-hora-dourada')}
+    rotulo="Contato"
+    titulo="Bora fotografar?"
+    texto="Seu lifestyle, seus rolês, as pessoas que você ama."
+    botoes={[
+      { texto: 'Quero um ensaio ↗', href: linkEnsaio, principal: true, fora: true, lente: 'foto' },
+      { texto: 'Ver os sites', href: url('/'), lente: 'codigo' },
+    ]}
+  />
+</Portfolio>

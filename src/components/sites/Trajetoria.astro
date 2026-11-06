@@ -1,0 +1,72 @@
+---
+// "Onde eu já estive": a trajetória (data/site.ts → trajetoria) passando de lado na FaixaLateral.
+// Cada etapa é um cartaz: ano pequeno, título gigante, uma frase e o que eu uso.
+import FaixaLateral from '../comum/FaixaLateral.astro';
+import { trajetoria } from '../../data/site';
+---
+
+<FaixaLateral id="trajetoria" rotulo="02 · Onde eu já estive" letreiro="Trajetória · 2025 → 2026" tema="tinta" lente="codigo">
+  <article class="tj-abre">
+    <h2 class="titulo-cartaz">Onde eu<br />já estive</h2>
+    <p class="voz-foto">Da faculdade à câmera, e da câmera aos sites.</p>
+    <span class="rotulo">role para o lado →</span>
+  </article>
+  {
+    trajetoria.map((t, i) => (
+      <article class="tj-etapa">
+        <span class="rotulo">
+          {t.ano} · 0{i + 1} / 0{trajetoria.length}
+        </span>
+        <b class="titulo-cartaz">{t.titulo}</b>
+        <p>{t.texto}</p>
+        <span class="voz-codigo">{t.detalhe}</span>
+      </article>
+    ))
+  }
+</FaixaLateral>
+
+<style>
+  .tj-abre {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    width: min(78vw, 640px);
+  }
+  .tj-abre h2 {
+    margin: 0;
+    font-size: clamp(56px, min(9vw, 15svh), 150px);
+  }
+  .tj-abre p {
+    max-width: 30ch;
+    margin: 0;
+    font-size: clamp(20px, 2vw, 28px);
+    line-height: 1.25;
+    color: var(--texto-suave);
+  }
+  .tj-etapa {
+    display: grid;
+    align-content: end;
+    gap: 14px;
+    width: min(80vw, 560px);
+    min-height: min(56svh, 520px);
+    padding: clamp(20px, 3vw, 40px);
+    border: 1px solid var(--linha);
+    border-radius: 22px;
+    background: var(--vidro);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .tj-etapa b {
+    font-size: clamp(44px, 5.4vw, 96px);
+  }
+  .tj-etapa p {
+    max-width: 34ch;
+    margin: 0;
+    font-size: clamp(15px, 1.2vw, 18px);
+    color: var(--texto-suave);
+  }
+  .tj-etapa .voz-codigo {
+    color: var(--azul);
+  }
+</style>

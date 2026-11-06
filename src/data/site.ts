@@ -65,8 +65,12 @@ export const criacaoDeSites = {
   mensagemWhatsApp: 'Olá! Vi seu portfólio e quero um site assim para mim.',
 };
 
-// Projetos de programação (página /projetos e seção na home).
+// Projetos de programação (página /projetos e as seções da home).
 // "imagem" = nome do print em src/assets/projetos/ (sem .jpg). Sem imagem = cartão só com texto.
+// Onde cada um aparece na home:
+//  - destaque: true      → "Sites no ar", no notebook 3D
+//  - grupo: 'prototipo'  → a faixa curva de protótipos e landing pages
+//  - todos               → a pilha de projetos no fim
 export const projetos: {
   nome: string;
   tipo: string;
@@ -77,6 +81,7 @@ export const projetos: {
   imagem?: string;
   cor?: string; // cor da luz de fundo do projeto na vitrine (a cor principal do site)
   destaque?: boolean;
+  grupo?: 'prototipo';
 }[] = [
   {
     nome: 'Manoel.ink',
@@ -87,6 +92,18 @@ export const projetos: {
     site: 'https://manoelink.github.io/',
     codigo: 'https://github.com/manoelink/manoelink.github.io',
     imagem: 'manoelink',
+    cor: '#d8392c',
+    destaque: true,
+  },
+  {
+    nome: 'Manoel.ink (demo)',
+    tipo: 'Exemplo para clientes',
+    descricao:
+      'A versão com todos os efeitos do site do Manoel, para mostrar a clientes: abertura com navalha, cursor com etiqueta, botões magnéticos, texto palavra por palavra e faixas que entortam com a rolagem.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
+    site: 'https://josefrancisco-alt.github.io/manoel-ink-demo/',
+    codigo: 'https://github.com/JoseFrancisco-alt/manoel-ink-demo',
+    imagem: 'manoel-demo',
     cor: '#d8392c',
     destaque: true,
   },
@@ -114,6 +131,56 @@ export const projetos: {
     destaque: true,
   },
   {
+    nome: 'Raiz & Orgulho',
+    tipo: 'Protótipo · barbearia',
+    descricao: 'Protótipo de site para uma barbearia de Maceió, com marcação online por serviço, barbeiro, dia e hora, direto no WhatsApp.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript'],
+    site: 'https://josefrancisco-alt.github.io/raiz-e-orgulho/',
+    codigo: 'https://github.com/JoseFrancisco-alt/raiz-e-orgulho',
+    imagem: 'raiz-e-orgulho',
+    grupo: 'prototipo',
+  },
+  {
+    nome: 'Zeroalta',
+    tipo: 'Protótipo · barbearia (Portugal)',
+    descricao: 'Protótipo para uma barbearia com três lojas no Porto, Espinho e Lourosa: as três numa marcação só, serviços e preços à vista.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
+    site: 'https://josefrancisco-alt.github.io/zeroalta/',
+    codigo: 'https://github.com/JoseFrancisco-alt/zeroalta',
+    imagem: 'zeroalta',
+    grupo: 'prototipo',
+  },
+  {
+    nome: "La'Gringa",
+    tipo: 'Protótipo · barbearia',
+    descricao: 'Protótipo para uma barbearia da Jatiúca com a identidade do salão: laranja do bigode, tijolinho, agendamento e loja.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
+    site: 'https://josefrancisco-alt.github.io/lagringa/',
+    codigo: 'https://github.com/JoseFrancisco-alt/lagringa',
+    imagem: 'lagringa',
+    grupo: 'prototipo',
+  },
+  {
+    nome: 'Espaço Liv Sá',
+    tipo: 'Protótipo',
+    descricao: 'Protótipo de site para o Espaço Liv Sá, em Jaraguá, Maceió.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript'],
+    site: 'https://josefrancisco-alt.github.io/liv-sa/',
+    codigo: 'https://github.com/JoseFrancisco-alt/liv-sa',
+    imagem: 'liv-sa',
+    grupo: 'prototipo',
+  },
+  {
+    nome: 'Sofiarte',
+    tipo: 'Portfólio · tatuadora',
+    descricao: 'Site e portfólio da tatuadora Sofia (@sofiarte_tattoo), de Maceió.',
+    tecnologias: ['HTML', 'CSS', 'JavaScript'],
+    site: 'https://josefrancisco-alt.github.io/sofiarte/',
+    codigo: 'https://github.com/JoseFrancisco-alt/sofiarte',
+    imagem: 'sofiarte',
+    grupo: 'prototipo',
+  },
+  {
     nome: 'BookSmart',
     tipo: 'Faculdade',
     descricao:
@@ -138,6 +205,28 @@ export const projetos: {
 ];
 
 export const github = 'https://github.com/JoseFrancisco-alt';
+
+// "Onde eu já estive" (a trajetória que passa de lado na home). Confira os anos.
+export const trajetoria: { ano: string; titulo: string; texto: string; detalhe: string }[] = [
+  {
+    ano: '2025',
+    titulo: 'Engenharia de Software',
+    texto: 'Faculdade na Estácio: lógica, banco de dados e os primeiros sistemas em Java.',
+    detalhe: 'Java · MySQL · Git',
+  },
+  {
+    ano: '2026',
+    titulo: 'Fotógrafo',
+    texto: 'Uma Nikon D3200 e Maceió inteira: Pedras do Pôr do Sol, Jaraguá, Carneiros e gente na rua.',
+    detalhe: 'Nikon D3200 · 5 ensaios',
+  },
+  {
+    ano: '2026',
+    titulo: 'Dev de sites',
+    texto: 'Sites para clientes e protótipos: do tatuador à barbearia, cada um com a cara do negócio.',
+    detalhe: 'Astro · GSAP · Three.js · Supabase',
+  },
+];
 
 // Cada ensaio é um lugar (ou evento) e vira uma página (/pedras, /jaragua, ...)
 // e lê as fotos de src/assets/fotos/<slug>/

@@ -1,11 +1,14 @@
 ---
 // Barra do topo do site novo (inspirada no foldfolio: mínima, com controle em pílula).
 //  - Esquerda: nome em tipografia cartaz
-//  - Centro: Sites | Fotos. A pílula marca a lente da seção na tela (lê data-lente do <html>,
-//    que o Fundo.astro atualiza). No celular esse controle desce para o rodapé da tela.
+//  - Centro: Sites | Fotos, as duas páginas (home = sites, /fotografia = fotos). A pílula marca a
+//    lente da seção na tela (lê data-lente do <html>, que o Fundo.astro atualiza). Ir para a outra
+//    página passa pelo flash da câmera (data-flash, lib/flash.ts). No celular esse controle desce
+//    para o rodapé da tela.
 //  - Direita: "Sobre" (abre o Sobre.astro), "Agenda aberta" e o botão principal, que é o de pedir site (o foco do negócio)
 // Ao rolar, a barra encolhe numa cápsula de vidro.
 import { site, criacaoDeSites } from '../../data/site';
+import { url } from '../../lib/url';
 
 const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
 ---
@@ -18,8 +21,8 @@ const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompone
 
     <nav class="barra-lentes" aria-label="Seções">
       <span class="barra-pilula" aria-hidden="true"></span>
-      <a href="#sites" class="lente-sites voz-codigo">Sites</a>
-      <a href="#ensaios" class="lente-fotos voz-foto">Fotos</a>
+      <a href={url('/')} class="lente-sites voz-codigo" data-flash>Sites</a>
+      <a href={url('/fotografia')} class="lente-fotos voz-foto" data-flash>Fotos</a>
     </nav>
 
     <div class="barra-direita">

@@ -1,0 +1,74 @@
+---
+// Layout das duas páginas do site novo: a home (portfólio de sites) e /fotografia (portfólio de
+// fotos). Tudo que as duas têm em comum fica aqui: <head>, fontes, a luz do fundo + rolagem suave
+// (Fundo), a cor por seção (Cortina), o "Sobre" que abre por cima, a barra, o filtro de gravura e
+// o flash da câmera entre as páginas. As páginas antigas (/pedras, /contato...) usam o Base.astro.
+//
+// Ordem dos pedaços de cada página: veja o comentário no topo de pages/index.astro e
+// pages/fotografia.astro. Peças de uma página só: components/sites e components/foto; das duas:
+// components/comum; movimento: lib/movimento.ts; conteúdo: data/site.ts.
+import Fundo from '../components/comum/Fundo.astro';
+import Cortina from '../components/comum/Cortina.astro';
+import Sobre from '../components/comum/Sobre.astro';
+import Barra from '../components/comum/Barra.astro';
+import Gravura from '../components/comum/Gravura.astro';
+import Flash from '../components/comum/Flash.astro';
+import { url } from '../lib/url';
+import '../styles/novo.css';
+import '../styles/portfolio.css';
+
+interface Props {
+  titulo: string;
+  descricao: string;
+  loader?: boolean; // a home abre com o loader "FRANCIS."
+}
+
+const { titulo, descricao, loader = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={descricao} />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <meta name="theme-color" content="#1f3f99" />
+    <title>{titulo}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <script is:inline define:vars={{ loader }}>
+      // Antes da primeira pintura: chegou pelo flash da câmera? começa branco (lib/flash.ts).
+      // Senão, a home liga o loader. Nada disso com "reduzir movimento" ou abrindo num #link.
+      var raiz = document.documentElement;
+      var calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var flash = false;
+      try {
+        flash = sessionStorage.getItem('flash-camera') === '1';
+        sessionStorage.removeItem('flash-camera');
+      } catch (e) {}
+      if (flash && !calmo) raiz.classList.add('do-flash');
+      else if (loader && !location.hash && !calmo) raiz.classList.add('carregando');
+      if (!location.hash) history.scrollRestoration = 'manual';
+    </script>
+  </head>
+  <body id="topo">
+    <Fundo />
+    <Cortina />
+    <Sobre />
+    <Barra />
+    <Gravura />
+    <Flash />
+    <slot name="antes" />
+
+    <main>
+      <slot />
+    </main>
+
+    <slot name="rodape" />
+  </body>
+</html>
