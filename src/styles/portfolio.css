@@ -93,47 +93,102 @@ main {
   color: var(--azul);
 }
 
-/* texto dentro do painel do Mergulho */
-.painel-sobre .rotulo {
-  margin: 0;
-  color: var(--creme);
-  opacity: 0.8;
-}
-.painel-sobre h2 {
-  margin: 8px 0 14px;
-  font-size: clamp(48px, 7vw, 110px);
-}
-.painel-sobre p {
-  max-width: 44ch;
-  margin: 0 0 18px;
-  font-size: clamp(16px, 1.4vw, 21px);
-  line-height: 1.4;
-}
-.painel-sobre .acoes {
+/* texto nas bordas do painel do Mergulho: uma linha em cima, uma embaixo, o meio livre para a foto */
+.painel-linha {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
 }
-.painel-sobre .acoes a,
-.painel-sobre .acoes button {
-  padding: 12px 22px;
-  border: 1px solid rgb(241 230 204 / 0.5);
+.painel-linha .rotulo {
+  margin: 0;
+  color: rgb(241 230 204 / 0.65);
+}
+.painel-frase {
+  max-width: 40ch;
+  margin: 0;
+  font-family: var(--fonte);
+  font-size: clamp(12px, 1.05vw, 16px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.painel-fim {
+  align-items: flex-end;
+}
+.painel-resumo {
+  display: grid;
+  gap: 6px;
+  max-width: 56ch;
+}
+.painel-resumo p:not(.rotulo) {
+  margin: 0;
+  font-size: clamp(12px, 0.95vw, 14px);
+  line-height: 1.55;
+  color: rgb(241 230 204 / 0.8);
+}
+.painel-licoes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 820px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.painel-licoes p {
+  margin: 4px 0 0;
+  font-size: clamp(12px, 0.9vw, 13px);
+  line-height: 1.5;
+  color: rgb(241 230 204 / 0.8);
+}
+.painel-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.painel-acoes a,
+.painel-acoes button {
+  padding: 10px 18px;
+  border: 1px solid rgb(241 230 204 / 0.35);
   border-radius: 999px;
   background: none;
   color: var(--creme);
   font: inherit;
-  font-size: 14px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
 }
-.painel-sobre .acoes :first-child {
+.painel-acoes :first-child {
+  border-color: transparent;
   background: var(--creme);
-  color: var(--gravura);
+  color: #0c1530;
 }
-.painel-sobre .acoes a:hover,
-.painel-sobre .acoes button:hover {
-  background: rgb(241 230 204 / 0.18);
+.painel-acoes a:hover,
+.painel-acoes button:hover {
+  background: rgb(241 230 204 / 0.16);
+}
+.painel-acoes :first-child:hover {
+  background: #fff;
+}
+@media (max-width: 760px) {
+  .painel-licoes {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .painel-resumo p:not(.rotulo) {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 760px) {

@@ -47,12 +47,16 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
   <FaixaCurva id="ensaios" rotulo={`Ensaios · ${ensaios.length} lugares, ${totalFotos} fotos`} itens={cartoesEnsaios} formato="retrato" tema="azul" lente="foto" />
 
   <!-- 05 · O OLHAR -->
-  <Mergulho id="olhar" titulo={['O', 'olhar']} fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('pedras/12-wonder-why')} lente="foto">
-    <div class="painel-sobre">
-      <p class="rotulo">O olhar</p>
-      <h2 class="titulo-cartaz">As três perguntas de uma foto</h2>
-      {licoes.map((l, i) => <p><b>0{i + 1} · {l.titulo}.</b> {l.texto}</p>)}
-      <div class="acoes">
+  <Mergulho id="olhar" titulo={['O', 'olhar']} rotulo="As três perguntas de uma foto" fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('jaragua/05-escadaria-a-noite')} lente="foto">
+    <div slot="topo" class="painel-linha">
+      <h3 class="painel-frase">Toda foto passa pelas mesmas três perguntas</h3>
+      <span class="rotulo">{ensaios.length} ensaios · {totalFotos} fotos</span>
+    </div>
+    <div class="painel-linha painel-fim">
+      <ol class="painel-licoes">
+        {licoes.map((l, i) => <li><span class="rotulo">0{i + 1} · {l.titulo}</span><p>{l.texto}</p></li>)}
+      </ol>
+      <div class="painel-acoes">
         <a href={linkEnsaio} target="_blank" rel="noopener">Quero um ensaio</a>
         <a href={url('/')} data-flash>Ver os sites</a>
       </div>

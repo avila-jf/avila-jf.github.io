@@ -1,0 +1,197 @@
+---
+// Fundo "página de mangá" (o meu "Noite Estrelada", no lugar da pintura do @echo_builds): as minhas
+// fotos em quadrinhos de borda preta grossa, convertidas em retícula de mangá (screentone), um
+// quadro de linhas de velocidade e a onomatopeia do clique da câmera. Tudo original: nada de
+// desenho de mangá de outros autores, só as minhas fotos no estilo.
+//
+// Retícula: o filtro #manga-tom reduz a foto a cinza, compara com uma grade de pontinhos e deixa
+// só preto ou branco. Onde a foto é escura os pontos se juntam; onde é clara, viram pontinhos.
+// É desenhado uma vez (contain: paint no Mergulho); rolando, a camada só some.
+import { Image } from 'astro:assets';
+import type { Foto } from '../../lib/fotos';
+
+interface Props {
+  fotos: Foto[]; // 5 fotos: os quadrinhos, na ordem
+}
+
+const { fotos } = Astro.props;
+const [a, b, c, d, e] = fotos;
+// a bolinha da retícula (um degradê radial num quadradinho de 7 px)
+const ponto =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='7'%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='1' stop-color='%23fff'/%3E%3C/radialGradient%3E%3Crect width='7' height='7' fill='url(%23g)'/%3E%3C/svg%3E";
+---
+
+<div class="manga" aria-hidden="true">
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="manga-tom" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+      <feColorMatrix in="SourceGraphic" type="saturate" values="0" result="cinza" />
+      <feComponentTransfer in="cinza" result="tom">
+        <feFuncR type="gamma" exponent="1.25" amplitude="1.1" />
+        <feFuncG type="gamma" exponent="1.25" amplitude="1.1" />
+        <feFuncB type="gamma" exponent="1.25" amplitude="1.1" />
+      </feComponentTransfer>
+      <feImage href={ponto} x="0" y="0" width="7" height="7" result="bolinha" />
+      <feTile in="bolinha" result="grade" />
+      <!-- (tom − grade) × 9 + 0,5: só sobra preto ou branco (a retícula) -->
+      <feComposite in="tom" in2="grade" operator="arithmetic" k1="0" k2="9" k3="-9" k4="0.5" />
+    </filter>
+  </svg>
+
+  <div class="manga-pagina">
+    <figure class="q q1">{a && <Image src={a.src} alt="" widths={[800, 1400]} sizes="50vw" format="webp" quality={70} />}</figure>
+    <figure class="q q2">{b && <Image src={b.src} alt="" widths={[600, 1000]} sizes="30vw" format="webp" quality={70} />}</figure>
+    <figure class="q q3 q-velocidade">
+      <span class="sfx sfx-grande">カシャ!</span>
+      <span class="sfx sfx-pequeno">KASHA!</span>
+    </figure>
+    <figure class="q q4">{c && <Image src={c.src} alt="" widths={[600, 1000]} sizes="30vw" format="webp" quality={70} />}</figure>
+    <figure class="q q5">{d && <Image src={d.src} alt="" widths={[600, 1000]} sizes="30vw" format="webp" quality={70} />}</figure>
+    <figure class="q q6">
+      {e && <Image src={e.src} alt="" widths={[600, 1000]} sizes="30vw" format="webp" quality={70} />}
+      <span class="balao">clique.</span>
+    </figure>
+  </div>
+</div>
+
+<style>
+  .manga {
+    position: absolute;
+    inset: 0;
+    background: #f4f1ea; /* papel de mangá */
+  }
+  /* a página: grade de quadrinhos com sarjeta branca, levemente torta como papel na mesa */
+  .manga-pagina {
+    position: absolute;
+    inset: -4% -3%;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 0.9fr;
+    gap: clamp(8px, 1.1vw, 16px);
+    padding: clamp(10px, 1.4vw, 20px);
+    rotate: -2deg;
+  }
+  .q {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border: clamp(3px, 0.35vw, 5px) solid #0b0b0b;
+    background: #f4f1ea;
+  }
+  .q img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: contrast(1.35) url(#manga-tom);
+  }
+  /* quadrinhos de formatos diferentes, como numa página de verdade */
+  .q1 {
+    grid-row: 1 / span 2;
+    clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%);
+  }
+  .q2 {
+    grid-column: 2 / span 2;
+  }
+  .q4 {
+    clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
+  }
+  .q5 {
+    grid-column: 1 / span 2;
+  }
+  .q3 {
+    grid-row: 2;
+    grid-column: 3;
+  }
+  .q4 {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  .q5 {
+    grid-row: 3;
+  }
+  .q6 {
+    grid-row: 3;
+    grid-column: 3;
+  }
+
+  /* linhas de velocidade saindo do meio */
+  .q-velocidade {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at 50% 50%, #f4f1ea 0 18%, transparent 19%),
+      repeating-conic-gradient(from 0deg at 50% 50%, #0b0b0b 0deg 1.6deg, transparent 1.6deg 7deg),
+      #f4f1ea;
+  }
+  .sfx {
+    position: relative;
+    font-family: var(--fonte);
+    font-stretch: 68%;
+    font-weight: 900;
+    line-height: 0.9;
+    color: #f4f1ea;
+    -webkit-text-stroke: clamp(2px, 0.25vw, 4px) #0b0b0b;
+    paint-order: stroke fill;
+    rotate: -8deg;
+  }
+  .sfx-grande {
+    font-size: clamp(34px, 4.6vw, 80px);
+  }
+  .sfx-pequeno {
+    position: absolute;
+    right: 8%;
+    bottom: 10%;
+    font-size: clamp(14px, 1.4vw, 24px);
+    rotate: 6deg;
+  }
+  .balao {
+    position: absolute;
+    left: 10%;
+    top: 10%;
+    padding: 0.5em 0.9em;
+    border: 2px solid #0b0b0b;
+    border-radius: 50%;
+    background: #f4f1ea;
+    font: 700 clamp(11px, 1vw, 15px) var(--fonte);
+    color: #0b0b0b;
+  }
+  .balao::after {
+    content: '';
+    position: absolute;
+    left: 30%;
+    bottom: -12px;
+    border: 7px solid transparent;
+    border-top: 12px solid #0b0b0b;
+    border-bottom: 0;
+  }
+
+  @media (max-width: 760px) {
+    .manga-pagina {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 0.8fr 0.8fr 0.9fr;
+    }
+    .q1 {
+      grid-row: 1;
+      grid-column: 1 / span 2;
+    }
+    .q2 {
+      grid-row: 2;
+      grid-column: 1;
+    }
+    .q3 {
+      grid-row: 2;
+      grid-column: 2;
+    }
+    .q4 {
+      grid-row: 3;
+      grid-column: 1 / span 2;
+    }
+    .q5 {
+      grid-row: 4;
+      grid-column: 1;
+    }
+    .q6 {
+      grid-row: 4;
+      grid-column: 2;
+    }
+  }
+</style>

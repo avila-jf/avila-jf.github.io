@@ -18,6 +18,7 @@ import Portfolio from '../layouts/Portfolio.astro';
 import Loader from '../components/sites/Loader.astro';
 import Hero from '../components/sites/Hero.astro';
 import Mergulho from '../components/comum/Mergulho.astro';
+import PaginaManga from '../components/comum/PaginaManga.astro';
 import Trajetoria from '../components/sites/Trajetoria.astro';
 import Aparelho from '../components/sites/Aparelho.astro';
 import FaixaCurva from '../components/comum/FaixaCurva.astro';
@@ -55,12 +56,27 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
   <Hero />
 
   <!-- 03 · SOBRE MIM: a gravura é o "quadro pintado"; no painel, eu de costas olhando as luzes da cidade -->
-  <Mergulho id="sobre" titulo={['Sobre', 'mim']} fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('pedras/12-wonder-why')} lente="ambos">
-    <div class="painel-sobre">
-      <p class="rotulo">01 · Sobre mim</p>
-      <h2 class="titulo-cartaz">{site.nome}</h2>
-      <p class="voz-foto">{site.bio[1]}</p>
-      <div class="acoes">
+  <Mergulho id="sobre" titulo={['Sobre', 'mim']} rotulo="Por trás das lentes" foto={fotoDe('pedras/12-wonder-why')} lente="ambos">
+    <PaginaManga
+      slot="fundo"
+      fotos={[
+        fotoDe('pedras/13-perfil-na-noite'),
+        fotoDe('jaragua/05-escadaria-a-noite'),
+        fotoDe('carneiros/10-camera-na-praia'),
+        fotoDe('pedras/16-camisa-10'),
+        fotoDe('estudio/03-flash-na-tela'),
+      ].filter((f) => f !== undefined)}
+    />
+    <div slot="topo" class="painel-linha">
+      <h3 class="painel-frase">Sites que parecem foto: bem enquadrados, com luz e com ritmo</h3>
+      <span class="rotulo">Maceió · Brasil e Portugal</span>
+    </div>
+    <div class="painel-linha painel-fim">
+      <div class="painel-resumo">
+        <p class="rotulo">Engenharia de Software · Fotografia · Sites</p>
+        <p>{site.bio[1]}</p>
+      </div>
+      <div class="painel-acoes">
         <a href="#sites">Ver os sites</a>
         <button type="button" data-abrir-sobre>Ler mais</button>
       </div>
