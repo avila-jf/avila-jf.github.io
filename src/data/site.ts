@@ -171,16 +171,6 @@ export const projetos: {
     grupo: 'prototipo',
   },
   {
-    nome: 'Sofiarte',
-    tipo: 'Portfólio · tatuadora',
-    descricao: 'Site e portfólio da tatuadora Sofia (@sofiarte_tattoo), de Maceió.',
-    tecnologias: ['HTML', 'CSS', 'JavaScript'],
-    site: 'https://josefrancisco-alt.github.io/sofiarte/',
-    codigo: 'https://github.com/JoseFrancisco-alt/sofiarte',
-    imagem: 'sofiarte',
-    grupo: 'prototipo',
-  },
-  {
     nome: 'BookSmart',
     tipo: 'Faculdade',
     descricao:
