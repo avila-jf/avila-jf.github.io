@@ -3,19 +3,19 @@
 export const site = {
   nome: 'Francis Avila',
   apelido: 'Ávila', // como o pessoal te chama (aparece no "Olá, eu sou...")
-  descricao: 'Fotografia em Maceió e arredores: Pedras do Pôr do Sol, Jaraguá, Carneiros e mais.',
-  cidade: 'Maceió, Brasil',
+  descricao: 'Photography in Maceió and around: Pedras do Pôr do Sol, Jaraguá, Carneiros and more.',
+  cidade: 'Maceió, Brazil',
   // Frase grande da capa. "destaque" ganha o marca-texto azul.
   frase: {
-    inicio: 'O mundo',
-    destaque: 'pelas minhas lentes.',
+    inicio: 'The world',
+    destaque: 'through my lens.',
   },
   bio: [
-    'Tô começando na fotografia e pronto pra tirar os melhores cliques: registrar o seu lifestyle, os seus rolês, as pessoas que você ama e muito mais.',
-    'Entre uma linha de código e outra, eu fotografo. Esse site é onde as coisas que eu mais amo se encontram: programação, fotografia e arte. Todas as fotos aqui são minhas, e o site em si também é parte do projeto.',
-    'Ainda tô no começo, mas é exatamente isso que eu quero mostrar: evolução. Se curtiu, chega junto.',
+    "I'm early in my photography journey and ready to take the best shots: your lifestyle, your nights out, the people you love and much more.",
+    'Between one line of code and the next, I take photos. This site is where the things I love most meet: programming, photography and art. Every photo here is mine, and the site itself is part of the project too.',
+    "I'm still at the start, and that's exactly what I want to show: growth. If you like it, let's talk.",
   ],
-  equipamento: ['Câmera: Nikon D3200'],
+  equipamento: ['Camera: Nikon D3200'],
   contato: {
     instagram: '_avila.jf', // só o @, sem o "@"
     whatsapp: '5582993327581', // DDI + DDD + número, só dígitos
@@ -54,15 +54,15 @@ export const destaques: string[] = [
 // Divulgação: você também cria sites de portfólio para outras pessoas.
 // Aparece como uma seção na home (não é o foco do site) e na página de contato.
 export const criacaoDeSites = {
-  titulo: 'Quer um site como este?',
+  titulo: 'Want a site like this one?',
   texto:
-    'Além de fotografar, eu crio portfólios para fotógrafos, artistas e criadores. Rápidos, bonitos no celular e prontos para o link da bio.',
+    'Besides shooting, I build portfolios for photographers, artists and creators. Fast, beautiful on mobile and ready for the link in bio.',
   vantagens: [
-    'Galeria que se monta sozinha com suas fotos',
-    'Visual feito do seu jeito',
-    'Pronto para o link da bio do Instagram',
+    'A gallery that builds itself from your photos',
+    'A look made your way',
+    'Ready for your Instagram link in bio',
   ],
-  mensagemWhatsApp: 'Olá! Vi seu portfólio e quero um site assim para mim.',
+  mensagemWhatsApp: 'Hi! I saw your portfolio and I want a site like this.',
 };
 
 // Projetos de programação (página /projetos e as seções da home).
@@ -85,9 +85,9 @@ export const projetos: {
 }[] = [
   {
     nome: 'Manoel.ink',
-    tipo: 'Site para cliente',
+    tipo: 'Client website',
     descricao:
-      'Site do tatuador Juan Manoel, de Maceió: blackwork, fine line e tatuagens geek, com galeria de trabalhos, flashes disponíveis, antes/depois de cicatrizadas e pedido de orçamento.',
+      'Website for Juan Manoel, a tattoo artist from Maceió: blackwork, fine line and geek tattoos, with a work gallery, available flashes, healed before/after and quote requests.',
     tecnologias: ['HTML', 'CSS', 'JavaScript'],
     site: 'https://manoelink.github.io/',
     codigo: 'https://github.com/manoelink/manoelink.github.io',
@@ -97,9 +97,9 @@ export const projetos: {
   },
   {
     nome: 'Manoel.ink (demo)',
-    tipo: 'Exemplo para clientes',
+    tipo: 'Client showcase',
     descricao:
-      'A versão com todos os efeitos do site do Manoel, para mostrar a clientes: abertura com navalha, cursor com etiqueta, botões magnéticos, texto palavra por palavra e faixas que entortam com a rolagem.',
+      'The version of Manoel\'s site with every effect, to show clients: razor intro, labeled cursor, magnetic buttons, word-by-word text and bands that bend as you scroll.',
     tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
     site: 'https://josefrancisco-alt.github.io/manoel-ink-demo/',
     codigo: 'https://github.com/JoseFrancisco-alt/manoel-ink-demo',
@@ -109,9 +109,9 @@ export const projetos: {
   },
   {
     nome: 'Ótica Beco São José',
-    tipo: 'Site para cliente',
+    tipo: 'Client website',
     descricao:
-      'Loja online de uma ótica de Maceió: catálogo com busca e filtros, escolha de lentes de grau, carrinho, checkout, login, acompanhamento do pedido e painel da loja.',
+      'Online store for an optician in Maceió: catalog with search and filters, prescription lens picker, cart, checkout, login, order tracking and a store dashboard.',
     tecnologias: ['JavaScript', 'Vite', 'Supabase', 'GSAP', 'Three.js'],
     site: 'https://otica-beco-sao-jose.vercel.app/',
     imagem: 'otica-beco',
@@ -120,9 +120,9 @@ export const projetos: {
   },
   {
     nome: 'Magnobag',
-    tipo: 'Projeto pessoal',
+    tipo: 'Personal project',
     descricao:
-      'Plataforma de análise de ações da B3, cripto e câmbio: gráficos, indicadores, backtests com taxa de acerto real, notícias e um simulador de gale.',
+      'An analysis platform for Brazilian stocks, crypto and FX: charts, indicators, backtests with real hit rates, news and a martingale simulator.',
     tecnologias: ['Python', 'Flask', 'pandas', 'SQLite', 'Chart.js'],
     site: 'https://josefrancisco-alt.github.io/magnobag/',
     codigo: 'https://github.com/JoseFrancisco-alt/magnobag',
@@ -132,8 +132,8 @@ export const projetos: {
   },
   {
     nome: 'Raiz & Orgulho',
-    tipo: 'Protótipo · barbearia',
-    descricao: 'Protótipo de site para uma barbearia de Maceió, com marcação online por serviço, barbeiro, dia e hora, direto no WhatsApp.',
+    tipo: 'Prototype · barbershop',
+    descricao: 'Website prototype for a barbershop in Maceió, with online booking by service, barber, day and time, straight to WhatsApp.',
     tecnologias: ['HTML', 'CSS', 'JavaScript'],
     site: 'https://josefrancisco-alt.github.io/raiz-e-orgulho/',
     codigo: 'https://github.com/JoseFrancisco-alt/raiz-e-orgulho',
@@ -142,8 +142,8 @@ export const projetos: {
   },
   {
     nome: 'Zeroalta',
-    tipo: 'Protótipo · barbearia (Portugal)',
-    descricao: 'Protótipo para uma barbearia com três lojas no Porto, Espinho e Lourosa: as três numa marcação só, serviços e preços à vista.',
+    tipo: 'Prototype · barbershop (Portugal)',
+    descricao: 'Prototype for a barbershop with three shops in Porto, Espinho and Lourosa: one booking for all three, services and prices up front.',
     tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
     site: 'https://josefrancisco-alt.github.io/zeroalta/',
     codigo: 'https://github.com/JoseFrancisco-alt/zeroalta',
@@ -152,8 +152,8 @@ export const projetos: {
   },
   {
     nome: "La'Gringa",
-    tipo: 'Protótipo · barbearia',
-    descricao: 'Protótipo para uma barbearia da Jatiúca com a identidade do salão: laranja do bigode, tijolinho, agendamento e loja.',
+    tipo: 'Prototype · barbershop',
+    descricao: 'Prototype for a barbershop in Jatiúca with the shop\'s own identity: mustache orange, brick walls, booking and a store.',
     tecnologias: ['HTML', 'CSS', 'JavaScript', 'GSAP'],
     site: 'https://josefrancisco-alt.github.io/lagringa/',
     codigo: 'https://github.com/JoseFrancisco-alt/lagringa',
@@ -162,8 +162,8 @@ export const projetos: {
   },
   {
     nome: 'Espaço Liv Sá',
-    tipo: 'Protótipo',
-    descricao: 'Protótipo de site para o Espaço Liv Sá, em Jaraguá, Maceió.',
+    tipo: 'Prototype',
+    descricao: 'Website prototype for Espaço Liv Sá, in Jaraguá, Maceió.',
     tecnologias: ['HTML', 'CSS', 'JavaScript'],
     site: 'https://josefrancisco-alt.github.io/liv-sa/',
     codigo: 'https://github.com/JoseFrancisco-alt/liv-sa',
@@ -178,20 +178,20 @@ export const github = 'https://github.com/JoseFrancisco-alt';
 export const trajetoria: { ano: string; titulo: string; texto: string; detalhe: string }[] = [
   {
     ano: '2025',
-    titulo: 'Engenharia de Software',
-    texto: 'Faculdade na Estácio: lógica, banco de dados e os primeiros sistemas em Java.',
+    titulo: 'Software Engineering',
+    texto: 'College at Estácio: logic, databases and my first systems in Java.',
     detalhe: 'Java · MySQL · Git',
   },
   {
     ano: '2026',
-    titulo: 'Fotógrafo',
-    texto: 'Uma Nikon D3200 e Maceió inteira: Pedras do Pôr do Sol, Jaraguá, Carneiros e gente na rua.',
-    detalhe: 'Nikon D3200 · 5 ensaios',
+    titulo: 'Photographer',
+    texto: 'A Nikon D3200 and all of Maceió: Pedras do Pôr do Sol, Jaraguá, Carneiros and people on the street.',
+    detalhe: 'Nikon D3200 · 5 series',
   },
   {
     ano: '2026',
-    titulo: 'Dev de sites',
-    texto: 'Sites para clientes e protótipos: do tatuador à barbearia, cada um com a cara do negócio.',
+    titulo: 'Web developer',
+    texto: 'Client sites and prototypes: from the tattoo artist to the barbershop, each one with the face of the business.',
     detalhe: 'Astro · GSAP · Three.js · Supabase',
   },
 ];
@@ -203,30 +203,30 @@ export const categorias: { slug: string; titulo: string; descricao: string; capa
   {
     slug: 'pedras',
     titulo: 'Pedras do Pôr do Sol',
-    descricao: 'Do fim de tarde à noite na beira da baía: barcos, silhuetas e as luzes da cidade na água.',
+    descricao: 'From late afternoon to night by the bay: boats, silhouettes and the city lights on the water.',
     capa: '03-fim-de-tarde-nas-pedras',
   },
   {
     slug: 'jaragua',
     titulo: 'Jaraguá',
-    descricao: 'O bairro histórico: fachadas antigas, luz de poste e gente na rua.',
+    descricao: 'The historic district: old facades, streetlight glow and people outside.',
     capa: '05-escadaria-a-noite',
   },
   {
     slug: 'carneiros',
     titulo: 'Carneiros',
-    descricao: 'Pernambuco: coqueiros, areia clara e um dia inteiro de praia.',
+    descricao: 'Pernambuco: palm trees, white sand and a whole day at the beach.',
   },
   {
     slug: 'ato',
-    titulo: 'Ato de manifestação',
-    descricao: 'A rua em dia de manifestação: cartazes, bandeiras e gente junta.',
+    titulo: 'Street protest',
+    descricao: 'The street on protest day: signs, flags and people together.',
     capa: '09-pela-defesa-da-democracia',
   },
   {
     slug: 'estudio',
-    titulo: 'No estúdio',
-    descricao: 'Uma sessão de tatuagem de perto: luz de estúdio, luvas azuis e o traço na pele.',
+    titulo: 'In the studio',
+    descricao: 'A tattoo session up close: studio light, blue gloves and the line on skin.',
     capa: '01-luz-do-estudio',
   },
 ];

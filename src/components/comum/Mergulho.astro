@@ -7,7 +7,7 @@
 //  - um cartão de 300 × 400 com borda fina, no meio, com a foto DESFOCADA (uma cópia borrada por
 //    cima que some: a foto "entra em foco" sem refazer o filtro a cada quadro);
 //  - o título em duas partes em cima do cartão: a 1ª palavra sai para a esquerda e o resto para a
-//    direita, sumindo; o rótulo e o "role para abrir" saem junto;
+//    direita, sumindo; o rótulo e o "scroll to open" saem junto;
 //  - o cartão cresce até um painel largo (no formato da foto, 94% da largura ou 86% da altura);
 //  - no fim, o conteúdo aparece NAS BORDAS do painel (slot "topo" em cima, o slot normal embaixo),
 //    com o meio livre para a foto.
@@ -64,7 +64,7 @@ const proporcao = foto ? foto.src.width / foto.src.height : 16 / 9;
       {rotulo && <p class="m-rotulo rotulo">{rotulo}</p>}
       <b class="m-parte m-parte-1 titulo-cartaz">{titulo[0]}</b>
       <b class="m-parte m-parte-2 titulo-cartaz">{titulo[1]}</b>
-      <p class="m-role rotulo">role para abrir</p>
+      <p class="m-role rotulo">scroll to open</p>
     </div>
   </div>
 </section>

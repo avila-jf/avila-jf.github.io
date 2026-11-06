@@ -11,27 +11,27 @@ const minhaFoto = Object.values(
 )[0]?.default;
 ---
 
-<Base titulo="Sobre">
+<Base titulo="About">
   <section class="container sobre">
     <div class="retrato revelar" data-tilt>
       {minhaFoto ? (
         <Image src={minhaFoto} alt={site.nome} widths={[480, 900]} sizes="(max-width: 860px) 100vw, 40vw" format="webp" />
       ) : (
-        <div class="retrato-vazio"><span>sua foto aqui</span></div>
+        <div class="retrato-vazio"><span>your photo here</span></div>
       )}
     </div>
 
     <div class="texto">
-      <p class="rotulo">Sobre</p>
-      <h1>Olá, eu sou {site.apelido}.</h1>
+      <p class="rotulo">About</p>
+      <h1>Hi, I'm {site.apelido}.</h1>
       {site.bio.map((paragrafo) => <p>{paragrafo}</p>)}
 
-      <h2 class="rotulo">Equipamento</h2>
+      <h2 class="rotulo">Gear</h2>
       <ul>
         {site.equipamento.map((item) => <li>{item}</li>)}
       </ul>
 
-      <a class="botao" href={url('/contato')}>Fale comigo</a>
+      <a class="botao" href={url('/contato')}>Talk to me</a>
     </div>
   </section>
 </Base>

@@ -25,40 +25,40 @@ const totalFotos = ensaios.reduce((s, e) => s + e.fotos.length, 0);
 
 const cartoesEnsaios = ensaios.map((e) => ({
   titulo: e.titulo,
-  subtitulo: `${e.fotos.length} fotos · ${e.descricao}`,
+  subtitulo: `${e.fotos.length} photos · ${e.descricao}`,
   href: url(`/${e.slug}`),
   imagem: e.fotos[0]?.src,
 }));
 
 const licoes = [
-  { titulo: 'Enquadramento', texto: 'Onde o olho entra primeiro: o que fica grande, o que respira, o que corta a borda.' },
-  { titulo: 'Luz', texto: 'A luz escolhe o que importa: o rosto que acende e o fundo que se apaga.' },
-  { titulo: 'Ritmo', texto: 'Numa série, é o tempo entre um clique e outro: nada chega tudo de uma vez.' },
+  { titulo: 'Framing', texto: 'Where the eye goes first: what gets big, what breathes, what gets cut at the edge.' },
+  { titulo: 'Light', texto: 'Light picks what matters: the face that glows and the background that fades.' },
+  { titulo: 'Rhythm', texto: 'In a series, it is the time between one click and the next: nothing arrives all at once.' },
 ];
 
-const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Olá! Vi seu portfólio e quero marcar um ensaio.')}`;
+const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Hi! I saw your portfolio and I want to book a photo shoot.')}`;
 ---
 
-<Portfolio titulo={`${site.nome} · fotografia`} descricao={`Fotografia de ${site.nome} em ${site.cidade.split(',')[0]}: ${categorias.map((c) => c.titulo).join(', ')}.`}>
+<Portfolio titulo={`${site.nome} · photography`} descricao={`Photography by ${site.nome} in ${site.cidade.split(',')[0]}: ${categorias.map((c) => c.titulo).join(', ')}.`}>
   <!-- 01–03 · ENTRADA: o mural em gravura; rolando, ele encolhe, ganha cor e as fotos formam o hexágono -->
   <Mural fotos={selecionadas(fotos.length)} totalFotos={totalFotos} />
 
   <!-- 04 · ENSAIOS -->
-  <FaixaCurva id="ensaios" rotulo={`Ensaios · ${ensaios.length} lugares, ${totalFotos} fotos`} itens={cartoesEnsaios} formato="retrato" tema="azul" lente="foto" />
+  <FaixaCurva id="ensaios" rotulo={`Series · ${ensaios.length} places, ${totalFotos} photos`} itens={cartoesEnsaios} formato="retrato" tema="azul" lente="foto" />
 
   <!-- 05 · O OLHAR -->
-  <Mergulho id="olhar" titulo={['O', 'olhar']} rotulo="As três perguntas de uma foto" fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('jaragua/05-escadaria-a-noite')} lente="foto">
+  <Mergulho id="olhar" titulo={['The', 'eye']} rotulo="The three questions of a photo" fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('jaragua/05-escadaria-a-noite')} lente="foto">
     <div slot="topo" class="painel-linha">
-      <h3 class="painel-frase">Toda foto passa pelas mesmas três perguntas</h3>
-      <span class="rotulo">{ensaios.length} ensaios · {totalFotos} fotos</span>
+      <h3 class="painel-frase">Every photo goes through the same three questions</h3>
+      <span class="rotulo">{ensaios.length} series · {totalFotos} photos</span>
     </div>
     <div class="painel-linha painel-fim">
       <ol class="painel-licoes">
         {licoes.map((l, i) => <li><span class="rotulo">0{i + 1} · {l.titulo}</span><p>{l.texto}</p></li>)}
       </ol>
       <div class="painel-acoes">
-        <a href={linkEnsaio} target="_blank" rel="noopener">Quero um ensaio</a>
-        <a href={url('/')} data-flash>Ver os sites</a>
+        <a href={linkEnsaio} target="_blank" rel="noopener">Book a photo shoot</a>
+        <a href={url('/')} data-flash>See the websites</a>
       </div>
     </div>
   </Mergulho>
@@ -67,12 +67,12 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
   <RodapeAzul
     slot="rodape"
     foto={fotoDe('pedras/02-barcos-na-hora-dourada')}
-    rotulo="Contato"
-    titulo="Bora fotografar?"
-    texto="Seu lifestyle, seus rolês, as pessoas que você ama."
+    rotulo="Contact"
+    titulo="Shall we shoot?"
+    texto="Your lifestyle, your nights out, the people you love."
     botoes={[
-      { texto: 'Quero um ensaio ↗', href: linkEnsaio, principal: true, fora: true, lente: 'foto' },
-      { texto: 'Ver os sites', href: url('/'), lente: 'codigo' },
+      { texto: 'Book a photo shoot ↗', href: linkEnsaio, principal: true, fora: true, lente: 'foto' },
+      { texto: 'See the websites', href: url('/'), lente: 'codigo' },
     ]}
   />
 </Portfolio>

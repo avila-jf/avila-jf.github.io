@@ -168,8 +168,8 @@ function desenharMenu(g: CanvasRenderingContext2D, info: InfoDisplay, sel: numbe
   // linhas: os ensaios, a agenda e os sites
   const linhas = [
     ...info.ensaios.map((e) => ({ texto: e.titulo, valor: String(e.total), serifa: true })),
-    { texto: `Agenda aberta · ${info.cidade}`, valor: '●', serifa: false },
-    { texto: `${info.sitesNoAr} sites no ar`, valor: '</>', serifa: false },
+    { texto: `Booking open · ${info.cidade}`, valor: '●', serifa: false },
+    { texto: `${info.sitesNoAr} live websites`, valor: '</>', serifa: false },
   ];
   const topo = 118;
   const altura = 96;
@@ -201,9 +201,9 @@ function desenharMenu(g: CanvasRenderingContext2D, info: InfoDisplay, sel: numbe
   g.fillRect(0, A - 84, L, 84);
   g.fillStyle = 'rgba(232,238,247,0.75)';
   g.font = '400 30px Inter, sans-serif';
-  g.fillText(`${info.totalFotos} fotos · Nikon D3200`, 44, A - 42);
+  g.fillText(`${info.totalFotos} photos · Nikon D3200`, 44, A - 42);
   g.textAlign = 'right';
-  g.fillText('OK ▸ fotografar', L - 44, A - 42);
+  g.fillText('OK ▸ shoot', L - 44, A - 42);
   g.restore();
 }
 

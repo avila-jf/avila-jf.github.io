@@ -16,9 +16,36 @@ export interface Foto {
   alt: string;
 }
 
+// Legenda em inglês de cada foto (a chave é o nome do arquivo sem o número).
+// Foto nova sem tradução aqui mostra o nome do arquivo, como antes.
+const EN: Record<string, string> = {
+  'maos-pro-ceu': 'hands to the sky', 'beijo-e-cartazes': 'a kiss and signs', pare: 'stop',
+  'cartaz-erguido': 'sign held high', 'o-voto-e-individual': 'the vote is personal', 'beijo-e-leque': 'a kiss and a fan',
+  constituicao: 'the constitution', 'bandeira-na-avenida': 'flag on the avenue', 'pela-defesa-da-democracia': 'in defense of democracy',
+  'o-brasil-nao-cabe-no-quintal': "brazil doesn't fit in a backyard", 'tire-suas-patas': 'hands off', 'camisa-amarela': 'yellow shirt',
+  'buggy-e-bandeira': 'buggy and flag', 'escola-de-surf': 'surf school', 'coqueiros-ao-entardecer': 'palm trees at dusk',
+  'ceu-amarelo-e-coqueiros': 'yellow sky and palm trees', 'bandeira-vermelha': 'red flag', 'ambulante-na-areia': 'beach vendor',
+  'salva-vidas': 'lifeguard', 'bar-da-praia': 'beach bar', 'kit-de-praia': 'beach kit', 'camera-na-praia': 'camera on the beach',
+  'amigos-no-mar': 'friends in the sea', 'fim-de-tarde-nas-cadeiras': 'late afternoon in the chairs', 'torres-da-igreja': 'church towers',
+  'bicicleta-na-praia': 'bike on the beach',
+  'luz-do-estudio': 'studio light', 'de-perfil': 'in profile', 'flash-na-tela': 'flash on the screen', concentrado: 'focused',
+  'luvas-azuis': 'blue gloves', 'traco-na-perna': 'line on the leg',
+  'vermelho-na-rua': 'red on the street', 'olhar-direto': 'straight gaze', 'vermelho-e-atitude': 'red and attitude',
+  'parede-de-pedra': 'stone wall', 'escadaria-a-noite': 'stairs at night', 'fachada-a-noite': 'facade at night',
+  'postes-e-varal-de-luz': 'poles and string lights', cartazes: 'posters', 'parede-de-cartazes': 'wall of posters', mangas: 'mangoes',
+  sorriso: 'smile',
+  'sol-sobre-a-baia': 'sun over the bay', 'barcos-na-hora-dourada': 'boats at golden hour', 'fim-de-tarde-nas-pedras': 'late afternoon on the rocks',
+  'navio-ao-entardecer': 'ship at dusk', 'barcos-no-azul': 'boats in the blue', 'por-do-sol-com-barcos': 'sunset with boats',
+  'anoitecer-no-mar': 'nightfall at sea', 'olhando-a-baia': 'looking at the bay', 'silhueta-e-nuvem': 'silhouette and cloud',
+  'capa-mortal-no-barco': 'backflip off the boat', 'bolsa-na-pedra': 'bag on the rock', 'wonder-why': 'wonder why',
+  'perfil-na-noite': 'profile at night', 'noite-em-roxo': 'night in purple', 'olhando-a-cidade': 'looking at the city',
+  'camisa-10': 'number 10 shirt', 'casal-no-porto': 'couple at the port', 'noite-de-festa': 'party night', 'luzes-da-praca': 'lights of the square',
+};
+
 function legenda(nome: string) {
-  const texto = nome.replace(/^\d+[-_ ]*/, '').replace(/[-_]+/g, ' ').trim();
-  return texto || 'Fotografia';
+  const chave = nome.replace(/^\d+[-_ ]*/, '');
+  const texto = EN[chave] ?? chave.replace(/[-_]+/g, ' ').trim();
+  return texto || 'Photograph';
 }
 
 export const fotos: Foto[] = Object.entries(arquivos)

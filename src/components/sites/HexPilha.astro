@@ -30,7 +30,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
 <div class="hexpilha">
   <div class="hp-palco">
     <div class="hp-centro" aria-hidden="true">
-      <span class="rotulo">Projetos</span>
+      <span class="rotulo">Projects</span>
       <b class="titulo-cartaz">'26</b>
       <span class="hp-centro-nome voz-codigo">{itens[0]?.nome}</span>
     </div>
@@ -67,7 +67,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
             <span class="voz-codigo">{p.tecnologias.join(' · ')}</span>
             {p.link && (
               <a class="rotulo" href={p.link} target="_blank" rel="noopener">
-                Abrir ↗
+                Open ↗
               </a>
             )}
           </div>
@@ -75,7 +75,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
       }
     </div>
 
-    <span class="hp-dica rotulo" aria-hidden="true">role para ver mais ↓</span>
+    <span class="hp-dica rotulo" aria-hidden="true">scroll for more ↓</span>
   </div>
 </div>
 
@@ -316,12 +316,14 @@ const dois = (v: number) => String(v).padStart(2, '0');
       conta.textContent = `${dois(i + 1)} / ${dois(n)}`;
     };
 
-    // t = 0..1 da tela travada: 0–0,4 o anel gira · 0,4–0,55 fecha · 0,55–1 a pilha sobe
+    // t = 0..1 da tela travada: 0–0,08 o anel ABRE do centro (continua a faixa que se enrolou
+    // antes dele) · 0–0,4 o anel gira · 0,4–0,55 fecha · 0,55–1 a pilha sobe
     const desenhar = (t: number) => {
+      const abre = gsap.parseEase('power3.out')(faixa(t, 0, 0.08));
       const giro = -faixa(t, 0, 0.55) * passo * 3;
       const m = suave(faixa(t, 0.4, 0.55)); // 0 = anel, 1 = pilha
       const p = faixa(t, 0.55, 1) * (n - 1); // posição na pilha
-      const raio = lado * 0.4;
+      const raio = lado * 0.4 * (0.15 + 0.85 * abre);
       const raioPilha = largura * 1.75; // um cartão não invade o próximo (altura = 0,625 × largura)
 
       let doTopo = 0;
@@ -349,13 +351,13 @@ const dois = (v: number) => String(v).padStart(2, '0');
         const x = xa * (1 - m);
         const y = ya * (1 - m) + yp * m;
         const z = zp * m;
-        const escala = escalaAnel * (1 - m) + m;
+        const escala = escalaAnel * (1 - m) * (0.4 + 0.6 * abre) + m;
         el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateZ(${(inclinacao * (1 - m)).toFixed(2)}deg) rotateX(${(-ang * m).toFixed(2)}deg) scale(${escala.toFixed(3)})`;
-        el.style.opacity = String(1 - m + m * opPilha);
+        el.style.opacity = String((1 - m) * abre + m * opPilha);
       });
 
       centro.style.opacity = String(1 - m);
-      centro.style.scale = String(1 - m * 0.4);
+      centro.style.scale = String((1 - m * 0.4) * (0.6 + 0.4 * abre));
       lados.forEach((el) => (el.style.opacity = String(m)));
       marcar(m < 0.5 ? doTopo : gsap.utils.clamp(0, n - 1, Math.round(p)));
     };

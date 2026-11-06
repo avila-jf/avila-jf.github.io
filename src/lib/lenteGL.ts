@@ -7,8 +7,8 @@
 //    (celular), a lente fica parada no rosto.
 //
 //  - faixaQueCurva(): os cartões da faixa de protótipos/ensaios desenhados num canvas só. O meio
-//    fica reto; dos lados a imagem SOBE e encolhe, como um disco/tela curva, com as cores
-//    abrindo em arco-íris na curva. Rolando rápido, a curva entorta mais para o lado do movimento.
+//    fica reto; a ponta direita SOBE e a esquerda DESCE, as duas crescendo na nossa direção,
+//    como uma tela que enrola, com as cores abrindo em arco-íris na dobra. Rolando, torce mais.
 //
 // WebGL 1 (roda em qualquer celular). Sem WebGL, o HTML de sempre continua lá.
 
@@ -236,7 +236,8 @@ uniform vec2 uCard;         // tamanho do cartão (css px)
 uniform float uTopo;        // topo dos cartões no palco (css px)
 uniform float uInicio;      // x do 1º cartão no palco (css px)
 uniform float uPasso;       // largura + espaço
-uniform float uN, uCols, uRaioCanto, uCurva, uTorce, uDisp;
+uniform float uN, uCols, uRaioCanto, uCurva, uDisp;
+uniform float uFecha;       // 0..1: no fim da faixa ela gira, encolhe pro centro e some (vira o hexágono)
 uniform vec2 uCel;          // tamanho de uma célula do atlas, em 0..1
 
 vec4 cartao(vec2 p){
@@ -261,11 +262,20 @@ void main(){
   float alcance = (px.x - meio) / meio;            // -1 .. 1
   float lado = smoothstep(.22, 1.05, abs(alcance));
   float s = sign(alcance);
-  // a curva: as pontas sobem (disco) e entortam para o lado do movimento
-  float sobe = lado * lado * (uCurva + uTorce * s);
+  // a curva, como no reel dele: uma TORÇÃO. A ponta direita sobe e a esquerda desce, e as duas
+  // crescem, vindo na nossa direção como uma tela que enrola. Rolando, a torção aumenta.
+  float sobe = lado * lado * uCurva * s;
   float meioY = uTopo + uCard.y * .5;
-  float encolhe = 1. + lado * lado * .22;           // nas pontas o cartão fica mais baixo (perspectiva)
-  vec2 p = vec2(px.x, (px.y - meioY) * encolhe + meioY + sobe);
+  float cresce = 1. - lado * lado * .2;              // nas pontas o cartão fica mais alto (vem pra frente)
+  vec2 p = vec2(px.x, (px.y - meioY) * cresce + meioY + sobe * (1. + uFecha * 2.));
+
+  // fechando: a faixa gira em volta do centro e encolhe, como se enrolasse num anel
+  if (uFecha > 0.) {
+    vec2 c0 = vec2(meio, meioY);
+    float ang = uFecha * uFecha * 1.1;
+    vec2 d = (p - c0) * (1. + uFecha * uFecha * 3.2);
+    p = c0 + vec2(cos(ang) * d.x - sin(ang) * d.y, sin(ang) * d.x + cos(ang) * d.y);
+  }
 
   // arco-íris na curva: cada cor é lida um pouco deslocada
   float abre = lado * uDisp;
@@ -276,10 +286,10 @@ void main(){
     c = vec4(r.r, c.g, b.b, max(c.a, max(r.a, b.a)));
   }
   c.rgb *= 1. - lado * .28;                         // as pontas escurecem: profundidade
-  gl_FragColor = c;
+  gl_FragColor = c * (1. - smoothstep(.55, 1., uFecha));
 }`;
 
-export type Faixa = { atualizar(x: number, velocidade: number): void; medir(): void } | null;
+export type Faixa = { atualizar(x: number, velocidade: number, fecha?: number): void; medir(): void } | null;
 
 export async function faixaQueCurva(palco: HTMLElement, cards: HTMLElement[], celular: boolean): Promise<Faixa> {
   if (!cards.length) return null;
@@ -334,12 +344,13 @@ export async function faixaQueCurva(palco: HTMLElement, cards: HTMLElement[], ce
   };
   medir();
 
-  let curva = 0, torce = 0, x = 0, vel = 0;
+  let curva = 0, x = 0, vel = 0, fecha = 0;
   const desenhar = () => {
     // o topo dos cartões é lido a cada quadro: a trava do GSAP muda a página depois da 1ª medida
     card.topo = cards[0].getBoundingClientRect().top - palco.getBoundingClientRect().top;
-    curva = lerp(curva, (celular ? 70 : 120) + Math.min(90, Math.abs(vel) / 22), .12);
-    torce = lerp(torce, Math.max(-1, Math.min(1, vel / 2500)) * (celular ? 40 : 80), .1);
+    // a torção segue o sentido da rolagem: rolando pra cima, ela vira pro outro lado
+    const alvo = ((celular ? 60 : 110) + Math.min(110, Math.abs(vel) / 18)) * (vel < -40 ? -1 : 1);
+    curva = lerp(curva, alvo, .08);
     gl.uniform1i(u.uAtlas, 0);
     gl.uniform2f(u.uRes, W, H);
     gl.uniform2f(u.uCard, card.w, card.h);
@@ -351,7 +362,7 @@ export async function faixaQueCurva(palco: HTMLElement, cards: HTMLElement[], ce
     gl.uniform2f(u.uCel, 1 / cols, 1 / lins);
     gl.uniform1f(u.uRaioCanto, card.raio);
     gl.uniform1f(u.uCurva, curva);
-    gl.uniform1f(u.uTorce, torce);
+    gl.uniform1f(u.uFecha, fecha);
     gl.uniform1f(u.uDisp, 3 + Math.min(9, Math.abs(vel) / 160));
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -366,7 +377,7 @@ export async function faixaQueCurva(palco: HTMLElement, cards: HTMLElement[], ce
   requestAnimationFrame(quadro);
 
   return {
-    atualizar(nx, v) { x = nx; vel = v; },
+    atualizar(nx, v, f = 0) { x = nx; vel = v; fecha = f; },
     medir,
   };
 }

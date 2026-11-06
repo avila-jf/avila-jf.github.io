@@ -17,11 +17,11 @@ const projetoCapa = Object.values(
 )[0]?.default;
 
 const itens = [
-  { href: url('/'), texto: 'Início', foto: capa()?.src },
+  { href: url('/'), texto: 'Home', foto: capa()?.src },
   ...categorias.map((c) => ({ href: url(`/${c.slug}`), texto: c.titulo, foto: fotosDa(c.slug)[0]?.src })),
-  { href: url('/projetos'), texto: 'Projetos', foto: projetoCapa },
-  { href: url('/sobre'), texto: 'Sobre', foto: eu },
-  { href: url('/contato'), texto: 'Contato', foto: undefined },
+  { href: url('/projetos'), texto: 'Projects', foto: projetoCapa },
+  { href: url('/sobre'), texto: 'About', foto: eu },
+  { href: url('/contato'), texto: 'Contact', foto: undefined },
 ];
 
 const links = await Promise.all(
@@ -39,7 +39,7 @@ const { instagram, whatsapp } = site.contato;
 <header class="topo">
   <div class="topo-esquerda">
     {/* No início a seta só aparece com o menu aberto (para sair dele) */}
-    <a class:list={['voltar', { 'so-no-menu': naHome }]} href={url('/')} aria-label="Voltar">
+    <a class:list={['voltar', { 'so-no-menu': naHome }]} href={url('/')} aria-label="Back">
       <span class="voltar-fundo" aria-hidden="true" />
       <svg class="voltar-seta" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M19 12H5M11 6l-6 6 6 6" />

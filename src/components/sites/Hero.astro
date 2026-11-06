@@ -17,34 +17,34 @@ const pb = retratos['/src/assets/eu-retrato-pb.png']?.default;
 const cor = retratos['/src/assets/eu-retrato-cor.png']?.default;
 ---
 
-<section class="hero" data-lente="codigo" data-tema="claro" aria-label="Início">
+<section class="hero" data-lente="codigo" data-tema="claro" aria-label="Home">
   <h1 class="hero-titulo titulo-cartaz">
     <span class="hero-linha">Explore</span>
-    <span class="hero-linha hero-desbota">meu portfólio</span>
+    <span class="hero-linha hero-desbota">my portfolio</span>
   </h1>
 
   {
     pb && (
       <div class="hero-eu">
         <div class="hero-quadro" data-cor={cor?.src}>
-          <Image src={pb} alt={`Retrato de ${site.nome}`} widths={[480, 800, 1183]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
+          <Image src={pb} alt={`Portrait of ${site.nome}`} widths={[480, 800, 1183]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
         </div>
       </div>
     )
   }
 
-  <p class="hero-assina rotulo">Feito por {site.nome} · 2026</p>
+  <p class="hero-assina rotulo">Made by {site.nome} · 2026</p>
 
   <div class="hero-lado">
-    <p class="voz-foto">Sites que fazem a sua marca parecer o que ela vale, com olhar de fotógrafo.</p>
+    <p class="voz-foto">Websites that make your brand look as good as it is, with a photographer's eye.</p>
     <ul class="rotulo">
-      <li>Sites</li>
+      <li>Websites</li>
       <li>Landing pages</li>
-      <li>Fotografia</li>
+      <li>Photography</li>
     </ul>
   </div>
 
-  <span class="hero-dica rotulo" aria-hidden="true">role ↓</span>
+  <span class="hero-dica rotulo" aria-hidden="true">scroll ↓</span>
 </section>
 
 <style>

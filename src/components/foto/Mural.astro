@@ -49,14 +49,14 @@ const CORES: Record<string, string> = {
 };
 ---
 
-<section class="mural" data-trava data-lente="foto" data-tema="claro" aria-label="Mural de fotos">
+<section class="mural" data-trava data-lente="foto" data-tema="claro" aria-label="Photo wall">
   <div class="mural-palco">
     <div class="mural-centro">
       <div class="mural-grade">
         <div class="mural-cartao">
           <span class="rotulo">Francis Avila · Maceió</span>
-          <h1 class="mural-titulo">Pela minha <span class="voz-foto">lente.</span></h1>
-          <span class="rotulo">{categorias.length} ensaios · {totalFotos} fotos</span>
+          <h1 class="mural-titulo">Through my <span class="voz-foto">lens.</span></h1>
+          <span class="rotulo">{categorias.length} series · {totalFotos} photos</span>
         </div>
         {
           lista.map((f, i) => (
@@ -77,29 +77,29 @@ const CORES: Record<string, string> = {
     </div>
     <!-- o hexágono que as fotos formam no fim da tela travada (só no computador) -->
     <div class="mural-hex" aria-hidden="true">
-      <span class="rotulo">Fotos</span>
+      <span class="rotulo">Photos</span>
       <b class="titulo-cartaz">'26</b>
       <span class="mural-hex-nome voz-codigo"></span>
     </div>
   </div>
   <p class="mural-legenda" aria-live="polite"><b></b><span class="rotulo"></span></p>
   <div class="mural-dica">
-    <p class="rotulo dica-pc" aria-hidden="true">mova o mouse · clique na foto pra abrir</p>
-    <button class="mural-embaralhar rotulo" type="button">embaralhar ↻</button>
+    <p class="rotulo dica-pc" aria-hidden="true">move the mouse · click a photo to open it</p>
+    <button class="mural-embaralhar rotulo" type="button">shuffle ↻</button>
   </div>
-  <button class="mural-cor" type="button" aria-pressed="false"><span>Vamos colocar uma cor?</span></button>
+  <button class="mural-cor" type="button" aria-pressed="false"><span>Shall we add some color?</span></button>
 
   <!-- detalhe da foto -->
-  <div class="detalhe" role="dialog" aria-modal="true" aria-label="Foto" hidden>
+  <div class="detalhe" role="dialog" aria-modal="true" aria-label="Photo" hidden>
     <div class="detalhe-fundo" data-fechar-detalhe></div>
-    <button class="detalhe-fechar" type="button" aria-label="Fechar" data-fechar-detalhe>✕</button>
+    <button class="detalhe-fechar" type="button" aria-label="Close" data-fechar-detalhe>✕</button>
     <div class="detalhe-painel">
       <figure class="detalhe-foto"><img alt="" /></figure>
       <div class="detalhe-texto">
         <h2 class="detalhe-titulo"></h2>
         <p class="detalhe-ensaio"></p>
         <div class="detalhe-tags"><span class="tag-ensaio"></span><span class="tag-total"></span></div>
-        <a class="detalhe-link" href="#">ver o ensaio →</a>
+        <a class="detalhe-link" href="#">see the series →</a>
       </div>
     </div>
   </div>
@@ -695,7 +695,7 @@ const CORES: Record<string, string> = {
     const mostrarLegenda = (f: HTMLElement | null) => {
       if (!f) return legenda.classList.remove('ativa');
       legenda.querySelector('b')!.textContent = f.querySelector('img')?.alt ?? '';
-      legenda.querySelector('span')!.textContent = `${f.dataset.ensaio} · ${f.dataset.total} fotos`;
+      legenda.querySelector('span')!.textContent = `${f.dataset.ensaio} · ${f.dataset.total} photos`;
       legenda.classList.add('ativa');
     };
 
@@ -966,7 +966,7 @@ const CORES: Record<string, string> = {
           gsap.to(cam, { x: centros[0].x, y: centros[0].y, duration: semMovimento ? 0 : 1.1, ease: 'power3.inOut' });
         }
         botaoCor.setAttribute('aria-pressed', String(ligar));
-        botaoCor.querySelector('span')!.textContent = ligar ? 'voltar pro azul' : 'Vamos colocar uma cor?';
+        botaoCor.querySelector('span')!.textContent = ligar ? 'back to blue' : 'Shall we add some color?';
       };
       botaoCor.addEventListener('click', () => colorir(!emCor));
       document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', () => colorir(false)));
@@ -983,9 +983,9 @@ const CORES: Record<string, string> = {
       img.src = f.dataset.grande ?? f.querySelector('img')!.currentSrc;
       img.alt = f.querySelector('img')?.alt ?? '';
       detalhe.querySelector('.detalhe-titulo')!.textContent = img.alt;
-      detalhe.querySelector('.detalhe-ensaio')!.textContent = `Do ensaio ${f.dataset.ensaio}.`;
+      detalhe.querySelector('.detalhe-ensaio')!.textContent = `From the ${f.dataset.ensaio} series.`;
       detalhe.querySelector('.tag-ensaio')!.textContent = f.dataset.ensaio ?? '';
-      detalhe.querySelector('.tag-total')!.textContent = `${f.dataset.total} fotos`;
+      detalhe.querySelector('.tag-total')!.textContent = `${f.dataset.total} photos`;
       detalhe.querySelector<HTMLAnchorElement>('.detalhe-link')!.href = `${base}/${f.dataset.slug}`;
       painel.style.setProperty('--cor', f.dataset.cor ?? '#1f3f99');
       detalhe.hidden = false;

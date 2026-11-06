@@ -27,10 +27,10 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
       <div>camera.virar(<em data-v="virar">0.00</em>); camera.zoom(<em data-v="zoom">18</em>mm);</div>
       <div>camera.foco(<em data-v="foco">0.00</em>); <span class="c" data-v="estado"></span></div>
     </div>
-    <p class="cf-pergunta titulo-cartaz">Quer tirar uma fotografia?</p>
+    <p class="cf-pergunta titulo-cartaz">Want to take a photograph?</p>
     <button class="cf-disparar" type="button">
       <span class="cf-obturador" aria-hidden="true"></span>
-      Disparar
+      Shoot
     </button>
   </div>
 </div>
@@ -143,7 +143,7 @@ const fotoDisplay = foto ? (await getImage({ src: foto.src, width: 1000, format:
       if (agora !== emFoco) {
         emFoco = agora;
         const el = valor('estado');
-        el.textContent = agora ? '// ✓ em foco' : '';
+        el.textContent = agora ? '// ✓ in focus' : '';
         el.className = `c ${agora ? 'ok' : ''}`;
       }
     };

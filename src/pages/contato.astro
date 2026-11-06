@@ -6,18 +6,18 @@ const { instagram, whatsapp } = site.contato;
 const whats = (texto: string) => `https://wa.me/${whatsapp}?text=${encodeURIComponent(texto)}`;
 
 const canais = [
-  { nome: 'Ensaio', valor: 'Agendar pelo WhatsApp', href: whats('Olá! Vi seu portfólio e queria conversar sobre um ensaio.') },
-  { nome: 'Site', valor: 'Quero um portfólio', href: whats(criacaoDeSites.mensagemWhatsApp) },
+  { nome: 'Photo shoot', valor: 'Book on WhatsApp', href: whats('Hi! I saw your portfolio and I would like to talk about a photo shoot.') },
+  { nome: 'Website', valor: 'I want a portfolio', href: whats(criacaoDeSites.mensagemWhatsApp) },
   { nome: 'Instagram', valor: `@${instagram}`, href: `https://instagram.com/${instagram}` },
 ];
 ---
 
-<Base titulo="Contato" descricao={`Fale com ${site.nome} sobre ensaios e trabalhos.`}>
+<Base titulo="Contact" descricao={`Talk to ${site.nome} about photo shoots and projects.`}>
   <section class="container titulo-pagina">
-    <p class="rotulo">Contato</p>
-    <h1>Vamos criar algo juntos.</h1>
+    <p class="rotulo">Contact</p>
+    <h1>Let's make something together.</h1>
     <p>
-      Ensaios de retrato, trabalhos autorais e parcerias. Também crio sites de portfólio. Respondo mais rápido pelo
+      Portrait shoots, personal work and collaborations. I also build portfolio websites. I reply fastest on
       WhatsApp.
     </p>
   </section>

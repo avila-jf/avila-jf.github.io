@@ -17,13 +17,14 @@ interface Props {
   tema?: 'claro' | 'tinta' | 'azul';
   lente?: 'foto' | 'codigo' | 'ambos';
   formato?: 'tela' | 'retrato'; // tela = print 16:10 (sites); retrato = foto 4:5 (ensaios)
+  fecha?: boolean; // no fim, a faixa gira e encolhe pro centro: a ponte pro hexágono que vem depois
   itens: { titulo: string; subtitulo: string; href?: string; fora?: boolean; imagem?: ImageMetadata; posicao?: string }[];
 }
 
-const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } = Astro.props;
+const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', fecha = false, itens } = Astro.props;
 ---
 
-<section class="ato faixa-curva" id={id} data-trava data-lente={lente} data-tema={tema} data-formato={formato}>
+<section class="ato faixa-curva" id={id} data-trava data-lente={lente} data-tema={tema} data-formato={formato} data-fecha={fecha ? '' : undefined}>
   <div class="fc-palco">
     <p class="ato-id rotulo">{rotulo}</p>
     <div class="fc-trilho">
@@ -198,6 +199,7 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
     const trilho = secao.querySelector<HTMLElement>('.fc-trilho')!;
     const cards = [...trilho.querySelectorAll<HTMLElement>('.fc-card')];
     const legenda = secao.querySelector<HTMLElement>('.fc-legenda')!;
+    const fecha = secao.hasAttribute('data-fecha');
     trilho.style.overflow = 'visible';
     const distancia = () => Math.max(0, trilho.scrollWidth - trilho.clientWidth);
 
@@ -231,9 +233,11 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
     // a curva: reta no meio (20% da tela) e subindo para a frente nas pontas, como tela de cinema
     let fundura = 0;
     let atual = -1;
+    const fechando = { v: 0 };
     const curvar = (velocidade: number) => {
       const x = gsap.getProperty(trilho, 'x') as number;
-      gl?.atualizar(x, velocidade);
+      gl?.atualizar(x, velocidade, fechando.v);
+      if (gl && fecha) legenda.style.opacity = String(1 - Math.min(1, fechando.v * 2));
       const meio = innerWidth / 2;
       fundura += (gsap.utils.clamp(0, 160, Math.abs(velocidade) / 16) - fundura) * 0.15;
       const A = 460 + fundura;
@@ -275,7 +279,7 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
       scrollTrigger: {
         trigger: secao,
         start: 'top top',
-        end: () => `+=${distancia()}`,
+        end: () => `+=${distancia() * (gl && fecha ? 1.35 : 1)}`,
         pin: secao.querySelector('.fc-palco'),
         scrub: 0.6,
         invalidateOnRefresh: true,
@@ -284,7 +288,9 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', itens } =
       },
       onUpdate: () => curvar(tl.scrollTrigger?.getVelocity() ?? 0),
     });
-    tl.to(trilho, { x: () => -distancia() });
+    tl.to(trilho, { x: () => -distancia(), duration: 1 });
+    // a ponte pro hexágono: a faixa gira e encolhe pro centro (só com WebGL)
+    if (gl && fecha) tl.to(fechando, { v: 1, duration: 0.35 });
     curvar(0);
     remedir(); // a trava foi criada depois de carregar as fotos: reordena as medidas da página
   });

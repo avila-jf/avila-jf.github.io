@@ -36,7 +36,7 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
             target="_blank"
             rel="noopener"
             data-tilt
-            aria-label={`Abrir ${projeto.nome}`}
+            aria-label={`Open ${projeto.nome}`}
           >
             <div class="janela-barra" aria-hidden="true">
               <span class="bolinhas">
@@ -65,14 +65,14 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
               {print && (
                 <Image
                   src={print}
-                  alt={`Print do site ${projeto.nome}`}
+                  alt={`Screenshot of ${projeto.nome}`}
                   widths={[700, 1200]}
                   sizes="(max-width: 860px) 100vw, 55vw"
                   format="webp"
                   quality={78}
                 />
               )}
-              <span class="tela-dica">passe o mouse para rolar o site</span>
+              <span class="tela-dica">hover to scroll the site</span>
             </div>
           </a>
           </div>
@@ -91,15 +91,15 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
             <div class="projeto-links">
               {projeto.site && (
                 <a class="link-seta" href={projeto.site} target="_blank" rel="noopener">
-                  Ver site <span aria-hidden="true">↗</span>
+                  Visit site <span aria-hidden="true">↗</span>
                 </a>
               )}
               {projeto.codigo ? (
                 <a class="link-seta" href={projeto.codigo} target="_blank" rel="noopener">
-                  Código <span aria-hidden="true">↗</span>
+                  Code <span aria-hidden="true">↗</span>
                 </a>
               ) : (
-                <span class="privado">Código privado</span>
+                <span class="privado">Private code</span>
               )}
             </div>
           </div>

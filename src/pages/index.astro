@@ -46,17 +46,17 @@ const totalFotos = ensaios.reduce((s, e) => s + e.total, 0);
 const fotosDestaque = fotosEmDestaque(destaques);
 
 const linkSite = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent(criacaoDeSites.mensagemWhatsApp)}`;
-const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Olá! Vi seu portfólio e quero marcar um ensaio.')}`;
+const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Hi! I saw your portfolio and I want to book a photo shoot.')}`;
 ---
 
-<Portfolio titulo={`${site.nome} · sites com olhar de fotógrafo`} descricao={`${site.nome}: eu crio sites com olhar de fotógrafo, em ${site.cidade.split(',')[0]}.`} loader>
+<Portfolio titulo={`${site.nome} · websites with a photographer's eye`} descricao={`${site.nome}: I build websites with a photographer's eye, from ${site.cidade.split(',')[0]}.`} loader>
   <Loader slot="antes" />
 
   <!-- 02 · HERO -->
   <Hero />
 
   <!-- 03 · SOBRE MIM: a gravura é o "quadro pintado"; no painel, eu de costas olhando as luzes da cidade -->
-  <Mergulho id="sobre" titulo={['Sobre', 'mim']} rotulo="Por trás das lentes" foto={fotoDe('pedras/12-wonder-why')} lente="ambos">
+  <Mergulho id="sobre" titulo={['About', 'me']} rotulo="Behind the lens" foto={fotoDe('pedras/12-wonder-why')} lente="ambos">
     <PaginaManga
       slot="fundo"
       fotos={[
@@ -68,17 +68,17 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
       ].filter((f) => f !== undefined)}
     />
     <div slot="topo" class="painel-linha">
-      <h3 class="painel-frase">Sites que parecem foto: bem enquadrados, com luz e com ritmo</h3>
-      <span class="rotulo">Maceió · Brasil e Portugal</span>
+      <h3 class="painel-frase">Websites that feel like photos: well framed, with light and rhythm</h3>
+      <span class="rotulo">Maceió · Brazil and Portugal</span>
     </div>
     <div class="painel-linha painel-fim">
       <div class="painel-resumo">
-        <p class="rotulo">Engenharia de Software · Fotografia · Sites</p>
+        <p class="rotulo">Software Engineering · Photography · Websites</p>
         <p>{site.bio[1]}</p>
       </div>
       <div class="painel-acoes">
-        <a href="#sites">Ver os sites</a>
-        <button type="button" data-abrir-sobre>Ler mais</button>
+        <a href="#sites">See the websites</a>
+        <button type="button" data-abrir-sobre>Read more</button>
       </div>
     </div>
   </Mergulho>
@@ -88,16 +88,16 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
 
   <!-- 05 · SITES NO AR -->
   <section class="ato" id="sites" data-trava data-lente="codigo" data-tema="claro">
-    <p class="ato-id rotulo">03 · Sites no ar</p>
+    <p class="ato-id rotulo">03 · Live websites</p>
     <Aparelho sites={sitesNoAr} />
   </section>
 
   <!-- 06 · PROTÓTIPOS E LANDING PAGES -->
-  <FaixaCurva id="prototipos" rotulo="04 · Protótipos e landing pages" itens={prototipos} tema="claro" lente="codigo" />
+  <FaixaCurva id="prototipos" rotulo="04 · Prototypes and landing pages" itens={prototipos} tema="claro" lente="codigo" fecha />
 
   <!-- 07 · PROJETOS -->
   <section class="ato" id="projetos" data-trava data-lente="codigo" data-tema="claro">
-    <p class="ato-id rotulo">05 · Todos os projetos</p>
+    <p class="ato-id rotulo">05 · All projects</p>
     <HexPilha itens={todos} />
     <ul class="outros">
       {
@@ -119,12 +119,12 @@ const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURICompo
   <RodapeAzul
     slot="rodape"
     foto={fotoDe('pedras/02-barcos-na-hora-dourada')}
-    rotulo="06 · Contato"
-    titulo="Bora criar?"
-    texto="Um site que parece foto: bem enquadrado, com luz e com ritmo."
+    rotulo="06 · Contact"
+    titulo="Shall we build?"
+    texto="A website that feels like a photo: well framed, with light and rhythm."
     botoes={[
-      { texto: 'Quero meu site ↗', href: linkSite, principal: true, fora: true, lente: 'codigo' },
-      { texto: 'Quero um ensaio', href: linkEnsaio, fora: true, lente: 'foto' },
+      { texto: 'I want my website ↗', href: linkSite, principal: true, fora: true, lente: 'codigo' },
+      { texto: 'Book a photo shoot', href: linkEnsaio, fora: true, lente: 'foto' },
     ]}
   >
     <CameraFoto

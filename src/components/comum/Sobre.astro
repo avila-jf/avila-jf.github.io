@@ -14,14 +14,14 @@ const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/asse
 
 <div class="sobre" role="dialog" aria-modal="true" aria-labelledby="sobre-titulo" hidden>
   <div class="sobre-fundo" data-fechar-sobre></div>
-  <button class="sobre-fechar" type="button" aria-label="Fechar" data-fechar-sobre>✕</button>
+  <button class="sobre-fechar" type="button" aria-label="Close" data-fechar-sobre>✕</button>
 
   <div class="sobre-painel">
     <div class="sobre-texto">
-      <h2 id="sobre-titulo" class="titulo-cartaz">Sobre</h2>
+      <h2 id="sobre-titulo" class="titulo-cartaz">About</h2>
       {site.bio.map((p) => <p>{p}</p>)}
       <p class="sobre-equipamento rotulo">{site.equipamento.join(' · ')} · {site.cidade}</p>
-      <nav class="sobre-links" aria-label="Redes">
+      <nav class="sobre-links" aria-label="Social">
         <a href={`https://instagram.com/${site.contato.instagram}`} target="_blank" rel="noopener">Instagram ↗</a>
         <a href={`https://wa.me/${site.contato.whatsapp}`} target="_blank" rel="noopener">WhatsApp ↗</a>
         <a href={github} target="_blank" rel="noopener">GitHub ↗</a>
@@ -33,7 +33,7 @@ const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/asse
         eu && (
           <figure class="sobre-polaroid">
             <Image src={eu} alt="" widths={[320, 560]} sizes="(max-width: 760px) 36vw, 16vw" format="webp" />
-            <figcaption>eu, no espelho</figcaption>
+            <figcaption>me, in the mirror</figcaption>
           </figure>
         )
       }
@@ -43,7 +43,7 @@ const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/asse
         <span class="caixa-furo"></span>
         <div class="caixa-topo">
           <b class="titulo-cartaz">Francis<br />Avila</b>
-          <span class="caixa-selo">fotógrafo<br />+ dev</span>
+          <span class="caixa-selo">photographer<br />+ dev</span>
         </div>
         <div class="caixa-bolha">
           {eu && <Image src={eu} alt="" widths={[360, 640]} sizes="(max-width: 760px) 44vw, 20vw" format="webp" />}
@@ -59,8 +59,8 @@ const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/asse
             notebook
           </span>
         </div>
-        <span class="caixa-novo titulo-cartaz">Novo<br />boneco!</span>
-        <span class="caixa-preco voz-codigo">orçamento<br />grátis</span>
+        <span class="caixa-novo titulo-cartaz">New<br />figure!</span>
+        <span class="caixa-preco voz-codigo">free<br />quote</span>
       </div>
     </div>
   </div>
