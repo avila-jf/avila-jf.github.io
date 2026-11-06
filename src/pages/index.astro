@@ -18,6 +18,8 @@ import Cortina from '../components/novo/Cortina.astro';
 import Sobre from '../components/novo/Sobre.astro';
 import { url } from '../lib/url';
 import Aparelho from '../components/novo/Aparelho.astro';
+import Mergulho from '../components/novo/Mergulho.astro';
+import Hexagono from '../components/novo/Hexagono.astro';
 import { site, categorias, projetos, destaques, criacaoDeSites, github } from '../data/site';
 import { fotos, fotosDa, fotosEmDestaque, selecionadas } from '../lib/fotos';
 import '../styles/novo.css';
@@ -33,6 +35,8 @@ const printDe = (nome?: string) =>
   nome ? Object.entries(prints).find(([caminho]) => caminho.includes(`/${nome}.`))?.[1].default : undefined;
 
 const sitesComPrint = sites.map((p) => ({ ...p, print: printDe(p.imagem) }));
+// 04 · o anel do hexágono leva todos os projetos (os com print mostram o print)
+const todosNoAnel = projetos.map((p) => ({ ...p, link: p.site ?? p.codigo, print: printDe(p.imagem) }));
 
 // Foto do display da câmera da intro: a 2ª dos destaques
 const fotosDestaque = fotosEmDestaque(destaques);
@@ -122,9 +126,13 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
         <Aparelho sites={sitesComPrint} />
       </section>
 
+      <!-- SOBRE MIM: o cartão no meio da gravura cresce até a tela inteira (mergulho) -->
+      <Mergulho fundo={fotoDe('pedras/09-silhueta-e-nuvem')} />
+
       <!-- 02 · O OLHAR POR TRÁS DO CÓDIGO: a tela trava e as três lições passam de lado -->
       <section class="ato horizontal" data-lente="ambos" data-tema="tinta">
         <div class="h-palco">
+          <span class="h-letreiro titulo-cartaz" data-texto="Olhar · Código · 2026" aria-hidden="true">Olhar · Código · 2026</span>
           <p class="ato-id rotulo">02 · O olhar por trás do código</p>
           <div class="h-trilho">
             <article class="olhar-abre">
@@ -158,6 +166,7 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
       <!-- 03 · ENSAIOS: um ensaio por tela, passando de lado com a rolagem -->
       <section class="ato horizontal" id="ensaios" data-lente="foto" data-tema="azul">
         <div class="h-palco">
+          <span class="h-letreiro titulo-cartaz" data-texto="Ensaios · Maceió · 2026" aria-hidden="true">Ensaios · Maceió · 2026</span>
           <p class="ato-id rotulo">03 · Ensaios · {ensaios.length} lugares, {totalFotos} fotos</p>
           <div class="h-trilho">
             {
@@ -179,9 +188,10 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
         </div>
       </section>
 
-      <!-- 04 · OUTROS PROJETOS (só código, lista enxuta) -->
+      <!-- 04 · PROJETOS: no computador, o anel do hexágono gira com a rolagem; no celular, a lista enxuta -->
       <section class="ato" data-lente="codigo" data-tema="claro">
-        <p class="ato-id rotulo">04 · Outros projetos</p>
+        <p class="ato-id rotulo">04 · Projetos</p>
+        <Hexagono itens={todosNoAnel} />
         <ul class="outros">
           {
             outros.map((p) => (
@@ -243,11 +253,28 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
           if (celular && secao.id === 'ensaios') return; // no celular os ensaios são uma lista
           const trilho = secao.querySelector<HTMLElement>('.h-trilho')!;
           const barra = secao.querySelector<HTMLElement>('.h-progresso i');
+          const letreiro = secao.querySelector<HTMLElement>('.h-letreiro');
           trilho.style.overflow = 'visible';
           const distancia = () => Math.max(0, trilho.scrollWidth - trilho.clientWidth);
-          gsap.to(trilho, {
-            x: () => -distancia(),
-            ease: 'none',
+
+          // Ensaios: os painéis curvam como uma fita (pegada do "Landing pages" do @echo_builds).
+          // Cada um gira no eixo Y conforme se afasta do meio da tela e afunda um pouco; a velocidade
+          // da rolagem entorta de leve. As posições são calculadas, sem medir a página a cada quadro.
+          const paineis = secao.id === 'ensaios' ? [...trilho.querySelectorAll<HTMLElement>('.painel')] : [];
+          let medidas: { centro: number }[] = [];
+          const medir = () => (medidas = paineis.map((p) => ({ centro: p.offsetLeft + p.offsetWidth / 2 })));
+          let torcao = 0;
+          const curvar = (velocidade: number) => {
+            const x = gsap.getProperty(trilho, 'x') as number;
+            const meio = innerWidth / 2;
+            torcao += (gsap.utils.clamp(-10, 10, velocidade / 250) - torcao) * 0.2;
+            paineis.forEach((p, i) => {
+              const d = gsap.utils.clamp(-1.4, 1.4, (medidas[i].centro + x - meio) / innerWidth);
+              p.style.transform = `perspective(1600px) translateZ(${-Math.abs(d) * 260}px) rotateY(${-d * 38}deg) skewX(${torcao}deg)`;
+            });
+          };
+
+          const tl = gsap.timeline({
             scrollTrigger: {
               trigger: secao,
               start: 'top top',
@@ -255,10 +282,19 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
               pin: secao.querySelector('.h-palco'),
               scrub: 0.6,
               invalidateOnRefresh: true,
-              refreshPriority: -1 - n, // as seções de cima calculam primeiro
+              refreshPriority: -2 - n, // as seções de cima calculam primeiro (o mergulho é -1)
+              onRefresh: medir,
               onUpdate: (s) => barra && (barra.style.transform = `scaleX(${s.progress})`),
             },
           });
+          tl.to(trilho, { x: () => -distancia(), ease: 'none' }, 0);
+          // o letreiro vazado do fundo anda mais devagar e para o outro lado: profundidade
+          if (letreiro) tl.fromTo(letreiro, { x: () => innerWidth * 0.1 }, { x: () => -(letreiro.offsetWidth - innerWidth * 0.6), ease: 'none' }, 0);
+          if (paineis.length) {
+            medir();
+            curvar(0);
+            tl.eventCallback('onUpdate', () => curvar(tl.scrollTrigger?.getVelocity() ?? 0));
+          }
         });
         ScrollTrigger.sort();
         addEventListener('load', () => ScrollTrigger.refresh());
@@ -406,6 +442,89 @@ const dominio = (link?: string) => link?.replace(/^https?:\/\//, '').replace(/\/
     margin: 0;
     padding: 0 var(--margem);
   }
+  /* Letreiro gigante vazado atrás do trilho, com um glitch de vez em quando (pegada do
+     "TECHNO 2025" do @echo_builds): duas cópias em vermelho e ciano piscam deslocadas, em fatias */
+  .h-palco {
+    position: relative;
+  }
+  .h-letreiro {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 0;
+    font-size: clamp(120px, 34svh, 380px);
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--texto);
+    opacity: 0.2;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .h-letreiro::before,
+  .h-letreiro::after {
+    content: attr(data-texto);
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    animation: glitch 5s steps(1) infinite;
+  }
+  .h-letreiro::before {
+    -webkit-text-stroke-color: #ff2e5b;
+  }
+  .h-letreiro::after {
+    -webkit-text-stroke-color: #2ee6ff;
+    animation-delay: 0.08s;
+  }
+  @keyframes glitch {
+    0%,
+    86%,
+    100% {
+      opacity: 0;
+      translate: 0 0;
+      clip-path: inset(0 0 0 0);
+    }
+    88% {
+      opacity: 1;
+      translate: -14px 0;
+      clip-path: inset(10% 0 62% 0);
+    }
+    90% {
+      opacity: 1;
+      translate: 12px 0;
+      clip-path: inset(48% 0 22% 0);
+    }
+    92% {
+      opacity: 1;
+      translate: -8px 0;
+      clip-path: inset(70% 0 6% 0);
+    }
+    94% {
+      opacity: 1;
+      translate: 6px 0;
+      clip-path: inset(28% 0 50% 0);
+    }
+  }
+  .h-palco > .ato-id,
+  .h-trilho,
+  .h-progresso {
+    position: relative;
+    z-index: 1;
+  }
+  /* os painéis dos ensaios curvam com a rolagem (o JS escreve o transform) */
+  #ensaios .painel {
+    will-change: transform;
+    transform-origin: center;
+  }
+  @media (max-width: 760px) {
+    .h-letreiro {
+      font-size: 120px;
+    }
+    #ensaios .h-letreiro {
+      display: none;
+    }
+  }
+
   .h-trilho {
     display: flex;
     gap: clamp(14px, 2vw, 28px);
