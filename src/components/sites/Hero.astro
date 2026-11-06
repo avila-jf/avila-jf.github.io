@@ -1,49 +1,44 @@
 ---
-// Topo da home (pegada do "EXPLORE MY PORTFOLIO" do @echo_builds): a paisagem em gravura azul de
-// fundo, o título gigante e a minha foto recortada, em preto e branco escuro, NA FRENTE da linha de
-// baixo do título. Ao rolar, o título sobe mais rápido que a foto (profundidade) e tudo escurece
-// um pouco antes do "Sobre mim". Com o mouse, a foto e o título se mexem em camadas diferentes.
-// A foto: src/assets/eu-recorte-pb.png (feita com o rembg a partir de pedras/13-perfil-na-noite).
+// Topo da home, no modelo do "EXPLORE MY PORTFOLIO" do @echo_builds, nas cores do site:
+//  - fundo claro (a luz do Fundo.astro), "EXPLORE" sólido em azul-tinta e "MEU PORTFÓLIO" em
+//    cinza-azulado que desbota de cima para baixo, atrás da cabeça;
+//  - a minha foto recortada, escura (o rosto na sombra, luz só no contorno), em duotone tinta →
+//    creme, sumindo embaixo num degradê: src/assets/eu-recorte-pb.png (rembg + tratamento);
+//  - textinhos nos cantos: assinatura à esquerda, o que eu faço à direita.
+// Ao rolar, o título sobe mais rápido que a foto (profundidade). Com o mouse, cada camada anda um tanto.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import type { Foto } from '../../lib/fotos';
 import { site } from '../../data/site';
 
-interface Props {
-  fundo?: Foto;
-}
-
-const { fundo } = Astro.props;
 const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu-recorte-pb.png', { eager: true }))[0]?.default;
 ---
 
-<section class="hero" data-lente="codigo" data-tema="azul" aria-label="Início">
-  {
-    fundo && (
-      <div class="hero-fundo" aria-hidden="true">
-        <Image src={fundo.src} alt="" widths={[800, 1400, 2000]} sizes="100vw" format="webp" quality={70} loading="eager" />
-      </div>
-    )
-  }
-
+<section class="hero" data-lente="codigo" data-tema="claro" aria-label="Início">
   <h1 class="hero-titulo titulo-cartaz">
     <span class="hero-linha">Explore</span>
-    <span class="hero-linha hero-vazada">meu portfólio</span>
+    <span class="hero-linha hero-desbota">meu portfólio</span>
   </h1>
 
   {
     recorte && (
       <div class="hero-eu" aria-hidden="true">
-        <Image src={recorte} alt="" widths={[480, 800, 1200]} sizes="(max-width: 760px) 80vw, 34vw" format="webp" loading="eager" fetchpriority="high" />
+        <Image src={recorte} alt="" widths={[480, 800, 1200]} sizes="(max-width: 760px) 80vw, 40vw" format="webp" loading="eager" fetchpriority="high" />
       </div>
     )
   }
 
+  <p class="hero-assina rotulo">Feito por {site.nome} · 2026</p>
+
   <div class="hero-lado">
-    <p class="rotulo">{site.nome} · {site.cidade.split(',')[0]}</p>
-    <p class="voz-foto">Sites com olhar de fotógrafo.</p>
-    <span class="rotulo">role para entrar ↓</span>
+    <p class="voz-foto">Sites que fazem a sua marca parecer o que ela vale, com olhar de fotógrafo.</p>
+    <ul class="rotulo">
+      <li>Sites</li>
+      <li>Landing pages</li>
+      <li>Fotografia</li>
+    </ul>
   </div>
+
+  <span class="hero-dica rotulo" aria-hidden="true">role ↓</span>
 </section>
 
 <style>
@@ -52,30 +47,6 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     height: 100svh;
     margin: -110px calc(var(--margem) * -1) 0; /* encosta no topo, por baixo da barra */
     overflow: hidden;
-    background: var(--gravura);
-    color: var(--creme);
-  }
-  .hero-fundo {
-    position: absolute;
-    inset: -4%;
-    contain: paint; /* o filtro de gravura é pesado: desenha uma vez e só move a camada */
-    will-change: transform;
-  }
-  .hero-fundo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: contrast(1.25) url(#gravura-novo);
-  }
-  .hero-fundo::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      repeating-linear-gradient(118deg, rgb(20 45 120 / 0.3) 0 1px, transparent 1px 3.5px),
-      repeating-linear-gradient(28deg, rgb(20 45 120 / 0.12) 0 1px, transparent 1px 5px),
-      radial-gradient(ellipse at 50% 60%, transparent 25%, rgb(12 21 48 / 0.6));
-    mix-blend-mode: multiply;
   }
 
   .hero-titulo {
@@ -87,25 +58,26 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     align-items: center;
     margin: 0;
     padding-bottom: 24svh; /* o título fica alto: a cabeça cobre só a linha de baixo */
-    font-size: clamp(64px, min(15vw, 24svh), 280px);
+    font-size: clamp(64px, min(14vw, 22svh), 260px);
     line-height: 0.84;
     text-align: center;
-    color: var(--creme);
+    color: var(--texto);
     will-change: transform;
   }
-  .hero-vazada {
+  /* "meu portfólio": cinza-azulado desbotando para o fundo, como o "PORTFOLIO" dele */
+  .hero-desbota {
+    background: linear-gradient(180deg, #6d7489 0%, rgb(109 116 137 / 0.15) 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
-    -webkit-text-stroke: 2px var(--creme);
   }
 
-  /* a foto fica na frente da linha de baixo do título */
   .hero-eu {
     position: absolute;
     left: 50%;
     bottom: 0;
-    height: min(64svh, 760px);
+    height: min(68svh, 800px);
     translate: -50% 0;
-    filter: brightness(0.78) contrast(1.15) drop-shadow(0 30px 60px rgb(12 21 48 / 0.6));
     will-change: transform;
   }
   .hero-eu img {
@@ -114,36 +86,53 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
     height: 100%;
   }
 
+  .hero-assina {
+    position: absolute;
+    left: var(--margem);
+    bottom: clamp(28px, 7svh, 72px);
+    margin: 0;
+  }
   .hero-lado {
     position: absolute;
     right: var(--margem);
-    bottom: clamp(28px, 6svh, 64px);
+    bottom: clamp(28px, 7svh, 72px);
     display: grid;
-    gap: 6px;
-    max-width: 24ch;
-    text-align: right;
+    gap: 14px;
+    max-width: 26ch;
   }
   .hero-lado p {
     margin: 0;
+    font-size: clamp(14px, 1.1vw, 17px);
+    line-height: 1.35;
+    color: var(--texto-suave);
   }
-  .hero-lado .rotulo {
+  .hero-lado ul {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--texto);
+  }
+  .hero-dica {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    translate: -50% 0;
     color: var(--creme);
-    opacity: 0.8;
-  }
-  .hero-lado .voz-foto {
-    font-size: clamp(18px, 1.6vw, 24px);
-    line-height: 1.2;
+    mix-blend-mode: difference;
   }
 
   @media (max-width: 760px) {
     .hero-eu {
-      height: 56svh;
+      height: 58svh;
     }
-    .hero-lado {
+    .hero-assina {
       top: 92px;
       bottom: auto;
-      left: var(--margem);
-      text-align: left;
+    }
+    .hero-lado {
+      display: none;
     }
   }
 </style>
@@ -153,19 +142,22 @@ const recorte = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src
 
   const hero = document.querySelector<HTMLElement>('.hero');
   if (hero && !semMovimento) {
-    // rolando: o título sobe mais rápido que a foto, o fundo quase não mexe (três profundidades)
+    // entrada: o título sobe de baixo e a foto aparece subindo um pouco (depois do loader, se houver)
+    const atraso = document.documentElement.classList.contains('carregando') ? 1.5 : 0.2;
+    gsap.from('.hero-linha', { yPercent: 40, opacity: 0, duration: 1.1, stagger: 0.12, ease: 'power4.out', delay: atraso });
+    gsap.from('.hero-eu', { y: 60, opacity: 0, duration: 1.4, ease: 'power3.out', delay: atraso + 0.15 });
+
+    // rolando: o título sobe mais rápido que a foto (três profundidades)
     const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
-    tl.to('.hero-titulo', { yPercent: -28 }, 0)
-      .to('.hero-eu', { yPercent: 8 }, 0)
-      .to('.hero-fundo', { yPercent: 6, scale: 1.06 }, 0)
-      .to('.hero-lado', { opacity: 0 }, 0);
+    tl.to('.hero-titulo', { yPercent: -30 }, 0)
+      .to('.hero-eu', { yPercent: 10 }, 0)
+      .to(['.hero-lado', '.hero-assina', '.hero-dica'], { opacity: 0 }, 0);
 
     // mouse: cada camada anda um tanto (quickTo = sem criar animação nova a cada movimento)
     if (temMouse) {
       const camadas = [
-        { el: '.hero-fundo', f: 10 },
-        { el: '.hero-titulo', f: 22 },
-        { el: '.hero-eu', f: 38 },
+        { el: '.hero-titulo', f: 18 },
+        { el: '.hero-eu', f: 36 },
       ].map(({ el, f }) => ({ x: gsap.quickTo(el, 'x', { duration: 0.9, ease: 'power3.out' }), f }));
       hero.addEventListener('pointermove', (e) => {
         const nx = e.clientX / innerWidth - 0.5;
