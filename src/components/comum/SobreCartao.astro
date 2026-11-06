@@ -20,15 +20,34 @@ const { id, fundo } = Astro.props;
 const eu = Object.values(import.meta.glob<{ default: ImageMetadata }>('/src/assets/eu.{jpg,jpeg,png,webp}', { eager: true }))[0]?.default;
 const [nome, sobrenome] = site.nome.split(' ');
 
-// a espiral: uma espiral de Arquimedes de 13 voltas, como linha de tinta (gerada aqui, no build)
-const voltas = 13;
-const pontos: string[] = [];
-for (let i = 0; i <= voltas * 72; i++) {
-  const a = (i / 72) * Math.PI * 2;
-  const r = 2 + (i / (voltas * 72)) * 148;
-  pontos.push(`${(150 + Math.cos(a) * r).toFixed(1)},${(150 + Math.sin(a) * r).toFixed(1)}`);
-}
-const espiral = `M${pontos.join(' L')}`;
+// o fundo do cartão no clima do Uzumaki, gerado aqui no build (desenho original, nada copiado):
+// várias espirais de tamanhos diferentes e faixas de linhas paralelas que fluem como cabelo ao vento
+const espiral = (cx: number, cy: number, raio: number, voltas: number, giro: number) => {
+  const passos = Math.round(voltas * 48);
+  const p: string[] = [];
+  for (let i = 0; i <= passos; i++) {
+    const a = (i / 48) * Math.PI * 2 + giro;
+    const r = (i / passos) * raio;
+    p.push(`${(cx + Math.cos(a) * r).toFixed(1)},${(cy + Math.sin(a) * r).toFixed(1)}`);
+  }
+  return `M${p.join(' L')}`;
+};
+// faixa de linhas paralelas: uma onda (curva de Bézier) repetida com deslocamento, como um feixe de fios
+const faixa = (x0: number, y0: number, x1: number, y1: number, curva: number, fios: number, espaco: number) =>
+  Array.from({ length: fios }, (_, k) => {
+    const d = k * espaco;
+    return `M${x0},${y0 + d} C${x0 + (x1 - x0) * 0.33},${y0 + d - curva} ${x0 + (x1 - x0) * 0.66},${y1 + d + curva} ${x1},${y1 + d}`;
+  }).join(' ');
+const espirais = [
+  espiral(70, 70, 58, 7, 0.3),
+  espiral(250, 50, 44, 6, 1.4),
+  espiral(330, 190, 62, 8, 2.1),
+  espiral(55, 300, 50, 6, 0.9),
+  espiral(205, 400, 70, 9, 2.8),
+  espiral(355, 470, 40, 5, 0.2),
+  espiral(70, 520, 46, 6, 1.7),
+];
+const fluxos = [faixa(-20, 140, 420, 90, 70, 9, 6), faixa(-20, 330, 420, 260, -80, 8, 6), faixa(-20, 470, 420, 560, 60, 7, 6)];
 ---
 
 <section class="sc ato" id={id} data-lente="ambos" data-tema="tinta" aria-label="About me">
@@ -36,7 +55,10 @@ const espiral = `M${pontos.join(' L')}`;
 
   <article class="sc-cartao">
     <div class="sc-caixa">
-      <svg class="sc-espiral" viewBox="0 0 300 300" aria-hidden="true"><path d={espiral} /></svg>
+      <svg class="sc-espiral" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g class="sc-fluxo">{fluxos.map((d) => <path d={d} />)}</g>
+        <g class="sc-voltas">{espirais.map((d) => <path d={d} />)}</g>
+      </svg>
       <span class="sc-reticula" aria-hidden="true"></span>
       <span class="sc-furo" aria-hidden="true"></span>
 
@@ -123,20 +145,30 @@ const espiral = `M${pontos.join(' L')}`;
   /* a espiral de tinta girando atrás de tudo */
   .sc-espiral {
     position: absolute;
-    left: 50%;
-    top: 46%;
-    width: 170%;
-    aspect-ratio: 1;
-    translate: -50% -50%;
-    opacity: 0.16;
-    animation: sc-girar 60s linear infinite;
-    will-change: transform;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.55;
     pointer-events: none;
   }
   .sc-espiral path {
     fill: none;
     stroke: #111;
-    stroke-width: 1.6;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+  .sc-fluxo path {
+    stroke-width: 1.2;
+  }
+  /* cada espiral gira em torno do próprio centro, bem devagar */
+  .sc-voltas path {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sc-girar 48s linear infinite;
+  }
+  .sc-voltas path:nth-child(even) {
+    animation-duration: 64s;
+    animation-direction: reverse;
   }
   @keyframes sc-girar {
     to {
@@ -168,6 +200,9 @@ const espiral = `M${pontos.join(' L')}`;
   }
 
   .sc-topo {
+    margin: -40px -22px 0;
+    padding: 40px 22px 14px;
+    background: linear-gradient(180deg, rgb(244 241 234 / 0) 0%, rgb(244 241 234 / 0) 70%, #f4f1ea 100%);
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: start;
@@ -278,6 +313,14 @@ const espiral = `M${pontos.join(' L')}`;
     font: 800 12px var(--fonte);
   }
 
+  /* o texto fica num balão de papel por cima das espirais, como fala de mangá */
+  .sc-bio,
+  .sc-tags {
+    justify-self: start;
+    padding: 8px 12px;
+    border: 2.5px solid #111;
+    background: #f4f1ea;
+  }
   .sc-bio {
     margin: 0;
     font-size: 14px;
