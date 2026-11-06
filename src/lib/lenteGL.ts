@@ -128,6 +128,11 @@ void main(){
   dentro.rgb = mix(dentro.rgb, dentro.rgb * vec3(.94, .98, 1.08), .6) * (1. - pow(k, 6.) * .3);
 
   float mLente = (1. - smoothstep(R - 1.5, R + .5, d)) * uFoco;
+  // a lente só existe dentro do recorte: a cor ampliada passava da silhueta e mostrava fundo escuro
+  // fora do corpo. Fora do recorte (alfa do P&B) ou onde a cor ampliada é transparente, fica o P&B.
+  float recorte = texture2D(uPb, vUv).a;
+  mLente *= smoothstep(.05, .6, recorte) * smoothstep(.05, .6, dentro.a);
+  dentro.a = recorte;
   vec4 cor = mix(fora, dentro, mLente);
 
   // aro: anel fino + marquinhas de foco girando devagar (aparecem até fora do corpo)

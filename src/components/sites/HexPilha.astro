@@ -248,24 +248,37 @@ const dois = (v: number) => String(v).padStart(2, '0');
   }
 
   @media (max-width: 760px) {
+    /* celular: cartões menores e o nome (em cima) e a descrição (embaixo) numa faixa própria por
+       cima da pilha, com o fundo da página esmaecendo, pra pilha não cobrir o texto */
     .hp-palco {
-      --largura: 80vw;
+      --largura: 66vw;
     }
     .hp-nome {
-      top: 96px;
+      z-index: 5;
+      top: 0;
+      left: 0;
+      right: 0;
       width: auto;
+      padding: 84px var(--margem) 28px;
       translate: none;
+      background: linear-gradient(180deg, var(--fundo) 72%, transparent);
     }
     .hp-nome b {
-      font-size: 36px;
+      font-size: 34px;
     }
     .hp-detalhes {
+      z-index: 5;
       top: auto;
-      bottom: 56px;
-      left: var(--margem);
+      bottom: 0;
+      left: 0;
+      right: 0;
       width: auto;
-      min-height: 130px;
+      min-height: 236px;
       translate: none;
+      background: linear-gradient(0deg, var(--fundo) 74%, transparent);
+    }
+    .hp-detalhe {
+      inset: 34px var(--margem) auto;
     }
     .hp-detalhe p {
       font-size: 13px;
