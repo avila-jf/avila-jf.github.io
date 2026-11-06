@@ -75,7 +75,7 @@ const CORES: Record<string, string> = {
         }
       </div>
     </div>
-    <!-- o hexágono que as fotos formam no fim da tela travada (só no computador) -->
+    <!-- o selo no meio da bola de fotos, no fim da tela travada (só no computador) -->
     <div class="mural-hex" aria-hidden="true">
       <span class="rotulo">Photos</span>
       <b class="titulo-cartaz">'26</b>
@@ -215,7 +215,7 @@ const CORES: Record<string, string> = {
     filter: none;
   }
 
-  /* ---------- hexágono do fim (aparece quando as fotos se juntam) ---------- */
+  /* ---------- o selo no meio da bola (aparece quando as fotos se juntam) ---------- */
   .mural-hex {
     position: absolute;
     left: 50%;
@@ -226,11 +226,11 @@ const CORES: Record<string, string> = {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    width: min(30vw, 300px);
-    aspect-ratio: 1 / 0.866;
+    width: min(15vw, 150px);
+    aspect-ratio: 1;
     translate: -50% -50%;
     text-align: center;
-    clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+    clip-path: circle(50%);
     background: var(--linha);
     opacity: 0;
     pointer-events: none;
@@ -244,7 +244,7 @@ const CORES: Record<string, string> = {
     background: var(--fundo);
   }
   .mural-hex b {
-    font-size: min(8vw, 80px);
+    font-size: min(4.6vw, 46px);
     line-height: 0.9;
   }
   .mural-hex-nome {
@@ -699,14 +699,15 @@ const CORES: Record<string, string> = {
       legenda.classList.add('ativa');
     };
 
-    // estado do hexágono (a tela travada escreve aqui; o relógio da parede lê)
+    // estado da BOLA (a tela travada escreve aqui; o relógio da parede lê)
     const hex = {
-      m: 0, // 0 = parede, 1 = as fotos no anel
+      m: 0, // 0 = parede, 1 = as fotos juntas numa bola
       escala: 1, // o palco encolhendo
-      giro: 0, // o anel girando no fim
-      raio: 0, // raio do anel, em px da tela
-      tamanho: 0, // lado de cada foto no anel, em px da tela
-      vagas: 12,
+      giro: 0, // a bola girando
+      boom: 0, // 0..1: a bola explode pra fora
+      raio: 0, // raio da bola, em px da tela
+      tamanho: 0, // lado de cada foto na bola, em px da tela
+      vagas: 44,
       ladoCasa: 1, // lado de uma casa do mural, em px de dentro
       vaga: new Map<number, number>(), // índice da casa → face do anel
     };
@@ -763,19 +764,27 @@ const CORES: Record<string, string> = {
             let tf = `translateZ(${z.toFixed(1)}px) rotateY(${(nx * 16).toFixed(2)}deg) rotateX(${(-ny * 14).toFixed(2)}deg)`;
             const k = hex.vaga.get(i);
             if (m > 0 && k !== undefined) {
-              // a foto vai da casa dela até a face k do hexágono (e o anel gira no fim)
-              const a = k * (360 / hex.vagas) + hex.giro;
-              const rad = (a * Math.PI) / 180;
-              const raio = hex.raio / escala;
-              const dx = Math.sin(rad) * raio - (centros[i].x + gx);
-              const dy = -Math.cos(rad) * raio - (centros[i].y + gy);
-              const inclinacao = ((((a + 90) % 180) + 180) % 180) - 90;
-              const tamanho = 1 + (hex.tamanho / (hex.ladoCasa * escala) - 1) * m;
-              tf = `translate3d(${(dx * m).toFixed(1)}px, ${(dy * m).toFixed(1)}px, ${(z * (1 - m) + p * 40).toFixed(1)}px) rotateZ(${(inclinacao * m).toFixed(2)}deg) rotateY(${(nx * 16 * (1 - m)).toFixed(2)}deg) rotateX(${(-ny * 14 * (1 - m)).toFixed(2)}deg) scale(${tamanho.toFixed(3)})`;
+              // a foto vai da casa dela até o ponto k de uma esfera (distribuição de Fibonacci),
+              // a esfera gira e, no fim, explode: cada foto voa pra fora na direção dela
+              const N = hex.vagas;
+              const sy = 1 - (2 * (k + 0.5)) / N;
+              const sr = Math.sqrt(1 - sy * sy);
+              const fi = k * 2.39996 + hex.giro;
+              const inc = 0.35; // a bola inclinada, pra girar "de lado"
+              let sx = Math.cos(fi) * sr, sz = Math.sin(fi) * sr;
+              const y2 = sy * Math.cos(inc) - sz * Math.sin(inc);
+              sz = sy * Math.sin(inc) + sz * Math.cos(inc);
+              const voa = 1 + hex.boom * hex.boom * 7;
+              const raio = (hex.raio / escala) * voa;
+              const dx = sx * raio - (centros[i].x + gx);
+              const dy = y2 * raio - (centros[i].y + gy);
+              const dz = sz * raio;
+              const tamanho = 1 + (hex.tamanho / (hex.ladoCasa * escala) * (1 + hex.boom * 1.5) - 1) * m;
+              tf = `translate3d(${(dx * m).toFixed(1)}px, ${(dy * m).toFixed(1)}px, ${(z * (1 - m) + dz * m + p * 40).toFixed(1)}px) rotateY(${(nx * 16 * (1 - m)).toFixed(2)}deg) rotateX(${(-ny * 14 * (1 - m)).toFixed(2)}deg) scale(${tamanho.toFixed(3)})`;
             }
             if (tf !== poses[i]) c.style.transform = poses[i] = tf;
-            // quem não entra no anel (e o cartão) some depressa: some antes de o quadro soltar a borda
-            const op = m > 0 && k === undefined ? String(Math.max(0, 1 - m * 4)) : '';
+            // quem não entra na bola (e o cartão) some depressa; na explosão, todas somem
+            const op = m > 0 && k === undefined ? String(Math.max(0, 1 - m * 4)) : hex.boom > 0 ? String(Math.max(0, 1 - hex.boom * 1.3)) : '';
             if (c.style.opacity !== op) c.style.opacity = op;
           });
         });
@@ -1060,16 +1069,18 @@ const CORES: Record<string, string> = {
     });
 
     // ---------- rolando (computador), com a tela travada ----------
-    //  0 → 0,45: o mural encolhe até virar um quadro e as fotos ganham cor numa onda do meio pra fora
-    //  0,5 → 0,8: as 12 fotos mais perto do meio voam cada uma para uma face do hexágono "FOTOS '26"
-    //  0,8 → 1: o anel gira; a foto que passa no topo acende e o nome dela aparece no meio
+    //  0 → 0,42: o mural encolhe até virar um quadro e as fotos ganham cor numa onda do meio pra fora
+    //  0,46 → 0,7: as 44 fotos mais perto do meio se juntam numa BOLA (esfera de fotos)
+    //  0,6 → 0,86: a bola gira
+    //  0,86 → 1: a bola EXPLODE: as fotos voam pra fora e somem, e a página segue pros lugares
     if (!semMovimento && comMouse) {
       const faixa = (t: number, de: number, ate: number) => gsap.utils.clamp(0, 1, (t - de) / (ate - de));
       const suave = gsap.parseEase('power2.inOut');
       const hexagono = mural.querySelector<HTMLElement>('.mural-hex')!;
       const hexNome = mural.querySelector<HTMLElement>('.mural-hex-nome')!;
+      const dica = mural.querySelector<HTMLElement>('.mural-dica')!;
 
-      // quem entra no anel: as 12 fotos mais perto do meio, na ordem do ângulo (sem se cruzarem no voo)
+      // quem entra na bola: as fotos mais perto do meio
       const escolher = () => {
         hex.vaga.clear();
         const perto = fotos
@@ -1085,8 +1096,8 @@ const CORES: Record<string, string> = {
       const medirHex = () => {
         escolher();
         distMax = Math.max(...centros.map((c) => Math.hypot(c.x, c.y)));
-        hex.raio = Math.min(innerHeight * 0.36, 320);
-        hex.tamanho = Math.min(innerHeight * 0.17, 150);
+        hex.raio = Math.min(innerHeight * 0.26, 230);
+        hex.tamanho = Math.min(innerHeight * 0.085, 74);
         hex.ladoCasa = fotos[0]?.offsetWidth || 1;
       };
       medirHex();
@@ -1096,27 +1107,30 @@ const CORES: Record<string, string> = {
       ScrollTrigger.create({
         trigger: mural,
         start: 'top top',
-        end: '+=260%',
+        end: '+=320%',
         pin: true,
         scrub: 0.8,
         refreshPriority: prioridade(mural),
         onUpdate: ({ progress: t }) => {
-          const encolher = suave(faixa(t, 0, 0.45));
+          const encolher = suave(faixa(t, 0, 0.42));
           hex.escala = 1 - encolher * 0.38;
           gsap.set(palco, { scale: hex.escala, borderRadius: 28 * encolher });
           const onda = faixa(t, 0.04, 0.42);
           casas.forEach((c, i) => c.classList.toggle('colorida', Math.hypot(centros[i].x, centros[i].y) / distMax < onda));
 
-          hex.m = suave(faixa(t, 0.5, 0.8));
-          hex.giro = -faixa(t, 0.8, 1) * (360 / hex.vagas) * 4;
-          hexagono.style.opacity = String(hex.m);
+          hex.m = suave(faixa(t, 0.46, 0.7));
+          hex.giro = faixa(t, 0.6, 0.86) * Math.PI * 1.6;
+          hex.boom = gsap.parseEase('power2.in')(faixa(t, 0.86, 1));
+          hexagono.style.opacity = String(hex.m * (1 - Math.min(1, hex.boom * 3)));
+          dica.style.opacity = String(1 - hex.m); // a dica do mouse some quando as fotos viram a bola
+          hexagono.style.scale = String(0.7 + 0.3 * hex.m + hex.boom * 0.6);
           // o anel é maior que o quadro: quando as fotos de fora já sumiram, o quadro solta a borda
           palco.style.overflow = hex.m > 0.25 ? 'visible' : '';
           palco.style.background = hex.m > 0 ? `rgb(247 245 240 / ${(1 - hex.m).toFixed(2)})` : '';
 
-          // a foto do topo do anel
+          // (na bola não tem "foto do topo": o nome no meio some)
           let qual = -1;
-          if (hex.m > 0.9) {
+          if (false) {
             let menor = Infinity;
             hex.vaga.forEach((k, i) => {
               const a = k * (360 / hex.vagas) + hex.giro;

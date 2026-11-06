@@ -319,7 +319,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
     };
 
     // t = 0..1 da tela travada:
-    //  0–0,06  TODOS os projetos aparecem juntos, numa grade (logo depois da faixa de protótipos)
+    //  0–0,06  TODOS os projetos juntos, numa grade (ela sobe logo atrás da faixa de protótipos)
     //  0,06–0,2 a grade vira o anel do hexágono · até 0,4 o anel gira
     //  0,4–0,55 o anel fecha · 0,55–1 a pilha sobe (o efeito do final)
     const grade = (i: number) => {
@@ -331,7 +331,7 @@ const dois = (v: number) => String(v).padStart(2, '0');
       return { x: (c - (cols - 1) / 2) * celW, y: (l - (lin - 1) / 2) * celH + innerHeight * 0.03, e: (celW * 0.9) / largura };
     };
     const desenhar = (t: number) => {
-      const entra = gsap.parseEase('power2.out')(faixa(t, 0, 0.06)); // a grade aparece
+      const entra = 1; // a grade já chega montada, subindo logo atrás da faixa de protótipos
       const vira = suave(faixa(t, 0.06, 0.2)); // 0 = grade, 1 = anel
       const giro = -faixa(t, 0.2, 0.55) * passo * 3;
       const m = suave(faixa(t, 0.4, 0.55)); // 0 = anel, 1 = pilha

@@ -1,0 +1,129 @@
+---
+// Os lugares (a estrutura da 1ª versão da fotografia): depois que a bola de fotos explode, a tela
+// trava e cada ensaio ocupa um painel grande, passando de lado com a rolagem. Cada painel é a capa
+// do lugar com o nome gigante, quantas fotos tem e a frase do ensaio; clicar abre o ensaio.
+// Atrás, o letreiro vazado da FaixaLateral anda no sentido contrário.
+import { Image } from 'astro:assets';
+import FaixaLateral from '../comum/FaixaLateral.astro';
+import { url } from '../../lib/url';
+import type { Foto } from '../../lib/fotos';
+
+interface Props {
+  ensaios: { slug: string; titulo: string; descricao: string; fotos: Foto[] }[];
+  totalFotos: number;
+}
+
+const { ensaios, totalFotos } = Astro.props;
+const dois = (v: number) => String(v).padStart(2, '0');
+---
+
+<FaixaLateral id="lugares" rotulo={`01 · The places · ${ensaios.length} series, ${totalFotos} photos`} letreiro="Maceió · Pernambuco · 2026" tema="azul" lente="foto">
+  <article class="lg-abre">
+    <h2 class="titulo-cartaz">The<br />places</h2>
+    <p class="voz-foto">Every series is a place: the light, the people and the time of day there.</p>
+    <span class="rotulo">scroll sideways →</span>
+  </article>
+  {
+    ensaios.map((e, i) => (
+      <a class="lg-painel" href={url(`/${e.slug}`)} data-lente-hover="foto">
+        {e.fotos[0] && (
+          <Image src={e.fotos[0].src} alt={e.fotos[0].alt} widths={[800, 1400, 2000]} sizes="(max-width: 760px) 88vw, 66vw" format="webp" loading="lazy" />
+        )}
+        <span class="lg-texto">
+          <span class="rotulo">
+            {dois(i + 1)} / {dois(ensaios.length)} · {e.fotos.length > 0 ? `${e.fotos.length} photos` : 'coming soon'}
+          </span>
+          <strong class="titulo-cartaz">{e.titulo}</strong>
+          <span class="lg-descricao">{e.descricao}</span>
+          <span class="lg-ver rotulo">See the series →</span>
+        </span>
+      </a>
+    ))
+  }
+</FaixaLateral>
+
+<style>
+  .lg-abre {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    width: min(34vw, 460px);
+    padding-left: var(--margem);
+  }
+  .lg-abre h2 {
+    margin: 0;
+    font-size: clamp(64px, 9vw, 150px);
+    line-height: 0.86;
+  }
+  .lg-abre p {
+    margin: 0;
+    max-width: 30ch;
+    font-size: clamp(16px, 1.3vw, 20px);
+    color: var(--texto-suave);
+  }
+  .lg-painel {
+    position: relative;
+    flex: none;
+    display: block;
+    width: min(66vw, 1100px);
+    height: min(68svh, 720px);
+    overflow: hidden;
+    border-radius: 22px;
+    background: var(--fundo-2);
+    color: #fff;
+    text-decoration: none;
+  }
+  .lg-painel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 1.2s var(--suave, cubic-bezier(0.2, 0.7, 0.2, 1));
+  }
+  .lg-painel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(6 10 24 / 0.82) 0%, rgb(6 10 24 / 0.25) 45%, transparent 70%);
+  }
+  .lg-painel:hover img {
+    scale: 1.05;
+  }
+  .lg-texto {
+    position: absolute;
+    left: clamp(20px, 3vw, 48px);
+    right: clamp(20px, 3vw, 48px);
+    bottom: clamp(20px, 3vw, 44px);
+    z-index: 1;
+    display: grid;
+    gap: 10px;
+  }
+  .lg-texto .rotulo {
+    color: rgb(255 255 255 / 0.8);
+  }
+  .lg-texto strong {
+    font-size: clamp(44px, 6.4vw, 110px);
+    line-height: 0.88;
+  }
+  .lg-descricao {
+    max-width: 46ch;
+    font-size: clamp(15px, 1.2vw, 18px);
+    color: rgb(255 255 255 / 0.86);
+  }
+  .lg-ver {
+    margin-top: 6px;
+    color: #fff !important;
+  }
+  @media (max-width: 760px) {
+    .lg-abre {
+      width: 78vw;
+    }
+    .lg-painel {
+      width: 84vw;
+      height: 64svh;
+    }
+  }
+</style>

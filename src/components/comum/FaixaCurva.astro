@@ -60,6 +60,10 @@ const { id, rotulo, tema = 'claro', lente = 'ambos', formato = 'tela', fecha = f
 </section>
 
 <style>
+  /* a faixa que vira a grade de projetos: sem espaço até a seção de baixo */
+  .faixa-curva[data-fecha] {
+    margin-bottom: 0;
+  }
   .faixa-curva {
     margin-left: calc(var(--margem) * -1);
     margin-right: calc(var(--margem) * -1);

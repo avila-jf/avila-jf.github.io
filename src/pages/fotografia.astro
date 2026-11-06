@@ -6,14 +6,14 @@
 // Ordem da página:
 //  01 Entrada: o mural inteiro em gravura, tela cheia       foto/Mural
 //  02 Rolando 1: o mural encolhe e as fotos ganham cor      (dentro do Mural, tela travada)
-//  03 Rolando 2: as fotos se juntam e formam o hexágono     (dentro do Mural, tela travada)
-//  04 Ensaios                                               comum/FaixaCurva (formato retrato)
-//  05 O olhar                                               comum/Mergulho
+//  03 Rolando 2: as fotos se juntam numa BOLA e ela explode (dentro do Mural, tela travada)
+//  04 Os lugares: um ensaio por painel, passando de lado    foto/Lugares   (a 1ª versão)
+//  05 The eye: as três perguntas, cada uma com uma foto     foto/Licoes    (a 1ª versão)
 //  06 Contato                                               comum/RodapeAzul
 import Portfolio from '../layouts/Portfolio.astro';
 import Mural from '../components/foto/Mural.astro';
-import FaixaCurva from '../components/comum/FaixaCurva.astro';
-import Mergulho from '../components/comum/Mergulho.astro';
+import Lugares from '../components/foto/Lugares.astro';
+import Licoes from '../components/foto/Licoes.astro';
 import RodapeAzul from '../components/comum/RodapeAzul.astro';
 import { url } from '../lib/url';
 import { site, categorias, projetos } from '../data/site';
@@ -23,45 +23,24 @@ const fotoDe = (chave: string) => fotos.find((f) => `${f.categoria}/${f.nome}` =
 const ensaios = categorias.map((c) => ({ ...c, fotos: fotosDa(c.slug) }));
 const totalFotos = ensaios.reduce((s, e) => s + e.fotos.length, 0);
 
-const cartoesEnsaios = ensaios.map((e) => ({
-  titulo: e.titulo,
-  subtitulo: `${e.fotos.length} photos · ${e.descricao}`,
-  href: url(`/${e.slug}`),
-  imagem: e.fotos[0]?.src,
-}));
-
 const licoes = [
-  { titulo: 'Framing', texto: 'Where the eye goes first: what gets big, what breathes, what gets cut at the edge.' },
-  { titulo: 'Light', texto: 'Light picks what matters: the face that glows and the background that fades.' },
-  { titulo: 'Rhythm', texto: 'In a series, it is the time between one click and the next: nothing arrives all at once.' },
+  { titulo: 'Framing', texto: 'Where the eye goes first: what gets big, what breathes, what gets cut at the edge.', foto: fotoDe('pedras/10-capa-mortal-no-barco') },
+  { titulo: 'Light', texto: 'Light picks what matters: the face that glows and the background that fades.', foto: fotoDe('estudio/01-luz-do-estudio') },
+  { titulo: 'Rhythm', texto: 'In a series, it is the time between one click and the next: nothing arrives all at once.', foto: fotoDe('pedras/12-wonder-why') },
 ];
 
 const linkEnsaio = `https://wa.me/${site.contato.whatsapp}?text=${encodeURIComponent('Hi! I saw your portfolio and I want to book a photo shoot.')}`;
 ---
 
 <Portfolio titulo={`${site.nome} · photography`} descricao={`Photography by ${site.nome} in ${site.cidade.split(',')[0]}: ${categorias.map((c) => c.titulo).join(', ')}.`}>
-  <!-- 01–03 · ENTRADA: o mural em gravura; rolando, ele encolhe, ganha cor e as fotos formam o hexágono -->
+  <!-- 01–03 · ENTRADA: o mural em gravura; rolando, ele encolhe, ganha cor, as fotos viram uma bola e ela explode -->
   <Mural fotos={selecionadas(fotos.length)} totalFotos={totalFotos} />
 
-  <!-- 04 · ENSAIOS -->
-  <FaixaCurva id="ensaios" rotulo={`Series · ${ensaios.length} places, ${totalFotos} photos`} itens={cartoesEnsaios} formato="retrato" tema="azul" lente="foto" />
+  <!-- 04 · OS LUGARES (a bola de fotos acabou de explodir) -->
+  <Lugares ensaios={ensaios} totalFotos={totalFotos} />
 
-  <!-- 05 · O OLHAR -->
-  <Mergulho id="olhar" titulo={['The', 'eye']} rotulo="The three questions of a photo" fundo={fotoDe('pedras/09-silhueta-e-nuvem')} foto={fotoDe('jaragua/05-escadaria-a-noite')} lente="foto">
-    <div slot="topo" class="painel-linha">
-      <h3 class="painel-frase">Every photo goes through the same three questions</h3>
-      <span class="rotulo">{ensaios.length} series · {totalFotos} photos</span>
-    </div>
-    <div class="painel-linha painel-fim">
-      <ol class="painel-licoes">
-        {licoes.map((l, i) => <li><span class="rotulo">0{i + 1} · {l.titulo}</span><p>{l.texto}</p></li>)}
-      </ol>
-      <div class="painel-acoes">
-        <a href={linkEnsaio} target="_blank" rel="noopener">Book a photo shoot</a>
-        <a href={url('/')} data-flash>See the websites</a>
-      </div>
-    </div>
-  </Mergulho>
+  <!-- 05 · THE EYE -->
+  <Licoes licoes={licoes} />
 
   <!-- 06 · CONTATO -->
   <RodapeAzul
