@@ -37,22 +37,23 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   <div class="aparelho-palco">
     <div class="aparelho-luz" aria-hidden="true"></div>
     <div class="robo-cena">
-      <div class="robo" role="img" aria-label="Clique, a little console robot showing the website on its screen" tabindex="0">
+      <div class="robo" role="img" aria-label="Clique, a little console robot: its front door opens to show the website and the gear inside" tabindex="0">
         <div class="robo-cima">
-          <span class="robo-antena"><i></i></span>
           <span class="robo-visor"><i></i></span>
           <span class="robo-braco robo-braco-esq"></span>
           <span class="robo-braco robo-braco-dir"></span>
           <div class="robo-corpo">
-            <div class="robo-moldura">
-              <div class="robo-tela">
+            <span class="robo-lado">FA</span>
+            <!-- o que tem dentro: o monitor com o site e as coisas do fotógrafo -->
+            <div class="robo-dentro">
+              <div class="robo-monitor">
                 <div class="robo-prints">
                   {
                     urls.map((u, i) => (
                       <img
                         src={urlsCelular[i]}
                         srcset={`${urlsCelular[i]} 800w, ${u} 1400w`}
-                        sizes="(max-width: 760px) 60vw, 30vw"
+                        sizes="(max-width: 760px) 50vw, 26vw"
                         alt=""
                         loading="lazy"
                         decoding="async"
@@ -61,20 +62,34 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
                     ))
                   }
                 </div>
-                <div class="robo-rosto">
-                  <span class="robo-olhos"><i></i><i></i></span>
-                  <span class="robo-bochecha robo-bochecha-esq"></span>
-                  <span class="robo-bochecha robo-bochecha-dir"></span>
-                  <span class="robo-boca"></span>
+              </div>
+              <span class="robo-placa"><i></i><i></i><i></i></span>
+              <span class="robo-filme"><i></i></span>
+              <span class="robo-objetiva"></span>
+              <span class="robo-cartao"></span>
+              <span class="robo-coracao"></span>
+              <span class="robo-fio"></span>
+            </div>
+            <!-- a porta da frente: o rosto, os controles; abre na dobradiça da esquerda -->
+            <div class="robo-porta">
+              <div class="robo-frente">
+                <div class="robo-tela">
+                  <div class="robo-rosto">
+                    <span class="robo-olhos"><i></i><i></i></span>
+                    <span class="robo-bochecha robo-bochecha-esq"></span>
+                    <span class="robo-bochecha robo-bochecha-dir"></span>
+                    <span class="robo-boca"></span>
+                  </div>
+                  <span class="robo-vidro"></span>
                 </div>
-                <span class="robo-vidro"></span>
+                <div class="robo-painel">
+                  <span class="robo-alavanca"><i></i></span>
+                  <span class="robo-pilulas"><i></i><i></i></span>
+                  <span class="robo-dial"></span>
+                </div>
+                <span class="robo-grade"><i></i><i></i><i></i><i></i></span>
               </div>
-              <div class="robo-painel">
-                <span class="robo-alavanca"><i></i></span>
-                <span class="robo-pilulas"><i></i><i></i></span>
-                <span class="robo-dial"></span>
-              </div>
-              <span class="robo-grade"><i></i><i></i><i></i><i></i></span>
+              <span class="robo-verso"></span>
             </div>
           </div>
         </div>
@@ -82,7 +97,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
         <span class="robo-perna robo-perna-dir"></span>
         <span class="robo-chao"></span>
       </div>
-      <p class="robo-dica voz-codigo" aria-hidden="true"><span class="so-mouse">hover the screen</span><span class="so-dedo">tap the screen</span></p>
+      <p class="robo-dica voz-codigo" aria-hidden="true"><span class="so-mouse">hover to open me</span><span class="so-dedo">tap to open me</span></p>
     </div>
 
     <div class="aparelho-infos">
@@ -209,19 +224,19 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     gap: 2.2em;
     height: 100%;
     min-height: 0;
-    --l: min(380px, 28vw, 50svh);
+    --l: min(340px, 26vw, 46svh);
     font-size: calc(var(--l) / 100);
   }
   .robo {
-    --corpo: #ef6a3a;
-    --corpo-sombra: #c24f25;
-    --creme: #f4ecdc;
-    --tinta: #16255e;
-    --tela: #cfe7ff;
+    --corpo: #2346a8;
+    --corpo-sombra: #172f78;
+    --creme: #fff1d6;
+    --tinta: #0e1a45;
+    --laranja: #ef6a3a;
     --acordar: 0;
     position: relative;
     width: 100em;
-    height: 152em;
+    height: 150em;
     outline: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -235,6 +250,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   .robo-cima {
     position: absolute;
     inset: 0 0 auto;
+    z-index: 1;
     height: 130em;
     animation: robo-respira 3.2s ease-in-out infinite alternate;
   }
@@ -243,35 +259,10 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
       transform: translateY(-1.6em);
     }
   }
-  /* antena com a luz de "gravando" */
-  .robo-antena {
-    left: 74em;
-    top: 0;
-    width: 2.4em;
-    height: 14em;
-    border-radius: 2em;
-    background: var(--tinta);
-  }
-  .robo-antena i {
-    left: -2.3em;
-    top: -3em;
-    width: 7em;
-    height: 7em;
-    border-radius: 50%;
-    background: #ff4b3a;
-    box-shadow: 0 0 calc(var(--acordar) * 4em) #ff4b3a;
-    animation: robo-gravando 1.6s steps(2) infinite;
-  }
-  @keyframes robo-gravando {
-    50% {
-      background: #8a2a20;
-      box-shadow: none;
-    }
-  }
-  /* o visor de câmera em cima da cabeça, com a lente */
+  /* o visor de câmera em cima da caixa, com a lente: a marca do fotógrafo */
   .robo-visor {
-    left: 12em;
-    top: 5em;
+    left: 14em;
+    top: -4em;
     width: 30em;
     height: 12em;
     border-radius: 4em 4em 0 0;
@@ -283,46 +274,32 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     width: 14em;
     height: 14em;
     border-radius: 50%;
-    background: radial-gradient(circle at 36% 34%, #fff 0 8%, #6f86d6 9% 22%, var(--tinta) 23% 52%, #0a1236 53% 66%, #2b2b2b 67%);
+    background: radial-gradient(circle at 36% 34%, #fff 0 8%, #7f95e0 9% 22%, #1b2a6b 23% 52%, #05081a 53% 66%, #2b2b2b 67%);
     box-shadow: 0 0 0 1.4em var(--creme);
   }
-  /* braços: um tubo que sai da lateral e desce em curva, com a mão na ponta */
+  /* braços: um tubo da cor do corpo que sai da lateral e desce em curva, ponta reta */
   .robo-braco {
-    top: 60em;
-    width: 20em;
-    height: 30em;
-    border: 6.5em solid var(--corpo);
+    z-index: -1;
+    top: 50em;
+    width: 18em;
+    height: 34em;
+    border: 6em solid var(--corpo);
     border-bottom: 0;
     animation: robo-aceno 3.2s ease-in-out infinite alternate;
   }
-  .robo-braco::after {
-    content: '';
-    position: absolute;
-    bottom: -6em;
-    width: 11em;
-    height: 11em;
-    border-radius: 50%;
-    background: var(--creme);
-    box-shadow: inset 0 -1.6em 0 rgb(0 0 0 / 0.12);
-  }
   .robo-braco-esq {
-    left: -15em;
+    left: -13em;
     border-right: 0;
-    border-top-left-radius: 18em;
+    border-top-left-radius: 16em;
     transform-origin: 100% 0;
   }
-  .robo-braco-esq::after {
-    left: -8.7em;
-  }
   .robo-braco-dir {
-    right: -15em;
+    right: -13em;
     border-left: 0;
-    border-top-right-radius: 18em;
+    border-top-right-radius: 16em;
+    border-color: var(--corpo-sombra);
     transform-origin: 0 0;
     animation-direction: alternate-reverse;
-  }
-  .robo-braco-dir::after {
-    right: -8.7em;
   }
   @keyframes robo-aceno {
     from {
@@ -332,56 +309,63 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
       rotate: 5deg;
     }
   }
-  /* o chassi: a faixa mais escura à direita é a espessura da caixa */
+  /* o bloco: topo reto; a faixa mais escura à direita é a espessura da caixa */
   .robo-corpo {
     position: absolute;
     left: 0;
-    top: 14em;
+    top: 6em;
     width: 100em;
-    height: 114em;
-    border-radius: 9em 9em 7em 7em;
+    height: 120em;
+    border-radius: 3em;
     background: linear-gradient(90deg, var(--corpo) 0 87%, var(--corpo-sombra) 87%);
     box-shadow:
-      inset 0 1.2em 0 rgb(255 255 255 / 0.22),
-      inset 0 -2.6em 0 rgb(0 0 0 / 0.14),
+      inset 0 0.9em 0 rgb(255 255 255 / 0.16),
       0 3em 5em rgb(0 0 0 / 0.28);
+    perspective: 260em;
   }
-  /* moldura da frente, encaixada no chassi (borda interna + degrau de sombra) */
-  .robo-moldura {
-    position: absolute;
-    left: 5em;
-    top: 7em;
-    width: 78em;
-    bottom: 8em;
-    border-radius: 6em;
-    background: var(--creme);
-    box-shadow:
-      inset 0 0 0 0.9em rgb(0 0 0 / 0.06),
-      inset 0 -1.4em 0 rgb(0 0 0 / 0.08),
-      0 0.8em 0 rgb(0 0 0 / 0.2);
+  /* as iniciais na lateral, em pé */
+  /* a fonte é 9em: as medidas aqui vão divididas por 9 */
+  .robo-lado {
+    left: calc(87em / 9);
+    width: calc(13em / 9);
+    top: calc(30em / 9);
+    writing-mode: vertical-rl;
+    text-align: center;
+    font: 900 9em/1 'Archivo', sans-serif;
+    letter-spacing: 0.1em;
+    color: var(--creme);
+    opacity: 0.85;
   }
-  /* a tela, recuada: sombra por dentro em cima e um aro escuro */
-  .robo-tela {
+  /* ---- dentro da caixa ---- */
+  .robo-dentro {
     position: absolute;
-    left: 6em;
-    right: 6em;
-    top: 6em;
-    height: 54em;
+    left: 3em;
+    top: 3em;
+    width: 81em;
+    height: 114em;
     overflow: hidden;
-    border-radius: 4em;
-    background: var(--tela);
+    border-radius: 2em;
+    background: var(--tinta);
     box-shadow:
-      inset 0 0 0 1em var(--tinta),
-      inset 0 2.4em 0 1em rgb(0 0 0 / 0.25);
-    filter: brightness(calc(0.55 + var(--acordar) * 0.45));
+      inset 1.5em 1.5em 3em rgb(0 0 0 / 0.55),
+      inset -0.6em -0.6em 0 rgb(255 255 255 / 0.05);
+  }
+  .robo-monitor {
+    position: absolute;
+    left: 7em;
+    right: 7em;
+    top: 7em;
+    height: 46em;
+    border-radius: 3em;
+    background: var(--creme);
+    box-shadow: 0 1em 0 rgb(0 0 0 / 0.35);
   }
   .robo-prints {
     position: absolute;
-    inset: 1em;
-    border-radius: 3em;
+    inset: 2.2em;
+    border-radius: 1.6em;
     overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.45s;
+    background: #fff;
   }
   .robo-prints img {
     position: absolute;
@@ -391,12 +375,186 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     object-fit: cover;
     object-position: 50% calc(var(--rolar, 0) * 100%);
   }
+  /* placa de circuito com chips */
+  .robo-placa {
+    left: 5em;
+    top: 60em;
+    width: 36em;
+    height: 22em;
+    border-radius: 1.2em;
+    background:
+      radial-gradient(circle, #c9d98a 0 0.6em, transparent 0.7em) 0 0 / 4em 4em,
+      #2f7d4f;
+  }
+  .robo-placa i {
+    width: 9em;
+    height: 6em;
+    border-radius: 0.6em;
+    background: #1b1f2a;
+    box-shadow: 0 0 0 0.6em #3a4152;
+  }
+  .robo-placa i:nth-child(1) {
+    left: 4em;
+    top: 4em;
+  }
+  .robo-placa i:nth-child(2) {
+    left: 18em;
+    top: 4em;
+    width: 12em;
+  }
+  .robo-placa i:nth-child(3) {
+    left: 9em;
+    top: 13em;
+    width: 16em;
+    height: 4em;
+  }
+  /* rolo de filme laranja, em pé */
+  .robo-filme {
+    left: 46em;
+    top: 57em;
+    width: 13em;
+    height: 24em;
+    border-radius: 1.4em;
+    background: repeating-linear-gradient(0deg, var(--laranja) 0 3em, #ffc93c 3em 4.2em);
+  }
+  .robo-filme::before,
+  .robo-filme::after {
+    content: '';
+    position: absolute;
+    left: 3.5em;
+    width: 6em;
+    height: 3em;
+    background: #2b2b2b;
+    border-radius: 0.6em;
+  }
+  .robo-filme::before {
+    top: -2.4em;
+  }
+  .robo-filme::after {
+    bottom: -2.4em;
+  }
+  .robo-filme i {
+    left: 12em;
+    top: 6em;
+    width: 9em;
+    height: 7em;
+    background: repeating-linear-gradient(90deg, #3a2a1c 0 1.2em, #1d140d 1.2em 2.4em);
+  }
+  /* uma objetiva de câmera, vista de frente */
+  .robo-objetiva {
+    left: 61em;
+    top: 62em;
+    width: 16em;
+    height: 16em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, #fff 0 7%, #7f95e0 8% 22%, #1b2a6b 23% 50%, #05081a 51% 64%, #3b3f4c 65% 80%, #22252f 81%);
+  }
+  /* cartão de memória */
+  .robo-cartao {
+    left: 8em;
+    top: 88em;
+    width: 15em;
+    height: 19em;
+    background:
+      linear-gradient(#ffc93c 0 0) 3em 2em / 1.4em 4em no-repeat,
+      linear-gradient(#ffc93c 0 0) 5.5em 2em / 1.4em 4em no-repeat,
+      linear-gradient(#ffc93c 0 0) 8em 2em / 1.4em 4em no-repeat,
+      linear-gradient(#fff 0 0) 2em 10em / 11em 6em no-repeat,
+      #24272f;
+    clip-path: polygon(0 0, 72% 0, 100% 20%, 100% 100%, 0 100%);
+    border-radius: 0.6em;
+  }
+  /* um coração (o amor pelo que faz) */
+  .robo-coracao {
+    left: 34em;
+    top: 92em;
+    width: 13em;
+    height: 13em;
+    rotate: 45deg;
+    background: #ffc93c;
+    border-radius: 0 0 1.4em 0;
+  }
+  .robo-coracao::before,
+  .robo-coracao::after {
+    content: '';
+    position: absolute;
+    width: 13em;
+    height: 13em;
+    border-radius: 50%;
+    background: inherit;
+  }
+  .robo-coracao::before {
+    left: -6.5em;
+    top: 0;
+  }
+  .robo-coracao::after {
+    left: 0;
+    top: -6.5em;
+  }
+  /* um fio que sai da placa e se enrola */
+  .robo-fio {
+    left: 52em;
+    top: 84em;
+    width: 24em;
+    height: 22em;
+    border: 1.6em solid var(--laranja);
+    border-left-color: transparent;
+    border-radius: 50%;
+    rotate: 20deg;
+  }
+  /* ---- a porta da frente ---- */
+  .robo-porta {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 87em;
+    height: 120em;
+    transform-origin: 0 50%;
+    transform-style: preserve-3d;
+    transition: transform 0.9s cubic-bezier(0.3, 1.4, 0.4, 1);
+  }
+  .robo-frente,
+  .robo-verso {
+    position: absolute;
+    inset: 0;
+    border-radius: 3em 0 0 3em;
+    backface-visibility: hidden;
+  }
+  .robo-frente {
+    background: var(--corpo);
+    box-shadow:
+      inset 0 0.9em 0 rgb(255 255 255 / 0.16),
+      inset -0.5em 0 0 rgb(0 0 0 / 0.18);
+  }
+  /* o lado de dentro da porta, mais escuro */
+  .robo-verso {
+    transform: rotateY(180deg);
+    background: var(--corpo-sombra);
+    box-shadow: inset 0 0 0 2em rgb(0 0 0 / 0.15);
+  }
+  .robo:hover .robo-porta,
+  .robo:focus-visible .robo-porta,
+  .robo.mostra .robo-porta {
+    transform: rotateY(-112deg);
+  }
+  /* a tela do rosto ocupa a metade de cima */
+  .robo-tela {
+    position: absolute;
+    left: 8em;
+    right: 8em;
+    top: 8em;
+    height: 52em;
+    overflow: hidden;
+    border-radius: 3em;
+    background: var(--creme);
+    box-shadow:
+      inset 0 0 0 0.9em var(--tinta),
+      inset 0 2.2em 0 0.9em rgb(0 0 0 / 0.18);
+    filter: brightness(calc(0.55 + var(--acordar) * 0.45));
+  }
   .robo-rosto {
     position: absolute;
     inset: 0;
-    transition:
-      opacity 0.45s,
-      scale 0.45s;
   }
   .robo-olhos {
     left: 0;
@@ -414,10 +572,10 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     animation: robo-pisca 4.6s infinite;
   }
   .robo-olhos i:first-child {
-    left: 20em;
+    left: 18em;
   }
   .robo-olhos i:last-child {
-    right: 20em;
+    right: 18em;
   }
   @keyframes robo-pisca {
     0%,
@@ -438,10 +596,10 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     opacity: 0.7;
   }
   .robo-bochecha-esq {
-    left: 12em;
+    left: 10em;
   }
   .robo-bochecha-dir {
-    right: 12em;
+    right: 10em;
   }
   /* boca aberta em D, com a língua */
   .robo-boca {
@@ -465,41 +623,29 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     background: #ff7a8a;
   }
   .robo-vidro {
-    inset: 1em;
-    border-radius: 3em;
+    inset: 0.9em;
+    border-radius: 2.2em;
     pointer-events: none;
     background:
-      linear-gradient(130deg, rgb(255 255 255 / 0.35) 0 18%, transparent 19%),
-      repeating-linear-gradient(0deg, rgb(0 0 0 / 0.05) 0 0.5em, transparent 0.5em 1.2em);
-  }
-  /* mouse em cima (ou toque no celular): o rosto some e aparece o print do site */
-  .robo:hover .robo-rosto,
-  .robo:focus-visible .robo-rosto,
-  .robo.mostra .robo-rosto {
-    opacity: 0;
-    scale: 0.85;
-  }
-  .robo:hover .robo-prints,
-  .robo:focus-visible .robo-prints,
-  .robo.mostra .robo-prints {
-    opacity: 1;
+      linear-gradient(130deg, rgb(255 255 255 / 0.4) 0 18%, transparent 19%),
+      repeating-linear-gradient(0deg, rgb(0 0 0 / 0.04) 0 0.5em, transparent 0.5em 1.2em);
   }
   /* painel de controles */
   .robo-painel {
     position: absolute;
-    left: 6em;
-    right: 6em;
-    top: 64em;
-    height: 22em;
+    left: 8em;
+    right: 8em;
+    top: 68em;
+    height: 26em;
   }
   .robo-alavanca {
-    left: 2em;
-    top: 1em;
+    left: 0;
+    top: 2em;
     width: 19em;
     height: 19em;
     border-radius: 50%;
-    background: #dcd2bd;
-    box-shadow: inset 0 0.9em 0 rgb(0 0 0 / 0.15);
+    background: var(--corpo-sombra);
+    box-shadow: inset 0 0.9em 0 rgb(0 0 0 / 0.25);
   }
   .robo-alavanca i {
     left: 4.5em;
@@ -507,42 +653,42 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     width: 10em;
     height: 10em;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #4d63b8, var(--tinta) 60%);
-    box-shadow: 0 1.4em 0 #0b143a;
+    background: radial-gradient(circle at 35% 30%, #ff9a6e, var(--laranja) 60%);
+    box-shadow: 0 1.4em 0 #a8401c;
   }
   .robo-pilulas {
-    left: 27em;
-    top: 9em;
-    width: 22em;
+    left: 24em;
+    top: 11em;
+    width: 20em;
     height: 6em;
     rotate: -22deg;
   }
   .robo-pilulas i {
     top: 0;
-    width: 9.5em;
-    height: 4.6em;
+    width: 8.6em;
+    height: 4.4em;
     border-radius: 3em;
-    background: var(--tinta);
-    box-shadow: 0 0.8em 0 #0b143a;
+    background: var(--creme);
+    box-shadow: 0 0.8em 0 rgb(0 0 0 / 0.3);
   }
   .robo-pilulas i:last-child {
     right: 0;
   }
   /* o "dial" de câmera, serrilhado */
   .robo-dial {
-    right: 1em;
-    top: 1em;
+    right: 0;
+    top: 2em;
     width: 15em;
     height: 15em;
     border-radius: 50%;
     background:
       radial-gradient(circle, #ffc93c 0 46%, transparent 47%),
       repeating-conic-gradient(var(--tinta) 0 10deg, #2c3d82 10deg 20deg);
-    box-shadow: 0 1.2em 0 #0b143a;
+    box-shadow: 0 1.2em 0 rgb(0 0 0 / 0.35);
   }
   .robo-grade {
     left: 50%;
-    bottom: 4.5em;
+    bottom: 8em;
     width: 30em;
     height: 6em;
     translate: -50% 0;
@@ -552,7 +698,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     right: 0;
     height: 0.9em;
     border-radius: 1em;
-    background: rgb(22 37 94 / 0.4);
+    background: rgb(0 0 0 / 0.3);
   }
   .robo-grade i:nth-child(2) {
     top: 1.7em;
@@ -563,34 +709,30 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
   .robo-grade i:nth-child(4) {
     top: 5.1em;
   }
-  /* pernas esticadas pra frente: a sola do pé fica de frente pra quem olha, maior que a perna */
+  /* pernas: tubos finos e escuros que saem da base, com um pezinho */
   .robo-perna {
-    bottom: 4em;
-    width: 12em;
+    z-index: 0;
+    bottom: 5em;
+    width: 6em;
     height: 26em;
-    border-radius: 0 0 4em 4em;
-    background: var(--corpo-sombra);
+    border-radius: 0 0 3em 3em;
+    background: var(--tinta);
   }
   .robo-perna::after {
     content: '';
     position: absolute;
-    left: -6em;
-    bottom: -4em;
-    width: 24em;
-    height: 15em;
-    border-radius: 50%;
-    background: var(--creme);
-    box-shadow:
-      inset 0 -3em 0 #b9ad95,
-      0 1em 1.5em rgb(0 0 0 / 0.2);
+    left: -3em;
+    bottom: -2.4em;
+    width: 12em;
+    height: 4.4em;
+    border-radius: 3em 3em 1.4em 1.4em;
+    background: var(--tinta);
   }
   .robo-perna-esq {
-    left: 20em;
-    rotate: 8deg;
+    left: 24em;
   }
   .robo-perna-dir {
-    left: 56em;
-    rotate: -8deg;
+    left: 60em;
   }
   .robo-chao {
     left: -12em;
@@ -600,15 +742,6 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
     z-index: -1;
     border-radius: 50%;
     background: radial-gradient(closest-side, rgb(0 0 0 / 0.35), transparent);
-  }
-  .robo-perna {
-    z-index: 0;
-  }
-  .robo-cima {
-    z-index: 1;
-  }
-  .robo-braco {
-    z-index: -1;
   }
   .robo-dica {
     margin: 0;
@@ -705,7 +838,7 @@ const cores = comPrint.map((s) => s.cor ?? '#2346a8');
       height: 36svh;
     }
     .aparelho.ativo .robo-cena {
-      --l: min(58vw, 28svh);
+      --l: min(52vw, 27svh);
     }
     .aparelho.ativo .aparelho-info {
       inset: 0 0 auto;
